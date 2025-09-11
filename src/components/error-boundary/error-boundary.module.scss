@@ -1,0 +1,64 @@
+.container {
+  display: grid;
+  height: 100vh;
+  margin: 0;
+  padding: 5px 0px;
+  box-sizing: border-box;
+  grid-template-rows: 75px auto;
+  background-color: $grey-200;
+  color: $text-color-dark;
+  header {
+    display: grid;
+    position: relative;
+    padding: 15px 5px;
+    align-items: center;
+    justify-items: center;
+    border-bottom: 1px solid $text-color-secondary;
+    box-sizing: border-box;
+
+    svg {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      height: 40px;
+      transform: translateY(-50%);
+    }
+    span {
+      display: inline-flex;
+      align-items: center;
+      @include typography('lg');
+    }
+    code {
+      margin-left: 5px;
+      padding: 6px 16px;
+      border-radius: 10px;
+      color: $blue-300;
+      background: $red-200;
+      @include typography('lg');
+      line-height: 1;
+    }
+  }
+
+  article {
+    display: grid;
+    align-content: center;
+    justify-content: center;
+    justify-items: center;
+
+    h1 {
+      @include typography('mlg');
+    }
+
+    p {
+      @include typography('md');
+      letter-spacing: 0.01rem;
+      text-align: center;
+    }
+
+    .hyperlink {
+      span {
+        @include typography('md');
+      }
+    }
+  }
+}

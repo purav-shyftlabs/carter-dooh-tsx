@@ -1,0 +1,57 @@
+.container {
+  .fileInput {
+    display: none;
+  }
+  .upload_button {
+    color: $carter-brand-600;
+    border-color: $carter-brand-600;
+    font-weight: 500;
+    min-width: 130px;
+  }
+}
+
+.name_input_container {
+  width: 100%;
+
+  .uploadedFileContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid $carter-grey-300;
+    border-radius: 6px;
+    padding: 8px 12px;
+    gap: 12px;
+
+    .uploadedFileName {
+      flex-grow: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      @include typography('xs');
+      display: flex;
+      gap: 9px;
+      align-content: center;
+
+      > svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .fileActions {
+      display: flex;
+      gap: 0px;
+      align-items: center;
+      svg {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+    }
+  }
+  &[data-disabled='true'] {
+    span {
+      color: $text-color-secondary;
+    }
+  }
+}

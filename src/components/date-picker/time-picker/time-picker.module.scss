@@ -1,0 +1,31 @@
+.container {
+  overflow-y: auto;
+  max-height: 337px;
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  @include themeScrollbar();
+
+  button {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid $grey-700;
+
+    &:hover {
+      cursor: pointer;
+      background-color: $white-400;
+      &:disabled {
+        cursor: not-allowed;
+        background-color: transparent;
+      }
+    }
+
+    &[data-active='true'] {
+      background-color: $primary-default;
+      color: $white-100;
+    }
+  }
+}

@@ -1,0 +1,98 @@
+.container {
+  all: unset;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  gap: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+  &:hover {
+    cursor: pointer;
+  }
+
+  &[data-reverse='true'] {
+    flex-direction: row-reverse;
+  }
+}
+
+.primary {
+  background-color: $primary-default;
+  color: $white-100;
+  &:hover {
+    background-color: $primary-hover;
+  }
+  &:disabled {
+    background-color: $text-color-inactive !important;
+  }
+}
+
+.secondary {
+  background-color: $white-100;
+  border: 1px solid $grey-700;
+  &:hover {
+    background-color: $grey-100;
+  }
+  &:disabled {
+    color: $text-color-inactive;
+    background-color: $white-100;
+  }
+}
+
+.text {
+  color: $secondary-default;
+  padding: 0px;
+  border: 1px solid transparent;
+  &:disabled {
+    color: $text-color-inactive !important;
+    cursor: not-allowed;
+  }
+}
+
+.info-secondary {
+  background-color: $white-100;
+  border: 1px solid $grey-700;
+  color: $blue-700;
+  &:hover {
+    border-color: $blue-700;
+  }
+  &:disabled {
+    color: $text-color-inactive;
+    background-color: $white-100;
+  }
+}
+
+.danger {
+  color: $red-400;
+  padding: 0px;
+  border: 1px solid transparent;
+  &:disabled {
+    color: $text-color-inactive;
+    cursor: not-allowed;
+  }
+}
+
+.danger-secondary {
+  background-color: $white-100;
+  border: 1px solid $grey-700;
+  color: $red-400;
+  &:hover {
+    border-color: $red-400;
+  }
+  &:disabled {
+    color: $text-color-inactive;
+    background-color: $white-100;
+  }
+}
+
+.login-primary {
+  background-color: #6f5cd9;
+  color: $white-100;
+  &:hover {
+    background-color: #6f5cd9;
+  }
+  &:disabled {
+    background-color: $text-color-inactive;
+  }
+}

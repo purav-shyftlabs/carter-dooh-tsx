@@ -1,0 +1,24 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  margin: 0px;
+  padding: 8px;
+
+  .checkbox {
+    pointer-events: auto;
+    padding: 0px;
+    margin-left: -8px;
+  }
+
+  .label {
+    @include typography('s', 'regular');
+  }
+
+  &[data-disabled='true'] {
+    .checkbox {
+      color: $carter-text-200 !important;
+    }
+  }
+}

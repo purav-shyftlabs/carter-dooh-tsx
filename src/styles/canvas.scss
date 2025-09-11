@@ -1,0 +1,725 @@
+.segment_canvas_container {
+  width: 100%;
+  height: calc(100vh - 80px);
+}
+.workflow-canvas-container {
+  width: 100%;
+  height: calc(100vh - 170px);
+}
+// react flow nodes properties css
+
+.react-flow__node-customSource,
+.react-flow__node-customFilters,
+.react-flow__node-customAggregation,
+.react-flow__node-customDestinations,
+.react-flow__node-customEmail,
+.react-flow__node-customSQL,
+.react-flow__node-customOperations {
+  font-size: 10px;
+  min-width: 320px !important;
+  width: fit-content;
+  background-color: $white-100;
+  color: $black-600;
+  box-shadow: 0px 2px 20px 0px #0000001a;
+  border-radius: 8px;
+  border-right: 3px solid $grey-900;
+  transition: border-color 0.2s ease-in;
+}
+.react-flow__node:hover {
+  cursor: url('../assets/images/cursor\ \(3\).png'), auto;
+}
+
+.react-flow__node-customSource .node_menu_dropdown_wrpr,
+.react-flow__node-customFilters .node_menu_dropdown_wrpr,
+.react-flow__node-customSQL .node_menu_dropdown_wrpr,
+.react-flow__node-customOperations .node_menu_dropdown_wrpr,
+.react-flow__node-customAggregation .node_menu_dropdown_wrpr {
+  width: 150px;
+  top: 35% !important;
+  left: 112% !important;
+}
+.react-flow__node-customSource:hover,
+.react-flow__node-customFilters:hover,
+.react-flow__node-customSQL:hover,
+.react-flow__node-customOperations:hover,
+.react-flow__node-customAggregation:hover {
+  border-right-color: $blue-1300;
+}
+.react-flow__node-customSource .node-menu-container .ant-btn > span,
+.react-flow__node-customFilters .node-menu-container .ant-btn > span,
+.react-flow__node-customSQL .node-menu-container .ant-btn > span,
+.react-flow__node-customOperations .node-menu-container .ant-btn > span,
+.react-flow__node-customAggregation .node-menu-container .ant-btn > span {
+  transition: rotate 0.2s ease;
+}
+.react-flow__node-customSource .node-menu-container .ant-dropdown-open > span,
+.react-flow__node-customFilters .node-menu-container .ant-dropdown-open > span,
+.react-flow__node-customSQL .node-menu-container .ant-dropdown-open > span,
+.react-flow__node-customOperations .node-menu-container .ant-dropdown-open > span,
+.react-flow__node-customAggregation .node-menu-container .ant-dropdown-open > span {
+  transition: rotate 0.2s ease;
+  rotate: 45deg;
+}
+.add-node-menu-btn {
+  padding: 0;
+  height: 35px;
+  width: 35px;
+  border-radius: 30px;
+}
+
+.react-flow__node-customSource .add-node-menu-btn,
+.react-flow__node-customFilters .add-node-menu-btn,
+.react-flow__node-customSQL .add-node-menu-btn,
+.react-flow__node-customOperations .add-node-menu-btn,
+.react-flow__node-customAggregation .add-node-menu-btn {
+  position: absolute;
+  top: 40%;
+  right: -35px;
+  background-color: $blue-900;
+  box-shadow: none;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: unset;
+  border-radius: 30px;
+  opacity: 0;
+  transform: translateY(-50%) scale(0);
+}
+.react-flow__node-customSource:hover .add-node-menu-btn,
+.react-flow__node-customFilters:hover .add-node-menu-btn,
+.react-flow__node-customSQL:hover .add-node-menu-btn,
+.react-flow__node-customOperations:hover .add-node-menu-btn,
+.react-flow__node-customAggregation:hover .add-node-menu-btn {
+  transform: translateY(-50%) scale(1);
+  opacity: 1;
+}
+
+.react-flow__node-customSource:has(.source-node-container.opened),
+.react-flow__node-customFilters:has(.filter-node-container.opened),
+.react-flow__node-customSQL:has(.sql-node-container.opened),
+.react-flow__node-customOperations:has(.operations-node-container.opened),
+.react-flow__node-customAggregation:has(.aggr-node-container.opened) {
+  border-color: $blue-1300;
+}
+.react-flow__node-customSource:has(.source-node-container.opened) .add-node-menu-btn,
+.react-flow__node-customFilters:has(.filter-node-container.opened) .add-node-menu-btn,
+.react-flow__node-customSQL:has(.sql-node-container.opened) .add-node-menu-btn,
+.react-flow__node-customOperations:has(.operations-node-container.opened) .add-node-menu-btn,
+.react-flow__node-customAggregation:has(.aggr-node-container.opened) .add-node-menu-btn {
+  transform: translateY(-50%) scale(1);
+  opacity: 1;
+}
+.node_menu_dropdown_wrpr {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  width: 100px;
+}
+.react-flow__node-customSource .react-flow__handle,
+.react-flow__node-customFilters .react-flow__handle-right,
+.react-flow__node-customSQL .react-flow__handle-right,
+.react-flow__node-customOperations .react-flow__handle-right,
+.react-flow__node-customAggregation .react-flow__handle-right {
+  width: 12px;
+  height: 12px;
+  border-radius: 20px;
+  background-color: $blue-1200;
+}
+
+.react-flow__node-customSQL .react-flow__handle-right,
+.react-flow__node-customOperations .react-flow__handle-right {
+  right: -12px;
+}
+
+.react-flow__node-customSource .react-flow__handle {
+  right: -10px;
+}
+
+.react-flow__node-customFilters .react-flow__handle-right,
+.react-flow__node-customAggregation .react-flow__handle-right {
+  right: -11px;
+}
+
+.react-flow__node-customFilters .react-flow__handle-left,
+.react-flow__node-customAggregation .react-flow__handle-left,
+.react-flow__node-customDestinations .react-flow__handle-left,
+.react-flow__node-customEmail .react-flow__handle-left,
+.react-flow__node-customSQL .react-flow__handle-left,
+.react-flow__node-customOperations .react-flow__handle-left {
+  width: 12px;
+  height: 12px;
+  border-radius: 20px;
+  background-color: $blue-1200;
+}
+.react-flow__node-customSQL .react-flow__handle-left,
+.react-flow__node-customOperations .react-flow__handle-left {
+  left: -12px;
+}
+.react-flow__node-customFilters .react-flow__handle-left,
+.react-flow__node-customAggregation .react-flow__handle-left {
+  left: -12px;
+}
+
+.react-flow__node-customEmail .react-flow__handle-left,
+.react-flow__node-customDestinations .react-flow__handle-left {
+  left: -10px;
+}
+
+.react-flow__node.circle {
+  border-radius: 10px;
+  width: 210px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+}
+
+.react-flow__node.result {
+  border-radius: 8px;
+  width: 200px !important;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 500;
+}
+
+.react-flow__node.annotation {
+  border-radius: 0;
+  text-align: left;
+  background: $white-100;
+  border: none;
+  line-height: 1.4;
+  width: 225px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 15%), 0 2px 4px -1px rgb(0 0 0 / 8%);
+}
+
+.react-flow__node.annotation .react-flow__handle {
+  display: none;
+}
+
+.custom-node__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem; // equivalent to p-4
+
+  .custom-node__header_options {
+    .node-options-btn {
+      border-radius: 0.375rem; // equivalent to rounded
+      border: 0;
+      box-shadow: none; // equivalent to shadow-none
+      width: auto;
+      min-width: 18px;
+      max-width: 18px;
+      min-height: 18px;
+      max-height: 18px;
+      height: auto;
+      padding: 0; // equivalent to p-0
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.execute-btn:hover {
+        background-color: $blue-1300;
+
+        img {
+          filter: invert(1);
+        }
+      }
+    }
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: flex-start; // equivalent to justify-start
+    align-items: center;
+    align-content: center;
+    gap: 0.5rem; // equivalent to gap-2
+  }
+}
+
+.custom-node__body {
+  margin: 0px 16px;
+  padding: 14px 16px;
+  background: $white-500;
+  border-radius: 6px;
+}
+.filter_custom-node__body {
+  padding: 0;
+}
+
+.custom-node_sql__body {
+  padding: 1rem;
+  padding-top: 0;
+}
+
+.custom-node_sql__body .custom-node__ui-container {
+  position: relative;
+  border: 1px solid $border-color-secondary;
+  border-radius: 0.375rem;
+}
+
+.custom-node__ui-container {
+  .custom-node__select_options {
+    max-height: 46px !important;
+    width: 100%;
+  }
+  .filters-container {
+    background-color: $white-100;
+    .filter_node_autocomplete {
+      background-color: $white-100;
+      border-radius: 4px;
+    }
+    .operator-text {
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      text-align: center;
+      font-weight: 500;
+      margin: 12px 0;
+      padding: 8px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 4px;
+      color: black;
+      // background-color: #12297D;
+    }
+    .conditions-container {
+      .add-filter-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+        pointer-events: auto;
+        opacity: 1;
+        &.disabled {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+      }
+      .condition-header-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+    .filter-divider {
+      margin: 22px 0 !important;
+      border-width: 1px;
+    }
+    .condition-aggregator {
+      .node-field-title.filter-operator {
+        font-size: 12px;
+        cursor: pointer;
+        &.disabled {
+          color: gray;
+          cursor: not-allowed;
+        }
+      }
+    }
+    .node-field-title {
+      .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+    .filterValues {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+
+      .filtervalue-select {
+        background-color: $white-100;
+        width: 33.33%;
+      }
+
+      .input-type-container {
+        background-color: $white-100;
+        width: 66.67%;
+        border-radius: 4px !important;
+        .css-10o2lyd-MuiStack-root {
+          padding: 0px !important;
+        }
+        .css-10o2lyd-MuiStack-root > .MuiTextField-root,
+        .css-10o2lyd-MuiStack-root > .MuiPickersTextField-root {
+          min-width: 0px !important;
+        }
+        .radio-group_container__s9NiO {
+          height: 36px;
+          gap: 12px !important;
+          padding-left: 15px;
+          .css-fvglsg-MuiButtonBase-root-MuiRadio-root {
+            padding: 0px !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+.sql-query-editor {
+  border-radius: 0.5rem; // equivalent to rounded-lg
+  overflow: hidden; // equivalent to overflow-hidden
+}
+
+.add-condition-button {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+  padding-top: 20px;
+
+  .add-cond-btn {
+    background-color: $grey-500;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: center;
+    width: 90%;
+    border: dashed 1px;
+  }
+}
+
+.header-title {
+  font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+  font-size: 0.875rem; // equivalent to text-sm
+  font-weight: 500; // equivalent to font-medium
+  color: $text-color-primary;
+}
+
+.node-field-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /* 142.857% */
+  margin-bottom: 0.25rem !important; // equivalent to mb-1
+  cursor: pointer;
+}
+
+.canvas-custom-panel {
+  display: flex;
+  flex-direction: column;
+  zoom: 1;
+}
+
+.conditions-container {
+  border-radius: 8px;
+  border-bottom: 3px solid $grey-900;
+  background-color: $white-500;
+  padding: 16px;
+  margin-top: 16px;
+
+  .condition-header-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: $text-color-description;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+  }
+}
+
+.condition-aggregator {
+  display: flex;
+  justify-content: center;
+}
+.node-options_icon {
+  position: relative !important;
+  right: 5px;
+  top: 2px;
+}
+
+.syncData-container {
+  padding: 1rem; // equivalent to p-4
+
+  .data-points-text {
+    font-size: 0.875rem; // equivalent to text-sm
+    font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+    font-weight: 400; // equivalent to font-normal
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; // equivalent to gap-3
+  }
+
+  .sync-data-button {
+    padding: 0.5rem 1rem; // equivalent to px-2 py-1
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; // equivalent to justify-start
+    gap: 0.5rem; // equivalent to gap-2
+    height: auto; // equivalent to h-auto
+    text-align: center;
+    font-family: Roboto;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 24px; /* 171.429% */
+  }
+
+  .sync-icon.rotate {
+    animation: rotate 2s linear infinite;
+  }
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .data-points-text {
+    .data-count {
+      font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+      font-size: 0.75rem; // equivalent to text-xs
+      font-weight: 500; // equivalent to font-medium
+    }
+
+    .data-percentage {
+      font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+      font-size: 0.75rem; // equivalent to text-xs
+    }
+
+    .sample-data-button {
+      background: none;
+      border: none;
+      padding: 0; // equivalent to p-0
+      height: auto; // equivalent to h-auto
+      min-height: unset; // equivalent to min-h-[unset]
+    }
+  }
+}
+
+.groupBy-container {
+  padding: 1rem; // equivalent to p-4
+  padding-bottom: 0; // equivalent to pb-0
+  .groupBy-text {
+    font-size: 0.875rem; // equivalent to text-sm
+    color: $text-color-primary;
+    font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+    font-weight: 400; // equivalent to font-normal
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; // equivalent to gap-3
+    margin-bottom: 1rem; // equivalent to mb-4
+  }
+}
+
+.delete-filter,
+.delete-aggr {
+  border-radius: 0.25rem; // equivalent to rounded
+  border: none; // equivalent to border-0
+  box-shadow: none; // equivalent to shadow-none
+  width: auto; // equivalent to w-auto
+  min-width: 18px; // equivalent to min-w-[18px]
+  max-width: 18px; // equivalent to max-w-[18px]
+  min-height: 18px; // equivalent to min-h-[18px]
+  max-height: 18px; // equivalent to max-h-[18px]
+  height: auto; // equivalent to h-auto
+  padding: 0; // equivalent to p-0
+  outline: none; // equivalent to outline-none
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mapping-header {
+  background-color: $grey-100;
+  margin: -9px -24px 9px;
+  .mapping-heder-col {
+    padding: 16px 20px;
+  }
+}
+.mapping-col-row {
+  margin: 16px 0px;
+  align-items: center;
+}
+.dw_modal_content {
+  .ant-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 28px;
+  }
+}
+.dw_modal_footer {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 24px !important;
+  padding-bottom: 0 !important;
+  margin: 20px -24px 0 !important;
+  border-top: 1px solid $grey-700 !important;
+}
+.reactflow-panel-btn {
+  background-color: $white-100 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.canvas_controls {
+  border: 1px solid $white-100;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: none !important;
+  .react-flow__controls-button {
+    background-color: $white-100 !important;
+    width: 40px;
+    height: 26px;
+  }
+}
+
+.checkbox-list {
+  .ant-select-item-option {
+    position: relative;
+    padding-left: 37px;
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      border: 1px solid $grey-700;
+      background-color: transparent;
+      border-radius: 2px;
+      transition: all 0.3s ease-in-out;
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      // background: url('../../assets/svgIcons/white-check.svg') no-repeat
+      //     center;
+      opacity: 0;
+      transition: all 0.3s ease-in-out;
+    }
+    &.ant-select-item-option-selected {
+      font-weight: 400;
+      &::before {
+        background-color: $blue-1300;
+        border-color: $blue-1300;
+      }
+      &::after {
+        opacity: 1;
+      }
+      .ant-select-item-option-state {
+        display: none;
+      }
+    }
+  }
+}
+
+.aggr-node-container {
+  .no-name-input .add-node-menu-btn {
+    top: 32%;
+  }
+}
+
+.sm-input {
+  min-height: auto !important;
+  max-height: 45px !important;
+  .dw-input-base,
+  .dw-input-focus {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .dw-label-base {
+    top: 0.5rem; // equivalent to 0.5rem or 8px
+  }
+}
+
+.sm-select.dw-select {
+  height: 46px;
+}
+
+.add-nodes-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; // equivalent to gap-1
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.875rem; // equivalent to text-sm
+}
+
+.sample_drawer_header {
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.125rem; /* This is the equivalent of Tailwind's text-lg */
+  font-weight: 500;
+  color: $black-600;
+}
+.sample_data_blank_space {
+  min-height: 200px;
+}
+.dw_table .ant-table-thead {
+  position: sticky;
+  top: 0px;
+  z-index: 99;
+}
+.dw_table_head {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500; /* Equivalent to font-medium */
+  line-height: 1.25rem; /* 1.25 * 13px = 16.25px ~ 1.25rem */
+  color: $black-600;
+
+  &.text-center {
+    text-align: center !important;
+  }
+
+  .ant-table-column-title {
+    max-width: fit-content;
+  }
+
+  .ant-table-column-sorters,
+  .ant-table-filter-column {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.5rem; /* Tailwind's gap-2 is 0.5rem */
+  }
+
+  .ant-table-filter-trigger {
+    margin: 0px;
+    min-width: 25px;
+    min-height: 20px;
+  }
+}
+.dw_table_cell {
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.875rem; /* Tailwind's text-sm is 14px, which is approximately 0.875rem */
+  line-height: 1.25rem; /* Tailwind's leading-4 is 1.25rem */
+  color: $black-600;
+  font-weight: 400; /* Tailwind's font-normal is equivalent to font-weight 400 */
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+}
+.edgebutton {
+  padding: 0;
+  height: 25px;
+  width: 25px;
+  border-radius: 20px;
+}
+.data-grid_container__3sv4M {
+  min-height: auto !important;
+}
+.sample-data-table-container {
+  table {
+    tr {
+      height: auto !important;
+    }
+  }
+}

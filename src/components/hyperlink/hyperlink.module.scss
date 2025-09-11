@@ -1,0 +1,46 @@
+$font-weights: (
+  normal: 400,
+  medium: 500,
+  semibold: 600,
+  bold: 700,
+);
+
+$colors: (
+  primary: $carter-brand-600,
+  link: $carter-links-blue,
+  secondary: $carter-text-500,
+  success: $carter-green-500,
+  error: $carter-red-500,
+  warning: $carter-yellow-500,
+  info: $carter-brand-400,
+  black: $carter-text-900,
+);
+
+@mixin font-weights {
+  @each $weight, $value in $font-weights {
+    .font#{$weight} {
+      font-weight: $value;
+    }
+  }
+}
+
+@mixin colors {
+  @each $name, $value in $colors {
+    .color#{$name} {
+      color: $value;
+    }
+  }
+}
+
+.container {
+  span {
+    color: $carter-links-blue;
+    @include typography('xs');
+    line-height: 20px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+}
+
+@include font-weights;
+@include colors;

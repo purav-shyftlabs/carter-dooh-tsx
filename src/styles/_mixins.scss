@@ -1,0 +1,73 @@
+@mixin externalLayoutBg {
+  background: linear-gradient(to bottom, var(--primary-dark), var(--primary-light));
+}
+
+@mixin hideScrollbar {
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@mixin themeScrollbar {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: $grey-100;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: $grey-700;
+  }
+}
+
+@mixin section-boiler-plate {
+  background-color: $white-100;
+  border-radius: var(--border-radius-common);
+  padding: 24px;
+  margin: 0 24px;
+}
+
+@mixin section-title-boiler-plate {
+  @include typography(s, semibold);
+  color: $text-color-primary;
+  line-height: 20px;
+  margin-bottom: 8px;
+}
+
+@mixin section-desc-boiler-plate {
+  @include typography(xs, regular);
+  color: $text-color-description;
+  line-height: 20px;
+  margin-bottom: 20px;
+}
+
+@mixin layout(
+  $display,
+  $direction,
+  $justification,
+  $alignments: center,
+  $padding: 0px,
+  $background-color: #fff,
+  $gap: inherit,
+  $border: none,
+  $border-radius: none
+) {
+  display: $display;
+  flex-direction: $direction;
+  justify-content: $justification;
+  align-items: $alignments;
+  padding: $padding;
+  background-color: $background-color;
+  gap: $gap;
+  border: $border;
+  border-radius: $border-radius;
+}
+
+@mixin cardLikeShadow {
+  box-shadow: 0px 4px 8px 3px rgba(0, 0, 0, 0.02), 0px 1px 3px 0px rgba(0, 0, 0, 0.02);
+}

@@ -1,0 +1,98 @@
+export type ENVIRONMENT = {
+  API_BASE_URL: string;
+  APP_BASE_URL: string;
+  BASE_PATH: string;
+  DATA_WEAVER_BASE_URL: string;
+  DATA_WEAVER_API_KEY: string;
+  APP_ENV?: string;
+  BUILD_TAG?: string;
+  AUTH0_SECRET?: string;
+  AUTH0_BASE_URL?: string;
+  AUTH0_ISSUER_BASE_URL?: string;
+  AUTH0_CLIENT_ID?: string;
+  AUTH0_CLIENT_SECRET?: string;
+  AUTH0_AUDIENCE?: string;
+  SNOWPLOW_COLLECTOR_URL?: string;
+  SNOWPLOW_BASE_URL?: string;
+  TRACKINGS_ENABLED?: boolean;
+  SNOWPLOW_URL?: string;
+  SNOWPLOW_NAME_TRACKER?: string;
+  SNOWPLOW_APP_ID?: string;
+  ALLOW_INSECURE?: boolean;
+  AUTH_PROVIDER?: string;
+  BUCKET_URL?: string;
+  CARTER_AI_API_KEY?: string;
+  AUTHENTIK_DOMAIN?: string;
+  AUTHENTIK_CLIENT_ID?: string;
+  AUTHENTIK_CLIENT_SECRET?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_PUBLIC_KEY?: string;
+  CARTER_AI_BASE_URL?: string;
+};
+
+/* Client Side Variables */
+const APP_ENV = process.env.NEXT_PUBLIC_APP_ENV || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_BASE_URL || '';
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const BUILD_TAG = process.env.NEXT_PUBLIC_BUILD_TAG || '';
+const SNOWPLOW_BASE_URL = process.env.NEXT_PUBLIC_SNOWPLOW_BASE_URL;
+const SNOWPLOW_COLLECTOR_URL = process.env.NEXT_PUBLIC_SNOWPLOW_COLLECTOR_URL;
+const TRACKINGS_ENABLED = process.env.NEXT_PUBLIC_TRACKINGS_ENABLED === 'true';
+const SNOWPLOW_URL = process.env.NEXT_PUBLIC_SNOWPLOW_URL;
+const SNOWPLOW_NAME_TRACKER = process.env.NEXT_PUBLIC_SNOWPLOW_NAME_TRACKER || '';
+const SNOWPLOW_APP_ID = process.env.NEXT_PUBLIC_SNOWPLOW_APP_ID;
+const BUCKET_URL = process.env.NEXT_PUBLIC_BUCKET_URL || '';
+const ALLOW_INSECURE = process.env.NEXT_PUBLIC_ALLOW_INSECURE === 'true';
+const AUTH_PROVIDER = process.env.NEXT_PUBLIC_AUTH_PROVIDER;
+
+/* Server Side Variables */
+const AUTH0_SECRET = process.env.AUTH0_SECRET || '';
+const AUTH0_BASE_URL = process.env.AUTH0_BASE_URL || '';
+const AUTH0_ISSUER_BASE_URL = process.env.AUTH0_ISSUER_BASE_URL || '';
+const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID || '';
+const AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET || '';
+const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE || '';
+const AUTHENTIK_DOMAIN = process.env.AUTHENTIK_DOMAIN || '';
+const AUTHENTIK_CLIENT_ID = process.env.AUTHENTIK_CLIENT_ID || '';
+const AUTHENTIK_CLIENT_SECRET = process.env.AUTHENTIK_CLIENT_SECRET || '';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_PUBLIC_KEY = process.env.STRIPE_PUBLIC_KEY || '';
+const DATA_WEAVER_BASE_URL = process.env.DATA_WEAVER_BASE_URL || '';
+const DATA_WEAVER_API_KEY = process.env.DATA_WEAVER_API_KEY || '';
+const CARTER_AI_BASE_URL = process.env.CARTER_AI_BASE_URL || '';
+const CARTER_AI_API_KEY = process.env.CARTER_AI_API_KEY || '';
+
+const environments: ENVIRONMENT = {
+  API_BASE_URL,
+  APP_BASE_URL,
+  DATA_WEAVER_BASE_URL,
+  DATA_WEAVER_API_KEY,
+  BASE_PATH,
+  BUILD_TAG,
+  APP_ENV,
+  AUTH0_SECRET,
+  AUTH0_BASE_URL,
+  AUTH0_ISSUER_BASE_URL,
+  AUTH0_CLIENT_ID,
+  AUTH0_CLIENT_SECRET,
+  AUTH0_AUDIENCE,
+  SNOWPLOW_COLLECTOR_URL,
+  SNOWPLOW_BASE_URL,
+  TRACKINGS_ENABLED,
+  SNOWPLOW_URL,
+  SNOWPLOW_NAME_TRACKER,
+  SNOWPLOW_APP_ID,
+  ALLOW_INSECURE,
+  AUTH_PROVIDER,
+  BUCKET_URL,
+  CARTER_AI_API_KEY,
+  AUTHENTIK_DOMAIN,
+  AUTHENTIK_CLIENT_ID,
+  AUTHENTIK_CLIENT_SECRET,
+  STRIPE_SECRET_KEY,
+  STRIPE_PUBLIC_KEY,
+  CARTER_AI_BASE_URL
+};
+
+export default environments;

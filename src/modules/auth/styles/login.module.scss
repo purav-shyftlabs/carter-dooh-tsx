@@ -1,0 +1,114 @@
+.pageContainer {
+  display: flex;
+
+  .leftContainer {
+    flex: 1;
+    height: 100vh;
+    background-color: $carter-brand-100;
+    display: flex;
+    flex-direction: column;
+
+    .header {
+      padding: 32px 48px;
+
+      img {
+        height: auto;
+      }
+    }
+
+    .imageContainer {
+      display: flex;
+      flex: 1;
+      // margin-top:-14vh !important;
+      justify-content: center;
+      align-items: center;
+
+      img {
+        width: 90%;
+        height: auto;
+      }
+    }
+  }
+
+  @include mobile {
+    .leftContainer {
+      display: none;
+    }
+  }
+
+  .rightContainer {
+    flex: 1;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: $grey-100;
+
+    .formContainer {
+      display: flex;
+      width: 75%;
+      flex-direction: column;
+      padding: 40px;
+      gap: 48px;
+      background-color: $white-100;
+
+      .formHeader {
+        display: flex;
+        justify-content: center;
+
+        .brandIconTitle {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .welcomeTitle {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+      .inviteLink {
+        color: $carter-links-blue;
+      }
+
+      .formField {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .formFooter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        text-decoration: underline;
+        color: $carter-links-blue;
+        @include mobile {
+          span {
+            text-align: center;
+          }
+        }
+      }
+    }
+
+    @include mobile {
+      .formContainer {
+        width: 100%;
+        background-color: $grey-100;
+      }
+    }
+  }
+}
+.authentik {
+  background-color: #fd4b2d;
+  &:hover {
+    background-color: #fb2602;
+  }
+}
