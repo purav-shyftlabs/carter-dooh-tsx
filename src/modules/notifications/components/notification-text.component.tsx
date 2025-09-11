@@ -42,7 +42,7 @@ const NotificationText: React.FC<Notification> = notification => {
   if (activityType === ActivityType.CopyCampaign) {
     return (
       <p className={styles.container}>
-        <Typography key="start" lineHeight="20px">
+        <Typography fontFamily="Roboto" key="start" lineHeight="20px">
           {notificationText.start}
         </Typography>
         <Button
@@ -53,7 +53,7 @@ const NotificationText: React.FC<Notification> = notification => {
           title={affectedEntity?.name || ''}
           label={truncateString(affectedEntity?.name || '', 20)}
         />
-        <Typography key="mid" lineHeight="20px">
+        <Typography fontFamily="Roboto" key="mid" lineHeight="20px">
           {notificationText.mid}
         </Typography>
         <Button
@@ -64,11 +64,11 @@ const NotificationText: React.FC<Notification> = notification => {
           title={getChangeObjectActivityWithOldValue(changes ?? []).name?.oldValue || ''}
           label={truncateString(getChangeObjectActivityWithOldValue(changes ?? []).name?.oldValue || '', 20)}
         />
-        <Typography key="by-text" lineHeight="20px">
+        <Typography fontFamily="Roboto" key="by-text" lineHeight="20px">
           {' '}
           by{' '}
         </Typography>
-        <Typography key="owner" variant="body-bold" lineHeight="20px">
+        <Typography fontFamily="Roboto" key="owner" variant="body-bold" lineHeight="20px">
           {ownerName}
         </Typography>
       </p>
@@ -77,7 +77,7 @@ const NotificationText: React.FC<Notification> = notification => {
 
   return (
     <p className={styles.container}>
-      <Typography key="start" lineHeight="20px">
+      <Typography fontFamily="Roboto" key="start" lineHeight="20px">
         {notificationText.start}
       </Typography>
       {isRedirectable ? (
@@ -90,20 +90,20 @@ const NotificationText: React.FC<Notification> = notification => {
           title={affectedEntity?.name || ''}
         />
       ) : (
-        <Typography key="entity-name" trimLength={20} lineHeight="20px">
+        <Typography fontFamily="Roboto" key="entity-name" trimLength={20} lineHeight="20px">
           {affectedEntity?.name || ''}
         </Typography>
       )}
-      <Typography key="mid" lineHeight="20px">
+      <Typography fontFamily="Roboto" key="mid" lineHeight="20px">
         {notificationText.mid}
       </Typography>
       {!isOOSActivity({ changes, activityType } as any) && (
-        <Typography key="owner" variant="body-bold">
+        <Typography fontFamily="Roboto" key="owner" variant="body-bold">
           {' '}
           {ownerName}
         </Typography>
       )}
-      <Typography key="end" trimLength={45} lineHeight="20px">
+      <Typography fontFamily="Roboto" key="end" trimLength={45} lineHeight="20px">
         {notificationText.end}
       </Typography>
     </p>

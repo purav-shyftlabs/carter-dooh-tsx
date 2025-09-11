@@ -43,7 +43,7 @@ const NotificationPagination: React.FC<INotificationPagination> = props => {
 
   return (
     <div className={styles.container}>
-      <Typography>
+      <Typography fontFamily="Roboto">
         Page
         <div className={styles.page_selection}>
           <select value={pageNo} onChange={({ target }) => goToPage(Number(target.value))}>

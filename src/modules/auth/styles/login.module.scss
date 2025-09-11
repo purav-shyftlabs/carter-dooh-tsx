@@ -7,9 +7,13 @@
     background-color: $carter-brand-100;
     display: flex;
     flex-direction: column;
+    position: relative;
 
     .header {
-      padding: 32px 48px;
+      position: absolute;
+      top: 32px;
+      left: 48px;
+      z-index: 2;
 
       img {
         height: auto;
@@ -19,9 +23,10 @@
     .imageContainer {
       display: flex;
       flex: 1;
-      // margin-top:-14vh !important;
+      margin-top: -3.5% !important;
       justify-content: center;
       align-items: center;
+      z-index: 1;
 
       img {
         width: 90%;

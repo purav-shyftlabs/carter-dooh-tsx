@@ -98,7 +98,6 @@ const TopBar: React.FC<TopBarProps> = ({ logoSrc }) => {
       
       // Redirect to login
       // wait for 1 second
-      await new Promise(resolve => setTimeout(resolve, 3000));
       router.push(ROUTES.AUTH.LOGIN);
     } catch (error) {
       console.error('Logout error:', error);
@@ -112,7 +111,7 @@ const TopBar: React.FC<TopBarProps> = ({ logoSrc }) => {
       deleteCookie('access_token');
       deleteCookie('user_acl');
       // wait for 1 second
-      router.push(ROUTES.AUTH.LOGIN);
+      // router.push(ROUTES.AUTH.LOGIN);
     }
   };
   return (

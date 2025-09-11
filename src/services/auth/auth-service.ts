@@ -93,7 +93,7 @@ class AuthService {
         headers: { ...utcHeader }
       });
       // wait for 1 second
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       return response.data as { token?: string; refreshToken?: string; user?: unknown } | unknown;
     } catch (error) {
       console.error('Error during login:', error);

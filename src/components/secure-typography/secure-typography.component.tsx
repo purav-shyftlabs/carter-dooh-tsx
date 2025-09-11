@@ -20,7 +20,7 @@ const sanitizeHtml = (str: string): string => {
     .replace(/\t/g, '&#x09;');
 };
 
-interface SecureTypographyProps extends Omit<TypographyProps, 'children'> {
+interface SecureTypographyProps extends Omit<Typography fontFamily="Roboto"Props, 'children'> {
   children: string | number | React.ReactNode;
   sanitizeType?: 'text' | 'number' | 'url' | 'filename';
 }

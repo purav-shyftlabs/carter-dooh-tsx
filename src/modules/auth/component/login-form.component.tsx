@@ -75,7 +75,7 @@ const LoginForm = () => {
       
       
       <div className={styles.formField}>
-        <Typography variant="body-regular">Email Address</Typography>
+        <Typography fontFamily="Roboto" variant="body-regular">Email Address</Typography>
         <CarterInput
           type="email"
           placeholder="Enter your Email"
@@ -89,7 +89,7 @@ const LoginForm = () => {
       </div>
       <div className={styles.formField}>
         <div className={styles.passwordLabel}>
-          <Typography variant="body-regular">Password</Typography>
+          <Typography fontFamily="Roboto" variant="body-regular">Password</Typography>
         </div>
         <CarterInput
           placeholder="Enter your password"
@@ -118,7 +118,7 @@ const LoginForm = () => {
             onChange={() => setFieldValue('rememberMe', !values.rememberMe)}
           />
           <Link href={ROUTES.AUTH.FORGOT_PASSWORD} color={carterColors['links-blue']}>
-            <Typography color={carterColors['links-blue']} variant="subtitle-medium" data-testid="login-forgot-password-link">
+            <Typography fontFamily="Roboto" color={carterColors['links-blue']}  data-testid="login-forgot-password-link">
               Forgot Password?
             </Typography>
           </Link>

@@ -383,7 +383,7 @@
 }
 
 .header-title {
-  font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+  font-family: 'Roboto', sans-serif; // equivalent to font-Roboto
   font-size: 0.875rem; // equivalent to text-sm
   font-weight: 500; // equivalent to font-medium
   color: $text-color-primary;
@@ -440,7 +440,7 @@
 
   .data-points-text {
     font-size: 0.875rem; // equivalent to text-sm
-    font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+    font-family: 'Roboto', sans-serif; // equivalent to font-Roboto
     font-weight: 400; // equivalent to font-normal
     display: flex;
     align-items: center;
@@ -476,13 +476,13 @@
 
   .data-points-text {
     .data-count {
-      font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+      font-family: 'Roboto', sans-serif; // equivalent to font-Roboto
       font-size: 0.75rem; // equivalent to text-xs
       font-weight: 500; // equivalent to font-medium
     }
 
     .data-percentage {
-      font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+      font-family: 'Roboto', sans-serif; // equivalent to font-Roboto
       font-size: 0.75rem; // equivalent to text-xs
     }
 
@@ -502,7 +502,7 @@
   .groupBy-text {
     font-size: 0.875rem; // equivalent to text-sm
     color: $text-color-primary;
-    font-family: 'Roboto', sans-serif; // equivalent to font-roboto
+    font-family: 'Roboto', sans-serif; // equivalent to font-Roboto
     font-weight: 400; // equivalent to font-normal
     display: flex;
     align-items: center;
@@ -668,7 +668,7 @@
   z-index: 99;
 }
 .dw_table_head {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-size: 13px;
   font-weight: 500; /* Equivalent to font-medium */
   line-height: 1.25rem; /* 1.25 * 13px = 16.25px ~ 1.25rem */

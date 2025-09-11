@@ -33,7 +33,7 @@ const MoreMenu: React.FC<MoreMenuProps> = props => {
   };
 
   if (!options.length) {
-    return <Typography>{fallback}</Typography>;
+    return <Typography fontFamily="Roboto">{fallback}</Typography>;
   }
 
   return (
@@ -64,7 +64,7 @@ const MoreMenu: React.FC<MoreMenuProps> = props => {
             onClick={event => handleOptionSelect(option, event)} // Call handleOptionSelect with the selected option
             selected={option.label === selectedOption} // Add selected prop to highlight the selected option
           >
-            {option.apply ? option.apply(option.label) : <Typography>{option.label}</Typography>}
+            {option.apply ? option.apply(option.label) : <Typography fontFamily="Roboto">{option.label}</Typography>}
             {option.label === selectedOption && option.showCheckmark && (
               <CheckIcon className={optionSelectStyles.checkmarkIcon} />
             )}

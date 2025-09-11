@@ -5,7 +5,7 @@ import { Menu } from '@/lib/material-ui';
 import useUser from '@/contexts/user-data/user-data.hook';
 
 const ProfileSection = styled.div`
-  font-family: 'Inter', sans-serif;
+  font-family: 'Roboto', sans-serif;
   display: flex;
   gap: 8px;
   align-items: center;

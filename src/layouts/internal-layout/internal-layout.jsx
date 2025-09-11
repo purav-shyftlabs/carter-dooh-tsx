@@ -43,7 +43,7 @@ const InternalLayout = ({ children, head = {} }) => {
           <title>Loading...</title>
         </Head>
         <div className={styles.loadingContent}>
-          <Typography variant="h1-bold">Loading...</Typography>
+          <Typography fontFamily="Roboto" variant="h1-bold">Loading...</Typography>
         </div>
       </div>
     );

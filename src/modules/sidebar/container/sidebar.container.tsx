@@ -224,7 +224,7 @@ const SidebarComponent: React.FC = () => {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <Typography variant="body-regular">{item.label}</Typography>
+                <Typography fontFamily="Roboto" variant="body-regular">{item.label}</Typography>
               </button>
             ))}
         </div>

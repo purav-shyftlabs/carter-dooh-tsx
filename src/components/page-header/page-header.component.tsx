@@ -23,12 +23,12 @@ const PageHeaderLink = ({ label, url }: { label: string; url?: string }) => {
     <Tooltip title={label.length > 30 ? label : undefined}>
       {url ? (
         <Link href={url}>
-          <Typography color={carterColors['links-blue']} variant="caption-medium">
+          <Typography fontFamily="Roboto" color={carterColors['links-blue']} variant="caption-medium">
             {truncateString(label)}
           </Typography>
         </Link>
       ) : (
-        <Typography color={carterColors['text-800']} variant="caption-regular">
+        <Typography fontFamily="Roboto" color={carterColors['text-800']} variant="caption-regular">
           {truncateString(label)}
         </Typography>
       )}
@@ -65,7 +65,7 @@ const PageHeader: React.FC<PageHeaderProps> = props => {
           {isLoading ? (
             <Skeleton width={150} />
           ) : (
-            <Typography variant="body-large-semibold" color={carterColors['text-900']} data-testid={testId}>
+            <Typography fontFamily="Roboto" variant="body-large-semibold" color={carterColors['text-900']} data-testid={testId}>
               {title}
             </Typography>
           )}

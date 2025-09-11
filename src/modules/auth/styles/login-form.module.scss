@@ -9,16 +9,38 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    
+    // Target CarterInput components
+    :global(.MuiOutlinedInput-root) {
+      transition: all 0.3s ease;
+      
+      &:focus-within {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 3px rgba(18, 31, 105, 0.1);
+      }
+    }
 
-    .passwordLabel {
+    .passwordLabel {  
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .eye_icon {
-      color: $grey-1200;
-      &:hover {
+    // Target the eye icon within CarterInput
+    :global(.MuiInputAdornment-root) {
+      svg {
+        color: $grey-1200;
+        transition: all 0.3s ease;
+        transform: scale(1);
         cursor: pointer;
+        
+        &:hover {
+          color: $brand-600;
+          transform: scale(1.1);
+        }
+        
+        &:active {
+          transform: scale(0.95);
+        }
       }
     }
 
@@ -29,6 +51,17 @@
   }
   .submit_button {
     margin-top: 28px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+    
     p {
       color: $white-100;
       @include typography('md', 'medium');
@@ -37,5 +70,25 @@
 
   .auth_form {
     padding: 56px 50px;
+  }
+  
+  .errorMessage {
+    padding: 12px 16px;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

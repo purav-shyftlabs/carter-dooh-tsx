@@ -51,10 +51,10 @@ const ForgotPasswordForm = () => {
         {!isEmailSent ? (
           <div className={styles.body}>
             <div className={styles.header}>
-              <Typography variant="h2-bold" color={carterColors['brand-900']}>
+              <Typography fontFamily="Roboto" variant="h2-bold" color={carterColors['brand-900']}>
                 Forgot Password?
               </Typography>
-              <Typography variant="body-medium" color={carterColors['text-600']}>
+              <Typography fontFamily="Roboto" variant="body-medium" color={carterColors['text-600']}>
                 Enter your email to reset password
               </Typography>
             </div>
@@ -79,20 +79,20 @@ const ForgotPasswordForm = () => {
                 disabled={!(!errors.username && values.username.length > 0)}
               />
               <Link href={ROUTES.AUTH.LOGIN}>
-                <Typography variant="body-large-semibold" color={carterColors['brand-600']}>
+                <Typography fontFamily="Roboto" variant="body-large-semibold" color={carterColors['brand-600']}>
                   Back to log in
                 </Typography>
               </Link>
             </div>
             <div className={styles.formFooter}>
               <Link href={client?.website ?? ''} color={carterColors['links-blue']}>
-                <Typography color={carterColors['links-blue']}>Visit Website</Typography>
+                <Typography fontFamily="Roboto" color={carterColors['links-blue']}>Visit Website</Typography>
               </Link>
               <Link href={client?.termsAndCondition ?? ''} color={carterColors['links-blue']}>
-                <Typography color={carterColors['links-blue']}>Terms & Conditions</Typography>
+                <Typography fontFamily="Roboto" color={carterColors['links-blue']}>Terms & Conditions</Typography>
               </Link>
               <Link href={client?.privacyPolicy ?? ''} color={carterColors['links-blue']}>
-                <Typography color={carterColors['links-blue']}>Privacy Policy</Typography>
+                <Typography fontFamily="Roboto" color={carterColors['links-blue']}>Privacy Policy</Typography>
               </Link>
             </div>
           </div>
@@ -100,31 +100,31 @@ const ForgotPasswordForm = () => {
           <div className={styles.body}>
             <Image src={EmailSentIcon} alt="email-sent-icon" />
             <div className={styles.notice_field}>
-              <Typography variant="h1-bold" color={carterColors['brand-900']}>
+              <Typography fontFamily="Roboto" variant="h1-bold" color={carterColors['brand-900']}>
                 Please verify your email
               </Typography>
-              <Typography>{`We've sent a reset link to ${getCodedEmail()}`}</Typography>
+              <Typography fontFamily="Roboto">{`We've sent a reset link to ${getCodedEmail()}`}</Typography>
             </div>
             <div className={styles.notice_field}>
               <Button className={styles.submit_button} label="Resend Email" variant="primary" type="submit" />
-              <Typography variant="caption-regular">
+              <Typography fontFamily="Roboto" variant="caption-regular">
                 If in case you don&apos;t see in your inbox, check your spam or junk folder
               </Typography>
             </div>
             <Link href={ROUTES.AUTH.LOGIN}>
-              <Typography variant="body-large-semibold" color={carterColors['brand-600']}>
+              <Typography fontFamily="Roboto" variant="body-large-semibold" color={carterColors['brand-600']}>
                 Back to log in
               </Typography>
             </Link>
             <div className={styles.formFooter}>
               <Link href={client?.website ?? ''} color={carterColors['links-blue']}>
-                <Typography color={carterColors['links-blue']}>Visit Website</Typography>
+                <Typography fontFamily="Roboto" color={carterColors['links-blue']}>Visit Website</Typography>
               </Link>
               <Link href={client?.termsAndCondition ?? ''} color={carterColors['links-blue']}>
-                <Typography color={carterColors['links-blue']}>Terms & Conditions</Typography>
+                <Typography fontFamily="Roboto" color={carterColors['links-blue']}>Terms & Conditions</Typography>
               </Link>
               <Link href={client?.privacyPolicy ?? ''} color={carterColors['links-blue']}>
-                <Typography color={carterColors['links-blue']}>Privacy Policy</Typography>
+                <Typography fontFamily="Roboto" color={carterColors['links-blue']}>Privacy Policy</Typography>
               </Link>
             </div>
           </div>

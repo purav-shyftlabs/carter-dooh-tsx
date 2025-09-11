@@ -14,8 +14,8 @@ const NoDataPlaceholder: React.FC<INoDataPlaceholder> = props => {
   return (
     <div className={`${styles.empty_creative_container} ${className}`}>
       <Image src={EmptyListImage} alt="Empty List Image" />
-      <Typography variant="body-semibold">{title} </Typography>
-      <Typography variant="caption-regular">{description}</Typography>
+      <Typography fontFamily="Roboto" variant="body-semibold">{title} </Typography>
+      <Typography fontFamily="Roboto" variant="caption-regular">{description}</Typography>
     </div>
   );
 };

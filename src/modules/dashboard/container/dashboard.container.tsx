@@ -7,7 +7,7 @@ const Dashboard = () => {
     const { userDisplayName, userEmail, userRole, isAdmin } = useUserData();
 
     return (
-        <Typography variant="h1-bold" color={carterColors['brand-900']}>
+        <Typography fontFamily="Roboto" variant="h1-bold" color={carterColors['brand-900']}>
             Dashboard
         </Typography>
     );
