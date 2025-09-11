@@ -73,13 +73,13 @@ const SidebarSection = ({
                     label: item.label,
                     icon: item.icon,
                     link: item.link ?? '',
-                    subCategories: (item.subCategories ?? []).map((s) => ({
-                      id: s.id,
-                      label: s.label,
-                      icon: undefined,
-                      link: s.link ?? '',
-                      show: s.show ?? true,
-                    })),
+                    // subCategories: (item.subCategories ?? []).map((s) => ({
+                    //   id: s.id,
+                    //   label: s.label,
+                    //   icon: undefined,
+                    //   link: s.link ?? '',
+                    //   show: s.show ?? true,
+                    // })),
                     show: item.show ?? true,
                   }}
                   sidebarCollapsed={isSidebarCollapsed}

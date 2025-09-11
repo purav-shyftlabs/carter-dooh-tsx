@@ -68,7 +68,7 @@ const SidebarComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    MenuItems.forEach((item: menuItem) => {
+    (MenuItems as menuItem[]).forEach((item: menuItem) => {
       if (item.subCategories?.some((subItem: SubCategory) => (subItem.link ? isActiveRoute(router, subItem.link) : false))) {
         setExpandedItems(prev => new Set(prev).add(item.id));
         return;

@@ -10,6 +10,9 @@ const ROUTES = {
   BILLBOARD: '/billboard',
   AUTH: AUTH_ROUTES,
   INSIGHTS: '/insights',
+  ACCOUNT: {
+    BASE: '/account',
+  },
 };
 
 export default ROUTES;

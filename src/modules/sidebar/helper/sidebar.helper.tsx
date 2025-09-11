@@ -1,5 +1,5 @@
 import { FileCheck } from 'lucide-react';
-import { HomeIcon } from '@/lib/icons';
+import { HomeIcon, SettingsIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
 import { NextRouter } from 'next/router';
 
@@ -24,6 +24,16 @@ export const useSidebarMenuList = () => {
       show: true,
       testId: 'billboard',
       assist: 'billboard',
+    },
+    {
+      id: 3,
+      label: 'Settings',
+      icon: <SettingsIcon width={16} height={16} />,
+      link: ROUTES.ACCOUNT.BASE,
+      show:  true,
+      testId: 'settings',
+      assist: 'settings',
+      position: 'bottom',
     },
   ];
 

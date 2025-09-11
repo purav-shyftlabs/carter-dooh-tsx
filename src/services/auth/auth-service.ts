@@ -101,6 +101,21 @@ class AuthService {
     }
   }
 
+  // Login using access token
+  async accessTokenLogin(accessToken: string): Promise<{ token?: string; refreshToken?: string; user?: unknown } | unknown> {
+    if (!accessToken) {
+      throw new Error('Access token is required');
+    }
+    try {
+      const response = await api.post('/api/user/access-token-login', { accessToken }, { headers: { ...utcHeader } });
+      return response.data as { token?: string; refreshToken?: string; user?: unknown } | unknown;
+    } catch (error) {
+      console.error('Error during access token login:', error);
+      const axiosErr = error as { response?: { data?: unknown } };
+      throw axiosErr.response?.data || error;
+    }
+  }
+
   // Register user
   async register(userData: { email: string; password: string; firstName: string; lastName: string; [key: string]: unknown }): Promise<{ user: unknown; token: string; refreshToken: string }> {
     const { email, password, firstName, lastName, ...otherData } = userData;
@@ -226,7 +241,7 @@ class AuthService {
     }
 
     try {
-      const response = await api.post('/public/user/reset-password', {
+      const response = await api.post('/api/user/reset-password', {
         token: token,
         newPassword: newPassword
       }, {
@@ -236,6 +251,24 @@ class AuthService {
       return response.data as unknown;
     } catch (error) {
       console.error('Error during reset password:', error);
+      const axiosErr = error as { response?: { data?: unknown } };
+      throw axiosErr.response?.data || error;
+    }
+  }
+
+  // Validate reset password token
+  async validateResetPasswordToken(token: string): Promise<{ valid: boolean } | unknown> {
+    if (!token) {
+      throw new Error('Token is required');
+    }
+    try {
+      const response = await api.get('/api/user/validate-reset-password-token', {
+        params: { token },
+        headers: { ...utcHeader },
+      });
+      return response.data as { valid: boolean } | unknown;
+    } catch (error) {
+      console.error('Error during token validation:', error);
       const axiosErr = error as { response?: { data?: unknown } };
       throw axiosErr.response?.data || error;
     }
