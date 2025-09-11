@@ -15,7 +15,7 @@ const NotFoundPage: NextPageWithLayout = () => {
       />
       <div className={styles.card}>
         <p className={styles.title}>404 Not Found</p>
-        <p className={styles.subtitle}>Oops! The page you're looking for does not exist.</p>
+        <p className={styles.subtitle}>Oops! The page you&apos;re looking for does not exist.</p>
         <p className={styles.reason}>The page may have been moved, deleted, or the URL may be incorrect.</p>
 
         <p className={styles.suggestionsTitle}>Possible reasons:</p>

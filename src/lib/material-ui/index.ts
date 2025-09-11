@@ -87,4 +87,4 @@ export type {
   TooltipProps,
 };
 
-export const isMobileView = () => useMediaQuery(`(min-width: 320px) and (max-width: 767px)`);
+export const useIsMobileView = () => useMediaQuery(`(min-width: 320px) and (max-width: 767px)`);

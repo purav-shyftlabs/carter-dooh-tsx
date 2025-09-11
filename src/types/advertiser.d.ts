@@ -12,7 +12,7 @@ export interface AdvertiserAdSlotFormDropDownItem {
 export interface IAdvertiserDropDown {
   advertisers?: string[];
   handleAdvertiserSelect: (advertisers: string[]) => void;
-  setMappedAdvertiser?: any;
+  setMappedAdvertiser?: (advertiser: string | null) => void;
 }
 
 export interface IAdvertisersDrawerProps {

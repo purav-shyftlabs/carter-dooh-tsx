@@ -1,15 +1,15 @@
 import { Tooltip } from 'shyftlabs-dsl';
-import { menuItem } from '../types/typings';
+import { menuItem, SubCategories } from '../types/typings';
 import SidebarItem from './sidebar-item.component';
 
 interface SidebarSectionProps {
   menuItems: menuItem[];
-  getActiveSubItemIndex: (subCategories: any[] | undefined) => number;
+  getActiveSubItemIndex: (subCategories: Array<{ link?: string }> | undefined) => number;
   expandedItems: Set<number>;
   isSidebarCollapsed: boolean;
   isActive: (link: string) => boolean;
   toggleSubItems: (id: number) => void;
-  handleItemClick: (item: any) => void;
+  handleItemClick: (item: menuItem | { id: number; link: string }) => void;
   isInsightActive: (id: string) => boolean;
   handleInsightSubItemClick: (id: number) => void;
   classNames?: string;
@@ -29,14 +29,16 @@ const SidebarSection = ({
 }: SidebarSectionProps) => {
   // Sort menu items: top items first, then bottom items
   const sortedMenuItems = [...menuItems].sort((a, b) => {
-    if (a.position === 'bottom' && b.position !== 'bottom') return 1;
-    if (a.position !== 'bottom' && b.position === 'bottom') return -1;
+    const aIsBottom = a.position === 'bottom';
+    const bIsBottom = b.position === 'bottom';
+    if (aIsBottom && !bIsBottom) return 1;
+    if (!aIsBottom && bIsBottom) return -1;
     return 0;
   });
 
   return (
     <div className={classNames}>
-      {sortedMenuItems.map((item: any, index) => {
+      {sortedMenuItems.map((item, index) => {
         const activeSubItemIndex = getActiveSubItemIndex(item.subCategories);
         const isItemExpanded = expandedItems.has(item.id);
         if (item.show === false) return null;
@@ -66,10 +68,23 @@ const SidebarSection = ({
             >
               <div>
                 <SidebarItem
-                  item={item}
+                  item={{
+                    id: item.id,
+                    label: item.label,
+                    icon: item.icon,
+                    link: item.link ?? '',
+                    subCategories: (item.subCategories ?? []).map((s) => ({
+                      id: s.id,
+                      label: s.label,
+                      icon: undefined,
+                      link: s.link ?? '',
+                      show: s.show ?? true,
+                    })),
+                    show: item.show ?? true,
+                  }}
                   sidebarCollapsed={isSidebarCollapsed}
                   showSubItems={isItemExpanded}
-                  isActive={isActive(item.link) || activeSubItemIndex !== -1}
+                  isActive={Boolean(isActive(item.link ?? '')) || activeSubItemIndex !== -1}
                   onToggleSubItems={() => toggleSubItems(item.id)}
                   onItemClick={() => handleItemClick(item)}
                   testId={item?.testId}
@@ -79,14 +94,20 @@ const SidebarSection = ({
             {!isSidebarCollapsed &&
               isItemExpanded &&
               item.subCategories &&
-              item.subCategories.map((subItem: any, index: number) => {
+              item.subCategories.map((subItem: SubCategories, index: number) => {
                 if (subItem.show === false) return null;
                 if (item.link === '/insights')
                   return (
                     <SidebarItem
                       key={subItem.id}
-                      item={subItem}
-                      isActive={isInsightActive(subItem.id)}
+                      item={{
+                        id: subItem.id,
+                        label: subItem.label,
+                        icon: undefined,
+                        link: String(subItem.id),
+                        show: subItem.show ?? true,
+                      }}
+                      isActive={isInsightActive(String(subItem.id))}
                       isSubItem={true}
                       sidebarCollapsed={isSidebarCollapsed}
                       onItemClick={() => handleInsightSubItemClick(subItem.id)}
@@ -98,11 +119,17 @@ const SidebarSection = ({
                 return (
                   <SidebarItem
                     key={subItem.id}
-                    item={subItem}
-                    isActive={isActive(subItem.link)}
+                    item={{
+                      id: subItem.id,
+                      label: subItem.label,
+                      icon: undefined,
+                      link: subItem.link ?? '',
+                      show: subItem.show ?? true,
+                    }}
+                    isActive={Boolean(isActive(subItem.link ?? ''))}
                     isSubItem={true}
                     sidebarCollapsed={isSidebarCollapsed}
-                    onItemClick={() => handleItemClick(subItem)}
+                    onItemClick={() => handleItemClick({ id: subItem.id, link: subItem.link ?? '' })}
                     activeSubItemIndex={activeSubItemIndex}
                     index={index}
                     testId={subItem.testId}

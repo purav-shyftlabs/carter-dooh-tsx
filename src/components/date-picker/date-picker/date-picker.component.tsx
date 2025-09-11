@@ -12,7 +12,7 @@ interface IDatePicker<T> {
 
 const DatePicker: React.FC<IDatePicker<DateTimeType>> = props => {
   const { calendarProps, withTimezone, onChange, value: propValue } = props;
-  const { timeZone } = { timeZone: 'EST' } 
+  const { timeZone } = { timeZone: 'EST' };
 
   const value = withTimezone ? DateTimeParser.tz(propValue, timeZone) : DateTimeParser(propValue);
 
@@ -34,7 +34,7 @@ const DatePicker: React.FC<IDatePicker<DateTimeType>> = props => {
     <LocalizationProvider dateAdapter={AdapterMoment} dateLibInstance={DateTimeParser}>
       <DateTimePicker
         value={value}
-        onChange={onChange as any}
+        onChange={(newValue) => onChange(newValue as DateTimeType)}
         sx={{
           '& .MuiInputBase-root': {
             height: '40px',

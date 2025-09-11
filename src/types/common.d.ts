@@ -4,21 +4,21 @@ import { SnackbarProps } from 'shyftlabs-dsl';
 
 export type REDUX_ACTION = {
   type: string;
-  payload?: any;
+  payload?: unknown;
 };
-export type Response<T = any> = {
+export type Response<T = unknown> = {
   data: T;
   status: number;
 };
 
-export type PaginatedResponse<T = any> = {
+export type PaginatedResponse<T = unknown> = {
   data: T;
   total: number;
   page: number;
   size: number;
 };
 
-export type SortByFilters<T = any> = {
+export type SortByFilters<T = unknown> = {
   [key in keyof T]: '-' | '+';
 };
 
@@ -45,8 +45,8 @@ export type PaginationProps = {
 
 export type PageType = ReactElement | ReactElement[];
 
-export type NextPageWithLayout<P = {}> = NextPage<P> & {
-  getLayout: (page: PageType) => ReactNode;
+export type NextPageWithLayout<P = object> = NextPage<P> & {
+  getLayout: (page: PageType) => ReactElement;
 };
 
 export type SelectOption<T> = {

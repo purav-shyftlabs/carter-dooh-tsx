@@ -29,21 +29,28 @@ const authReducer = (state: IAuthState = AUTH_INITIAL_STATE, action: REDUX_ACTIO
     case types.AUTH_LOGIN_REQUEST:
       return { ...state, isLoading: true, error: null };
     case types.AUTH_LOGIN_SUCCESS:
-      return {
-        ...state,
-        isLoading: false,
-        isAuthenticated: true,
-        user: action.payload.user ?? state.user,
-        token: action.payload.token ?? state.token,
-        refreshToken: action.payload.refreshToken ?? state.refreshToken,
-        error: null,
-      };
+      {
+        const payload = (action.payload ?? {}) as {
+          user?: AuthUser | null;
+          token?: string | null;
+          refreshToken?: string | null;
+        };
+        return {
+          ...state,
+          isLoading: false,
+          isAuthenticated: true,
+          user: payload.user ?? state.user,
+          token: payload.token ?? state.token,
+          refreshToken: payload.refreshToken ?? state.refreshToken,
+          error: null,
+        };
+      }
     case types.AUTH_LOGIN_FAILURE:
-      return { ...state, isLoading: false, error: action.payload };
+      return { ...state, isLoading: false, error: String(action.payload ?? 'Login failed') };
     case types.AUTH_LOGOUT:
       return { ...AUTH_INITIAL_STATE };
     case types.AUTH_SET_USER:
-      return { ...state, user: action.payload };
+      return { ...state, user: (action.payload ?? null) as AuthUser | null };
     case types.AUTH_CLEAR_ERROR:
       return { ...state, error: null };
     default:

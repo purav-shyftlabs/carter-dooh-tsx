@@ -8,11 +8,11 @@ import reducers, { AUTH_INITIAL_STATE, IRootState } from './reducers';
 let store: Store<IRootState, REDUX_ACTION> | undefined;
 
 export function initStore(initialState: IRootState) {
-  return createStore(reducers, initialState as any, composeWithDevTools(applyMiddleware(thunkMiddleware)));
+  return createStore(reducers, initialState, composeWithDevTools(applyMiddleware(thunkMiddleware)));
 }
 
 export const initializeStore = (preloadedState?: IRootState) => {
-  let _store = store ?? initStore(preloadedState as any);
+  let _store = store ?? initStore(preloadedState ?? ({} as IRootState));
 
   // After navigating to a page with an initial Redux state, merge that state
   // with the current state in the store, and create a new store

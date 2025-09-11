@@ -119,11 +119,13 @@ export const roundToUnit = (
   return momentDate.format(format);
 };
 
-export const truncateString = (inputString: any, truncateTo: number = 30) => {
+export const truncateString = (
+  inputString: string | null | undefined,
+  truncateTo: number = 30,
+): string | null | undefined => {
   if (inputString === undefined || inputString === null) return inputString;
-  if (inputString?.length <= truncateTo) {
+  if (inputString.length <= truncateTo) {
     return inputString;
-  } else {
-    return `${inputString?.slice(0, truncateTo)}...`;
   }
+  return `${inputString.slice(0, truncateTo)}...`;
 };

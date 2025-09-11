@@ -10,12 +10,21 @@ export const login = (credentials: { email: string; password: string }) => async
   try {
     dispatch({ type: types.AUTH_LOGIN_REQUEST });
     const result = await authService.login(credentials);
-    const envelope = (result && typeof result === 'object' && 'data' in result) ? (result as any).data : result;
+    const envelope: unknown = (result && typeof result === 'object' && 'data' in (result as Record<string, unknown>))
+      ? (result as Record<string, unknown>)['data']
+      : result;
     const payload = {
-      user: envelope?.user ?? (result as any)?.user ?? null,
-      token: envelope?.token ?? (result as any)?.token ?? envelope?.accessToken ?? null,
-      refreshToken: envelope?.refreshToken ?? (result as any)?.refreshToken ?? null,
-    } as { user: any; token: string | null; refreshToken: string | null };
+      user: (envelope as Record<string, unknown>)?.user ?? (result as Record<string, unknown>)?.user ?? null,
+      token:
+        (envelope as Record<string, unknown>)?.token ??
+        (result as Record<string, unknown>)?.token ??
+        (envelope as Record<string, unknown>)?.accessToken ??
+        null,
+      refreshToken:
+        (envelope as Record<string, unknown>)?.refreshToken ??
+        (result as Record<string, unknown>)?.refreshToken ??
+        null,
+    } as { user: unknown; token: string | null; refreshToken: string | null };
     if (typeof window !== 'undefined') {
       payload.token && localStorage.setItem('token', payload.token);
       payload.refreshToken && localStorage.setItem('refreshToken', payload.refreshToken);
@@ -23,10 +32,10 @@ export const login = (credentials: { email: string; password: string }) => async
     }
     dispatch({ type: types.AUTH_LOGIN_SUCCESS, payload });
     return payload;
-  } catch (err: any) {
-    const message = err?.message || 'Login failed';
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Login failed';
     dispatch({ type: types.AUTH_LOGIN_FAILURE, payload: message });
-    throw err;
+    return Promise.reject(err);
   }
 };
 

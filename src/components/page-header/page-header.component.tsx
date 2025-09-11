@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { Maybe } from 'types';
+import { Maybe } from '@/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { carterColors, Tooltip, Typography } from 'shyftlabs-dsl';
 import Link from 'next/link';
@@ -76,8 +76,12 @@ const PageHeader: React.FC<PageHeaderProps> = props => {
               separator={<ChevronRight height={16} width={16} color={carterColors['text-500']} />}
               className={`${styles.breadcrumbs_container}`}
             >
-              {breadcrumbs.map(item =>
-                isLoading ? <Skeleton width={50} /> : <PageHeaderLink label={item.label as string} url={item.url} />,
+              {breadcrumbs.map((item, index) =>
+                isLoading ? (
+                  <Skeleton key={`breadcrumb-skel-${index}`} width={50} />
+                ) : (
+                  <PageHeaderLink key={`breadcrumb-${index}-${item.label}`} label={item.label as string} url={item.url} />
+                ),
               )}
             </Breadcrumbs>
           )}

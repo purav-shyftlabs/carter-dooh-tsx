@@ -13,7 +13,7 @@ class AuthService {
   
 
   // Safely parse JWT token
-  parseJWT(token: string): any {
+  parseJWT(token: string): Record<string, unknown> | null {
     try {
       if (!token || typeof token !== 'string') {
         return null;
@@ -50,7 +50,10 @@ class AuthService {
   }
 
   // Make API request with error handling
-  async makeRequest(url: string, options: { method?: string; headers?: Record<string, string>; body?: BodyInit | null; includeAuth?: boolean } = {}): Promise<any> {
+  async makeRequest(
+    url: string,
+    options: { method?: string; headers?: Record<string, string>; body?: BodyInit | null; includeAuth?: boolean } = {},
+  ): Promise<unknown> {
     try {
       const response = await fetch(url, {
         ...options,
@@ -63,18 +66,18 @@ class AuthService {
       // Handle different response statuses
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error((errorData as { message?: string }).message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       return await response.json();
-    } catch (error: any) {
+    } catch (error) {
       console.error('API Request Error:', error);
       throw error;
     }
   }
 
   // Login user
-  async login(credentials: { email: string; password: string }): Promise<any> {
+  async login(credentials: { email: string; password: string }): Promise<{ token?: string; refreshToken?: string; user?: unknown } | unknown> {
     const { email, password } = credentials;
     console.log('email', email);
     console.log('password', password);
@@ -90,15 +93,16 @@ class AuthService {
         headers: { ...utcHeader }
       });
       console.log(response.data);
-      return response.data;
-    } catch (error: any) {
+      return response.data as { token?: string; refreshToken?: string; user?: unknown } | unknown;
+    } catch (error) {
       console.error('Error during login:', error);
-      throw error.response?.data || error;
+      const axiosErr = error as { response?: { data?: unknown } };
+      throw axiosErr.response?.data || error;
     }
   }
 
   // Register user
-  async register(userData: { email: string; password: string; firstName: string; lastName: string; [key: string]: any }): Promise<{ user: any; token: string; refreshToken: string }> {
+  async register(userData: { email: string; password: string; firstName: string; lastName: string; [key: string]: unknown }): Promise<{ user: unknown; token: string; refreshToken: string }> {
     const { email, password, firstName, lastName, ...otherData } = userData;
     
     if (!email || !password || !firstName || !lastName) {
@@ -117,9 +121,9 @@ class AuthService {
     });
 
     return {
-      user: response.user,
-      token: response.token,
-      refreshToken: response.refreshToken,
+      user: (response as Record<string, unknown>).user as unknown,
+      token: (response as Record<string, unknown>).token as string,
+      refreshToken: (response as Record<string, unknown>).refreshToken as string,
     };
   }
 
@@ -130,7 +134,7 @@ class AuthService {
         method: 'POST',
         includeAuth: true,
       });
-    } catch (error: any) {
+    } catch (error) {
       // Even if logout fails on server, we should clear local data
       console.warn('Logout request failed:', error);
     }
@@ -153,34 +157,34 @@ class AuthService {
     });
 
     return {
-      token: response.token,
-      refreshToken: response.refreshToken,
+      token: (response as Record<string, unknown>).token as string,
+      refreshToken: (response as Record<string, unknown>).refreshToken as string,
     };
   }
 
   // Get current user profile
-  async getCurrentUser(): Promise<any> {
+  async getCurrentUser(): Promise<unknown> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/me`, {
       method: 'GET',
       includeAuth: true,
     });
 
-    return response.user;
+    return (response as Record<string, unknown>).user;
   }
 
   // Update user profile
-  async updateProfile(userData: Record<string, any>): Promise<any> {
+  async updateProfile(userData: Record<string, unknown>): Promise<unknown> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/profile`, {
       method: 'PUT',
       includeAuth: true,
       body: JSON.stringify(userData),
     });
 
-    return response.user;
+    return (response as Record<string, unknown>).user;
   }
 
   // Change password
-  async changePassword(currentPassword: string, newPassword: string): Promise<any> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<unknown> {
     if (!currentPassword || !newPassword) {
       throw new Error('Current password and new password are required');
     }
@@ -191,11 +195,11 @@ class AuthService {
       body: JSON.stringify({ currentPassword, newPassword }),
     });
 
-    return response;
+    return response as unknown;
   }
 
   // Forgot password
-  async forgotPassword(email: string): Promise<any> {
+  async forgotPassword(email: string): Promise<unknown> {
     if (!email) {
       throw new Error('Email is required');
     }
@@ -207,15 +211,16 @@ class AuthService {
         headers: { ...utcHeader }
       });
       console.log(response.data);
-      return response.data;
-    } catch (error: any) {
+      return response.data as unknown;
+    } catch (error) {
       console.error('Error during forgot password:', error);
-      throw error.response?.data || error;
+      const axiosErr = error as { response?: { data?: unknown } };
+      throw axiosErr.response?.data || error;
     }
   }
 
   // Reset password
-  async resetPassword(token: string, newPassword: string): Promise<any> {
+  async resetPassword(token: string, newPassword: string): Promise<unknown> {
     if (!token || !newPassword) {
       throw new Error('Token and new password are required');
     }
@@ -228,15 +233,16 @@ class AuthService {
         headers: { ...utcHeader }
       });
       console.log(response.data);
-      return response.data;
-    } catch (error: any) {
+      return response.data as unknown;
+    } catch (error) {
       console.error('Error during reset password:', error);
-      throw error.response?.data || error;
+      const axiosErr = error as { response?: { data?: unknown } };
+      throw axiosErr.response?.data || error;
     }
   }
 
   // Verify email
-  async verifyEmail(token: string): Promise<any> {
+  async verifyEmail(token: string): Promise<unknown> {
     if (!token) {
       throw new Error('Verification token is required');
     }
@@ -246,21 +252,21 @@ class AuthService {
       body: JSON.stringify({ token }),
     });
 
-    return response;
+    return response as unknown;
   }
 
   // Resend verification email
-  async resendVerificationEmail(): Promise<any> {
+  async resendVerificationEmail(): Promise<unknown> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/resend-verification`, {
       method: 'POST',
       includeAuth: true,
     });
 
-    return response;
+    return response as unknown;
   }
 
   // Delete account
-  async deleteAccount(password: string): Promise<any> {
+  async deleteAccount(password: string): Promise<unknown> {
     if (!password) {
       throw new Error('Password is required to delete account');
     }
@@ -271,7 +277,7 @@ class AuthService {
       body: JSON.stringify({ password }),
     });
 
-    return response;
+    return response as unknown;
   }
 
   // Check if user is authenticated (has valid token)
@@ -281,8 +287,8 @@ class AuthService {
     const token = localStorage.getItem('token');
     if (!token) return false;
 
-    const payload = this.parseJWT(token);
-    if (!payload) {
+    const payload = this.parseJWT(token) as { exp?: number } | null;
+    if (!payload || typeof payload.exp !== 'number') {
       // Clear invalid token
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
@@ -309,12 +315,12 @@ class AuthService {
   }
 
   // Get stored user
-  getUser(): any {
+  getUser(): unknown {
     if (typeof window === 'undefined') return null;
     
     try {
       const userStr = localStorage.getItem('user');
-      return userStr ? JSON.parse(userStr) : null;
+      return userStr ? (JSON.parse(userStr) as unknown) : null;
     } catch (error) {
       console.error('Error parsing user from localStorage:', error);
       return null;
@@ -322,12 +328,12 @@ class AuthService {
   }
 
   // Get stored accounts
-  getAccounts(): any {
+  getAccounts(): unknown {
     if (typeof window === 'undefined') return null;
     
     try {
       const accountsStr = localStorage.getItem('accounts');
-      return accountsStr ? JSON.parse(accountsStr) : null;
+      return accountsStr ? (JSON.parse(accountsStr) as unknown) : null;
     } catch (error) {
       console.error('Error parsing accounts from localStorage:', error);
       return null;

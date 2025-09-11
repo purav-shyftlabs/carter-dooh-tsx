@@ -1,6 +1,6 @@
 import { useFormik } from 'formik';
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { carterColors, CarterInput, Typography, Button } from 'shyftlabs-dsl';
 import Link from 'next/link';
 import { forgotPasswordSchema } from '@/common/schemas.yup';
@@ -29,8 +29,9 @@ const ForgotPasswordForm = () => {
         await authService.forgotPassword(username);
         showAlert('An email has been sent to you to reset your password', AlertVariant.SUCCESS);
         setIsEmailSent(true);
-      } catch (e: any) {
-        setError(e.message as string);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Something went wrong';
+        setError(message);
       }
     },
   });
@@ -107,7 +108,7 @@ const ForgotPasswordForm = () => {
             <div className={styles.notice_field}>
               <Button className={styles.submit_button} label="Resend Email" variant="primary" type="submit" />
               <Typography variant="caption-regular">
-                If in case you don't see in your inbox, check your spam or junk folder
+                If in case you don&apos;t see in your inbox, check your spam or junk folder
               </Typography>
             </div>
             <Link href={ROUTES.AUTH.LOGIN}>

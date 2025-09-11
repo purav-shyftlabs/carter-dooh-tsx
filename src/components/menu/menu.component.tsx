@@ -7,7 +7,7 @@ import { MoreHorizontalIcon, CheckIcon } from '@/lib/icons';
 import optionSelectStyles from '../roles-permissions-component/permissions.module.scss';
 
 const MoreMenu: React.FC<MoreMenuProps> = props => {
-  const { options = [], Icon, activeOption, stopPropagation, fallback = '' } = props;
+  const { options = [], Icon = null, activeOption = null, stopPropagation = false, fallback = '' } = props;
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const [selectedOption, setSelectedOption] = useState<string | null | undefined>(activeOption);
@@ -17,7 +17,7 @@ const MoreMenu: React.FC<MoreMenuProps> = props => {
     }
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = (event?: any) => {
+  const handleClose = (event?: React.MouseEvent<HTMLElement>) => {
     if (stopPropagation) {
       event?.stopPropagation();
     }
@@ -54,7 +54,7 @@ const MoreMenu: React.FC<MoreMenuProps> = props => {
         }}
         anchorEl={anchorEl}
         open={open}
-        onClose={handleClose}
+        onClose={(_, __) => handleClose()}
       >
         {options.map((option, index) => (
           <MenuItem
@@ -82,7 +82,7 @@ interface MenuItemOnClick {
 interface MenuItemProps {
   label: string;
   disabled?: boolean;
-  apply?: React.FC<string>;
+  apply?: (label: string) => React.ReactNode;
   onClick?: MenuItemOnClick;
   showCheckmark?: boolean;
   'data-testid'?:string;
@@ -96,11 +96,6 @@ interface MoreMenuProps {
   fallback?: string;
 }
 
-MoreMenu.defaultProps = {
-  options: [],
-  activeOption: null,
-  Icon: null,
-  stopPropagation: false,
-};
+ 
 
 export default MoreMenu;

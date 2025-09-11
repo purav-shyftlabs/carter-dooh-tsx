@@ -100,7 +100,7 @@ export interface UserPermissionType {
 
 export interface CustomPermission {
   options: Array<string>;
-  onPermissionSelect: Function;
+  onPermissionSelect: (permission: string) => void;
   selectedPermission: PERMISSION_LEVELS;
   permissionKey: PermissionType;
   disabled?: boolean;

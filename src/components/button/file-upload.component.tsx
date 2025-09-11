@@ -11,7 +11,7 @@ export type TFileUploadActions = {
 };
 
 interface IFileUploadButton {
-  ref?: any;
+  ref?: React.Ref<TFileUploadActions>;
   fileUrl?: string;
   disabled?: boolean;
   downloadUrl?: string;
@@ -108,5 +108,7 @@ const FileUploadButton: React.FC<IFileUploadButton> = forwardRef<TFileUploadActi
     );
   },
 );
+
+FileUploadButton.displayName = 'FileUploadButton';
 
 export default FileUploadButton;

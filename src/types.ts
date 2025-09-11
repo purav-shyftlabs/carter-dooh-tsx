@@ -22,5 +22,5 @@ export type AuthUser = {
   role?: string;
   status?: string;
   accountId?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 };

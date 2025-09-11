@@ -77,7 +77,7 @@ const getHoursRange = (options: THourRangeOptions) => {
     return selectedDate.clone();
   }
 };
-const getEndTime = (endDate?: Maybe<string | DateTimeType>, timeZone?: string): any => {
+const getEndTime = (endDate?: Maybe<string | DateTimeType>, timeZone?: string): string | undefined => {
   if (typeof endDate === 'string') {
     return endDate;
   }
@@ -90,7 +90,7 @@ const getEndTime = (endDate?: Maybe<string | DateTimeType>, timeZone?: string): 
   }
 };
 
-const getStartTime = (date?: Maybe<string | DateTimeType>, timeZone?: string) => {
+const getStartTime = (date?: Maybe<string | DateTimeType>, timeZone?: string): string | undefined => {
   if (typeof date === 'string') {
     return date;
   }
@@ -99,7 +99,7 @@ const getStartTime = (date?: Maybe<string | DateTimeType>, timeZone?: string) =>
   }
 };
 
-const getStartDateInUTC = (date?: Maybe<string | DateTimeType>, timeZone?: string) => {
+const getStartDateInUTC = (date?: Maybe<string | DateTimeType>, timeZone?: string): string | undefined => {
   if (typeof date === 'string') {
     return date;
   }
@@ -108,7 +108,7 @@ const getStartDateInUTC = (date?: Maybe<string | DateTimeType>, timeZone?: strin
   }
 };
 
-const getEndDateInUTC = (endDate?: Maybe<string | DateTimeType>, timeZone?: string) => {
+const getEndDateInUTC = (endDate?: Maybe<string | DateTimeType>, timeZone?: string): string | undefined => {
   if (typeof endDate === 'string') {
     return endDate;
   }

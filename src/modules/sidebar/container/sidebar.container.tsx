@@ -11,27 +11,38 @@ import { SidebarItemType } from '../components/sidebar-item.component';
 import styles from '../styles/sidebar.module.scss';
 import { SidebarContainer, ScrollableContent, ToggleIcon } from '../helper/sidebar.styled.component';
 
+interface SubCategory { id: number; link?: string; show?: boolean; }
+
+type ClickableItem = menuItem | { id: number; link: string; subCategories?: Array<SubCategory> };
+
+type PopperItem = SidebarItemType & { anchorEl: HTMLElement };
+
 const SidebarComponent: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const router = useRouter();
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const isLowHeight = () => useMediaQuery(`(max-height: 600px)`);
+  const isLowHeight = useMediaQuery(`(max-height: 600px)`);
 
   const isActive = (link: string) => isActiveRoute(router, link);
 
-  const [popperItem, setPopperItem] = useState<SidebarItemType & { anchorEl: HTMLElement }>();
+  const [popperItem, setPopperItem] = useState<PopperItem>();
 
   const isInsightActive = (id: string) => router.asPath === `/insights/${id}`;
 
-  const handleItemClick = (item: any) => {
-    if (isSidebarCollapsed && Number(item.subCategories?.length) > 0 && !popperItem) {
-      // Don't do anything here, let hover handle it
+  const handleItemClick = (item: ClickableItem) => {
+    if (
+      isSidebarCollapsed &&
+      Number((item as { subCategories?: Array<SubCategory> }).subCategories?.length) > 0 &&
+      !popperItem
+    ) {
       return;
     }
-    if (item.link === ROUTES.INSIGHTS && item.subCategories && item.subCategories.length > 0) {
-      router.push(`${ROUTES.INSIGHTS}/${item.subCategories[0].id}`);
+    const link = (item as { link?: string }).link ?? '';
+    const subCategories = (item as { subCategories?: Array<SubCategory> }).subCategories;
+    if (link === ROUTES.INSIGHTS && subCategories && subCategories.length > 0) {
+      router.push(`${ROUTES.INSIGHTS}/${subCategories[0].id}`);
     } else {
-      router.push(item.link);
+      router.push(link);
     }
   };
 
@@ -39,10 +50,8 @@ const SidebarComponent: React.FC = () => {
     setExpandedItems(prev => {
       const newSet = new Set<number>();
       if (prev.has(id)) {
-        // If clicking on already expanded item, collapse it
         return newSet;
       } else {
-        // If expanding a new item, collapse all others and expand only this one
         newSet.add(id);
         return newSet;
       }
@@ -53,26 +62,28 @@ const SidebarComponent: React.FC = () => {
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const getActiveSubItemIndex = (subCategories: any[] | undefined): number => {
+  const getActiveSubItemIndex = (subCategories: Array<{ link?: string }> | undefined): number => {
     if (!subCategories) return -1;
-    return subCategories.findIndex(subItem => isActive(subItem.link));
+    return subCategories.findIndex(subItem => (subItem.link ? isActive(subItem.link) : false));
   };
 
   useEffect(() => {
-    MenuItems.forEach((item: any) => {
-      if (item.subCategories?.some((subItem: any) => isActiveRoute(router, subItem.link))) {
+    MenuItems.forEach((item: menuItem) => {
+      if (item.subCategories?.some((subItem: SubCategory) => (subItem.link ? isActiveRoute(router, subItem.link) : false))) {
         setExpandedItems(prev => new Set(prev).add(item.id));
         return;
       }
 
-      if (item.subCategories?.length > 0) {
-        const isOnRelatedPage = item.subCategories.some((subItem: any) => isActiveRoute(router, subItem.link));
+      if ((item.subCategories?.length ?? 0) > 0) {
+        const isOnRelatedPage = item.subCategories!.some((subItem: SubCategory) =>
+          subItem.link ? isActiveRoute(router, subItem.link) : false,
+        );
         if (isOnRelatedPage) {
           setExpandedItems(prev => new Set(prev).add(item.id));
         }
       }
     });
-  }, [router.asPath]);
+  }, [router.asPath, MenuItems, router]);
 
   const handleInsightSubItemClick = (id: number) => {
     const basePath = '/insights';
@@ -84,7 +95,6 @@ const SidebarComponent: React.FC = () => {
     setPopperItem(undefined);
   };
 
-  // Single event handler for the entire sidebar
   useEffect(() => {
     if (!isSidebarCollapsed || !sidebarRef.current) return;
 
@@ -109,7 +119,6 @@ const SidebarComponent: React.FC = () => {
     const handleMouseOut = (e: MouseEvent) => {
       const relatedTarget = e.relatedTarget as HTMLElement;
 
-      // Check if we're moving to the popover
       if (
         relatedTarget &&
         (relatedTarget.closest('[role="presentation"]') || relatedTarget.closest('.MuiPopover-paper'))
@@ -118,7 +127,6 @@ const SidebarComponent: React.FC = () => {
         return;
       }
 
-      // If not moving to popover, close after delay
       hoverTimeout = setTimeout(() => {
         if (!isOverPopover) {
           setPopperItem(undefined);
@@ -155,7 +163,7 @@ const SidebarComponent: React.FC = () => {
         ref={sidebarRef}
         collapsed={isSidebarCollapsed}
         data-testId=""
-        hasNestedSubItems={MenuItems.filter(item => item.hasOwnProperty('subCategories')).length > 0}
+        hasNestedSubItems={MenuItems.filter(item => Object.prototype.hasOwnProperty.call(item, 'subCategories')).length > 0}
       >
         <ScrollableContent>
           <SidebarSection
@@ -169,7 +177,7 @@ const SidebarComponent: React.FC = () => {
           <SidebarSection
             menuItems={(MenuItems as menuItem[]).filter(el => el.position === 'bottom')}
             {...sidebarSectionProps}
-            classNames={isLowHeight() ? styles.bottomSectionRelative : styles.bottomSection}
+            classNames={isLowHeight ? styles.bottomSectionRelative : styles.bottomSection}
           />
         </ScrollableContent>
       </SidebarContainer>
@@ -183,9 +191,7 @@ const SidebarComponent: React.FC = () => {
         disableRestoreFocus
         disableAutoFocus
         PaperProps={{
-          onMouseEnter: () => {
-            // Keep popover open when hovering over it
-          },
+          onMouseEnter: () => {},
           onMouseLeave: () => {
             setPopperItem(undefined);
           },
@@ -206,8 +212,8 @@ const SidebarComponent: React.FC = () => {
                 onClick={() => {
                   if (popperItem.link === ROUTES.INSIGHTS) {
                     handleInsightSubItemClick(item.id);
-                  } else {
-                    handleItemClick(item);
+                  } else if (item.link) {
+                    handleItemClick({ id: item.id, link: item.link });
                   }
                   handlePopperClose();
                 }}

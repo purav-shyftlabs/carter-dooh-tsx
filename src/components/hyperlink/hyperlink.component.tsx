@@ -8,8 +8,8 @@ interface HyperlinkProps {
   url?: string | UrlObject;
   label?: string;
   className?: string;
-  target?: any;
-  testId?: any;
+  target?: React.HTMLAttributeAnchorTarget;
+  testId?: string;
   title?: string;
   fontWeight?: 'normal' | 'medium' | 'semibold' | 'bold';
   color?: 'primary' | 'link' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'black';

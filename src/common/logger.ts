@@ -1,6 +1,22 @@
 import pino, { stdTimeFunctions } from 'pino';
 
-const pinoConfig: any = {
+type PinoPrettyOptions = {
+  colorize: boolean;
+};
+
+type PinoConfig = {
+  transport: {
+    target: string;
+    options: PinoPrettyOptions;
+  };
+  enabled: boolean;
+  timestamp: typeof stdTimeFunctions.isoTime;
+  browser: {
+    asObject: boolean;
+  };
+};
+
+const pinoConfig: PinoConfig = {
   transport: {
     target: 'pino-pretty',
     options: {

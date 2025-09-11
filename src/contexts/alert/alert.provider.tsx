@@ -24,7 +24,7 @@ export const AlertContext = React.createContext<AlertContextInterface>({
   closeAlert: () => {},
 });
 
-const AlertProvider: React.FC<PropsWithChildren<any>> = ({ children }) => {
+const AlertProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [alert, setAlert] = useState<{
     variant?: AlertVariant;
     message: string;

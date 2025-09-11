@@ -3,17 +3,31 @@ import { DateTimeType } from '@/lib/date-time-parser';
 import { DateUtils } from '../helper/date-utils';
 import styles from './time-picker.module.scss';
 
+interface TimePickerConfig {
+  minDateTime?: DateTimeType;
+  maxDateTime?: DateTimeType;
+  value: DateTimeType | null;
+  timezone?: string;
+  disablePast?: boolean;
+  disableFuture?: boolean;
+  disabled?: boolean;
+}
+
 interface ITimePicker {
-  config: any;
+  config: TimePickerConfig;
   type: 'startDate' | 'endDate';
   handleChangeForPicker: (key: 'startDate' | 'endDate', date: DateTimeType, time: string) => void;
 }
 
 const TimePicker: React.FC<ITimePicker> = props => {
   const { config, type, handleChangeForPicker } = props;
-  const minDateTime: DateTimeType = config.minDateTime;
-  const maxDateTime: DateTimeType = config.maxDateTime;
-  const selectedDate: DateTimeType = config.value;
+  const minDateTime: DateTimeType = config.minDateTime as DateTimeType;
+  const maxDateTime: DateTimeType = config.maxDateTime as DateTimeType;
+  const selectedDate: DateTimeType | null = config.value;
+
+  if (!selectedDate) {
+    return null;
+  }
 
   const isPastDisabled = minDateTime ? selectedDate?.isSame(minDateTime, 'day') : config?.disablePast;
   const isFutureDisabled = maxDateTime ? selectedDate?.isSame(maxDateTime, 'day') : config?.disableFuture;
@@ -30,7 +44,7 @@ const TimePicker: React.FC<ITimePicker> = props => {
               selectedDate,
               minDateTime,
               maxDateTime,
-              timezone: config.timezone,
+              timezone: config.timezone ?? 'UTC',
               isPastDisabled,
               isFutureDisabled,
             }) || config.disabled
@@ -38,7 +52,7 @@ const TimePicker: React.FC<ITimePicker> = props => {
           onClick={() => {
             handleChangeForPicker(type, selectedDate, item.value);
           }}
-          data-active={DateUtils.isHourActive({ selectedDate, time: item.value, timezone: config.timezone })}
+          data-active={DateUtils.isHourActive({ selectedDate, time: item.value, timezone: config.timezone ?? 'UTC' })}
         >
           {item.label}
         </button>

@@ -4,15 +4,6 @@ import { useRef, useState } from 'react';
 import { carterColors } from 'shyftlabs-dsl';
 import useElementPosition from '@/contexts/useElementPosition/useElementPosition.hook';
 
-interface MenuItem {
-  id: number;
-  label: string;
-  icon: React.ReactNode;
-  link: string;
-  subCategories?: MenuItem[];
-  show: boolean;
-}
-
 export type SidebarItemType = {
   id: number;
   label: string;
@@ -27,7 +18,7 @@ export type SidebarItemType = {
 };
 
 interface SidebarItemProps {
-  item: MenuItem;
+  item: SidebarItemType;
   isActive: boolean;
   isSubItem?: boolean;
   sidebarCollapsed?: boolean;
