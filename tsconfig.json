@@ -31,6 +31,6 @@
       "mime": ["./node_modules/@types/mime"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/layouts/internal-layout/internal-layout.jsx", "src/layouts/internal-layout/index.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/layouts/internal-layout/internal-layout.jsx", "src/layouts/internal-layout/index.js", "src/modules/sidebar/container/sidebar.container.tsx"],
   "exclude": ["node_modules"]
 }

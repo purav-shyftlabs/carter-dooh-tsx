@@ -6,22 +6,24 @@ import { Popover, useMediaQuery } from '@mui/material';
 import ROUTES from '@/common/routes';
 import { useSidebarMenuList, isActiveRoute } from '../helper/sidebar.helper';
 import SidebarSection from '../components/sidebar-section.component';
+import type { menuItem } from '../types/typings';
+import { SidebarItemType } from '../components/sidebar-item.component';
 import styles from '../styles/sidebar.module.scss';
 import { SidebarContainer, ScrollableContent, ToggleIcon } from '../helper/sidebar.styled.component';
 
-const SidebarComponent = () => {
-  const [expandedItems, setExpandedItems] = useState(new Set());
+const SidebarComponent: React.FC = () => {
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const router = useRouter();
-  const sidebarRef = useRef(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const isLowHeight = () => useMediaQuery(`(max-height: 600px)`);
 
-  const isActive = (link) => isActiveRoute(router, link);
+  const isActive = (link: string) => isActiveRoute(router, link);
 
-  const [popperItem, setPopperItem] = useState();
+  const [popperItem, setPopperItem] = useState<SidebarItemType & { anchorEl: HTMLElement }>();
 
-  const isInsightActive = (id) => router.asPath === `/insights/${id}`;
+  const isInsightActive = (id: string) => router.asPath === `/insights/${id}`;
 
-  const handleItemClick = (item) => {
+  const handleItemClick = (item: any) => {
     if (isSidebarCollapsed && Number(item.subCategories?.length) > 0 && !popperItem) {
       // Don't do anything here, let hover handle it
       return;
@@ -33,9 +35,9 @@ const SidebarComponent = () => {
     }
   };
 
-  const toggleSubItems = (id) => {
+  const toggleSubItems = (id: number) => {
     setExpandedItems(prev => {
-      const newSet = new Set();
+      const newSet = new Set<number>();
       if (prev.has(id)) {
         // If clicking on already expanded item, collapse it
         return newSet;
@@ -51,20 +53,20 @@ const SidebarComponent = () => {
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const getActiveSubItemIndex = (subCategories) => {
+  const getActiveSubItemIndex = (subCategories: any[] | undefined): number => {
     if (!subCategories) return -1;
     return subCategories.findIndex(subItem => isActive(subItem.link));
   };
 
   useEffect(() => {
-    MenuItems.forEach((item) => {
-      if (item.subCategories?.some((subItem) => isActiveRoute(router, subItem.link))) {
+    MenuItems.forEach((item: any) => {
+      if (item.subCategories?.some((subItem: any) => isActiveRoute(router, subItem.link))) {
         setExpandedItems(prev => new Set(prev).add(item.id));
         return;
       }
 
       if (item.subCategories?.length > 0) {
-        const isOnRelatedPage = item.subCategories.some((subItem) => isActiveRoute(router, subItem.link));
+        const isOnRelatedPage = item.subCategories.some((subItem: any) => isActiveRoute(router, subItem.link));
         if (isOnRelatedPage) {
           setExpandedItems(prev => new Set(prev).add(item.id));
         }
@@ -72,7 +74,7 @@ const SidebarComponent = () => {
     });
   }, [router.asPath]);
 
-  const handleInsightSubItemClick = (id) => {
+  const handleInsightSubItemClick = (id: number) => {
     const basePath = '/insights';
     const path = `${basePath}/${id}`;
     router.push(path);
@@ -86,26 +88,26 @@ const SidebarComponent = () => {
   useEffect(() => {
     if (!isSidebarCollapsed || !sidebarRef.current) return;
 
-    let hoverTimeout;
+    let hoverTimeout: NodeJS.Timeout;
     let isOverPopover = false;
 
-    const handleMouseOver = (e) => {
-      const target = e.target;
-      const itemContainer = target.closest('[data-sidebar-item]');
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const itemContainer = target.closest('[data-sidebar-item]') as HTMLElement;
 
       if (!itemContainer) return;
 
       const itemId = itemContainer.getAttribute('data-item-id');
-      const item = MenuItems.find(menuItem => menuItem.id.toString() === itemId);
+      const item = (MenuItems as menuItem[]).find(menuItem => menuItem.id.toString() === itemId);
 
       if (item && item.subCategories && item.subCategories.length > 0) {
         clearTimeout(hoverTimeout);
-        setPopperItem({ ...(item), anchorEl: itemContainer });
+        setPopperItem({ ...(item as SidebarItemType), anchorEl: itemContainer });
       }
     };
 
-      const handleMouseOut = (e) => {
-      const relatedTarget = e.relatedTarget;
+    const handleMouseOut = (e: MouseEvent) => {
+      const relatedTarget = e.relatedTarget as HTMLElement;
 
       // Check if we're moving to the popover
       if (
@@ -157,15 +159,15 @@ const SidebarComponent = () => {
       >
         <ScrollableContent>
           <SidebarSection
-            menuItems={MenuItems.filter(el => el.id < 90 && el.position !== 'bottom')}
+            menuItems={(MenuItems as menuItem[]).filter(el => el.id < 90 && el.position !== 'bottom')}
             {...sidebarSectionProps}
           />
           <SidebarSection
-            menuItems={MenuItems.filter(el => el.id > 90 && el.position !== 'bottom')}
+            menuItems={(MenuItems as menuItem[]).filter(el => el.id > 90 && el.position !== 'bottom')}
             {...sidebarSectionProps}
           />
           <SidebarSection
-            menuItems={MenuItems.filter(el => el.position === 'bottom')}
+            menuItems={(MenuItems as menuItem[]).filter(el => el.position === 'bottom')}
             {...sidebarSectionProps}
             classNames={isLowHeight() ? styles.bottomSectionRelative : styles.bottomSection}
           />

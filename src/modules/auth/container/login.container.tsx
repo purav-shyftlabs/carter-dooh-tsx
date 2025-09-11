@@ -1,18 +1,18 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/redux/hooks';
 import AuthLayout from '@/layouts/auth-layout/auth-layout';
 import LoginForm from '../component/login-form.component';
 import styles from '../styles/login.module.scss';
-import billboard from '../../../assets/images/billboard.png';
+import billboard from '@/assets/images/billboard.png';
 import Head from 'next/head';
 import { Typography } from 'shyftlabs-dsl';
 import { carterColors } from 'shyftlabs-dsl';
 import Link from 'next/link';
-import logo from '../../../assets/images/logo.png';
+import logo from '@/assets/images/logo.png';
 const Login = () => {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useSelector(state => state.auth);
+  const { isAuthenticated, isLoading } = useAppSelector(state => state.auth);
   const { client } = { client: { name: 'Advertising', logo: logo, appSnapshotImage: billboard.src, tag: 'Welcome Back', website: 'https://www.google.com', termsAndCondition: 'https://www.google.com', privacyPolicy: 'https://www.google.com' } };
   
   // Redirect authenticated users to dashboard

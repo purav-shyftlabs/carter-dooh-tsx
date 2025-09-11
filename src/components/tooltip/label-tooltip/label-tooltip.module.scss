@@ -1,0 +1,8 @@
+.button {
+  max-height: 30px;
+  span {
+    color: $blue-700;
+    @include typography('xs');
+    line-height: 20px;
+  }
+}

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Alert, IconButton, Snackbar } from '@/lib/material-ui';
 import useAlert from '@/contexts/alert/alert.hook';
 import { CloseIcon } from '@/lib/icons';
-import { showMessage } from '@/redux/actions';
+// Removed redux message dispatch; using Alert context only
 
 const CustomAlert = () => {
   const [open, setOpen] = React.useState(false);
@@ -18,7 +18,6 @@ const CustomAlert = () => {
       return;
     }
     closeAlert();
-    showMessage('');
   };
 
   const action = (

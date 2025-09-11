@@ -4,7 +4,42 @@ import { useRef, useState } from 'react';
 import { carterColors } from 'shyftlabs-dsl';
 import useElementPosition from '@/contexts/useElementPosition/useElementPosition.hook';
 
-const ItemContainer = styled.div`
+interface MenuItem {
+  id: number;
+  label: string;
+  icon: React.ReactNode;
+  link: string;
+  subCategories?: MenuItem[];
+  show: boolean;
+}
+
+export type SidebarItemType = {
+  id: number;
+  label: string;
+  icon?: React.ReactNode;
+  link: string;
+  subCategories?: SidebarItemType[];
+  testId?: string;
+  assist?: string;
+  show?: boolean;
+  mobileOnly?: boolean;
+  type?: string;
+};
+
+interface SidebarItemProps {
+  item: MenuItem;
+  isActive: boolean;
+  isSubItem?: boolean;
+  sidebarCollapsed?: boolean;
+  showSubItems?: boolean;
+  onToggleSubItems?: () => void;
+  onItemClick: (link: string) => void;
+  index?: number;
+  activeSubItemIndex?: number | undefined;
+  testId?: string;
+}
+
+const ItemContainer = styled.div<{ active?: boolean; collapsed: boolean; isSubItem?: boolean }>`
   color: ${props => (props.active ? carterColors['brand-600'] : carterColors['text-700'])};
   font-family: inherit;
   font-size: 14px;
@@ -32,14 +67,14 @@ const ItemContainer = styled.div`
   `}
 `;
 
-const RoundedCornerIcon = styled(CornerDownRight)`
+const RoundedCornerIcon = styled(CornerDownRight)<{ visible: boolean }>`
   opacity: ${props => (props.visible ? 1 : 0)};
   transition: opacity 0.2s ease;
   position: absolute;
   left: 33.6px;
 `;
 
-const MenuIcon = styled.div`
+const MenuIcon = styled.div<{ collapsed: boolean }>`
   margin-right: ${props => (props.collapsed ? '0' : '8px')};
   height: 24px;
   width: 24px;
@@ -62,13 +97,13 @@ const SidebarContent = styled.div`
   scrollbar-width: none;
 `;
 
-const MenuText = styled.span`
+const MenuText = styled.span<{ collapsed: boolean }>`
   opacity: ${props => (props.collapsed ? 0 : 1)};
   transition: opacity 0.2s ease;
   white-space: wrap;
 `;
 
-const StyledSubItemIndicator = styled.div`
+const StyledSubItemIndicator = styled.div<{ isActive: boolean; positionTop: number }>`
   position: absolute;
   left: 35px;
   display: flex;
@@ -80,7 +115,7 @@ const StyledSubItemIndicator = styled.div`
   top: ${({ positionTop }) => `${positionTop - 4}px`};
 `;
 
-const SidebarItem = ({
+const SidebarItem: React.FC<SidebarItemProps> = ({
   item,
   isActive,
   sidebarCollapsed = false,

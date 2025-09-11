@@ -5,20 +5,19 @@ import { carterColors, CarterInput, Typography, Button } from 'shyftlabs-dsl';
 import Link from 'next/link';
 import { forgotPasswordSchema } from '@/common/schemas.yup';
 import EmailSentIcon from '@/assets/images/mail_folder.png';
-import AuthService from '@/services/auth/auth-service';
+import authService from '@/services/auth/auth-service';
 import useAlert from '@/contexts/alert/alert.hook';
 import { AlertVariant } from '@/contexts/alert/alert.provider';
 import ROUTES from '@/common/routes';
 import styles from '../styles/forgot-password.module.scss';
-import logo from '../../../assets/images/logo.png';
-import billboard from '../../../assets/images/billboard.png';
+import useConfigs from '@/contexts/app-configs/app-configs.hooks';
 
 const ForgotPasswordForm = () => {
-  const [isEmailSent, setIsEmailSent] = useState(false);
-  const { client } = { client: { name: 'Advertising', logo: logo, appSnapshotImage: billboard.src, tag: 'Welcome Back', website: 'https://www.google.com', termsAndCondition: 'https://www.google.com', privacyPolicy: 'https://www.google.com' } };
+  const [isEmailSent, setIsEmailSent] = useState<boolean>(false);
+  const { client } = useConfigs();
   const { showAlert } = useAlert();
-  const [error, setError] = useState();
-  const authService = useMemo(() => AuthService, []);
+  const [error, setError] = useState<string>();
+  // use exported singleton
 
   const { values, errors, handleSubmit, handleChange } = useFormik({
     initialValues: {
@@ -30,8 +29,8 @@ const ForgotPasswordForm = () => {
         await authService.forgotPassword(username);
         showAlert('An email has been sent to you to reset your password', AlertVariant.SUCCESS);
         setIsEmailSent(true);
-      } catch (e) {
-        setError(e.message);
+      } catch (e: any) {
+        setError(e.message as string);
       }
     },
   });
@@ -65,7 +64,7 @@ const ForgotPasswordForm = () => {
                 labelProps={{
                   label: 'Email Address',
                 }}
-                placeholder="Enter your email address"
+                placeholder="Enter your email"
                 error={!!errors.username || !!error}
                 errorMessage={errors.username ?? error}
                 value={values.username}

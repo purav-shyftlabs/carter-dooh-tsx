@@ -2,6 +2,9 @@ import api, { utcHeader } from '../api/api-client';
 
 // AuthService class for authentication logic
 class AuthService {
+  private baseURL: string;
+  private apiPrefix: string;
+
   constructor() {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
     this.apiPrefix = '/api/auth';
@@ -10,7 +13,7 @@ class AuthService {
   
 
   // Safely parse JWT token
-  parseJWT(token) {
+  parseJWT(token: string): any {
     try {
       if (!token || typeof token !== 'string') {
         return null;
@@ -31,8 +34,8 @@ class AuthService {
   }
 
   // Get headers with optional authorization
-  getHeaders(includeAuth = false) {
-    const headers = {
+  getHeaders(includeAuth: boolean = false): Record<string, string> {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
@@ -47,7 +50,7 @@ class AuthService {
   }
 
   // Make API request with error handling
-  async makeRequest(url, options = {}) {
+  async makeRequest(url: string, options: { method?: string; headers?: Record<string, string>; body?: BodyInit | null; includeAuth?: boolean } = {}): Promise<any> {
     try {
       const response = await fetch(url, {
         ...options,
@@ -64,14 +67,14 @@ class AuthService {
       }
 
       return await response.json();
-    } catch (error) {
+    } catch (error: any) {
       console.error('API Request Error:', error);
       throw error;
     }
   }
 
   // Login user
-  async login(credentials) {
+  async login(credentials: { email: string; password: string }): Promise<any> {
     const { email, password } = credentials;
     console.log('email', email);
     console.log('password', password);
@@ -88,14 +91,14 @@ class AuthService {
       });
       console.log(response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during login:', error);
       throw error.response?.data || error;
     }
   }
 
   // Register user
-  async register(userData) {
+  async register(userData: { email: string; password: string; firstName: string; lastName: string; [key: string]: any }): Promise<{ user: any; token: string; refreshToken: string }> {
     const { email, password, firstName, lastName, ...otherData } = userData;
     
     if (!email || !password || !firstName || !lastName) {
@@ -121,20 +124,20 @@ class AuthService {
   }
 
   // Logout user
-  async logout() {
+  async logout(): Promise<void> {
     try {
       await this.makeRequest(`${this.baseURL}${this.apiPrefix}/logout`, {
         method: 'POST',
         includeAuth: true,
       });
-    } catch (error) {
+    } catch (error: any) {
       // Even if logout fails on server, we should clear local data
       console.warn('Logout request failed:', error);
     }
   }
 
   // Refresh access token
-  async refreshToken() {
+  async refreshToken(): Promise<{ token: string; refreshToken: string }> {
     if (typeof window === 'undefined') {
       throw new Error('Cannot refresh token on server side');
     }
@@ -156,7 +159,7 @@ class AuthService {
   }
 
   // Get current user profile
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<any> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/me`, {
       method: 'GET',
       includeAuth: true,
@@ -166,7 +169,7 @@ class AuthService {
   }
 
   // Update user profile
-  async updateProfile(userData) {
+  async updateProfile(userData: Record<string, any>): Promise<any> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/profile`, {
       method: 'PUT',
       includeAuth: true,
@@ -177,7 +180,7 @@ class AuthService {
   }
 
   // Change password
-  async changePassword(currentPassword, newPassword) {
+  async changePassword(currentPassword: string, newPassword: string): Promise<any> {
     if (!currentPassword || !newPassword) {
       throw new Error('Current password and new password are required');
     }
@@ -192,7 +195,7 @@ class AuthService {
   }
 
   // Forgot password
-  async forgotPassword(email) {
+  async forgotPassword(email: string): Promise<any> {
     if (!email) {
       throw new Error('Email is required');
     }
@@ -205,14 +208,14 @@ class AuthService {
       });
       console.log(response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during forgot password:', error);
       throw error.response?.data || error;
     }
   }
 
   // Reset password
-  async resetPassword(token, newPassword) {
+  async resetPassword(token: string, newPassword: string): Promise<any> {
     if (!token || !newPassword) {
       throw new Error('Token and new password are required');
     }
@@ -226,14 +229,14 @@ class AuthService {
       });
       console.log(response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during reset password:', error);
       throw error.response?.data || error;
     }
   }
 
   // Verify email
-  async verifyEmail(token) {
+  async verifyEmail(token: string): Promise<any> {
     if (!token) {
       throw new Error('Verification token is required');
     }
@@ -247,7 +250,7 @@ class AuthService {
   }
 
   // Resend verification email
-  async resendVerificationEmail() {
+  async resendVerificationEmail(): Promise<any> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/resend-verification`, {
       method: 'POST',
       includeAuth: true,
@@ -257,7 +260,7 @@ class AuthService {
   }
 
   // Delete account
-  async deleteAccount(password) {
+  async deleteAccount(password: string): Promise<any> {
     if (!password) {
       throw new Error('Password is required to delete account');
     }
@@ -272,7 +275,7 @@ class AuthService {
   }
 
   // Check if user is authenticated (has valid token)
-  isAuthenticated() {
+  isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false;
     
     const token = localStorage.getItem('token');
@@ -294,19 +297,19 @@ class AuthService {
   }
 
   // Get stored token
-  getToken() {
+  getToken(): string | null {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('token');
   }
 
   // Get stored refresh token
-  getRefreshToken() {
+  getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('refreshToken');
   }
 
   // Get stored user
-  getUser() {
+  getUser(): any {
     if (typeof window === 'undefined') return null;
     
     try {
@@ -319,7 +322,7 @@ class AuthService {
   }
 
   // Get stored accounts
-  getAccounts() {
+  getAccounts(): any {
     if (typeof window === 'undefined') return null;
     
     try {
@@ -332,7 +335,7 @@ class AuthService {
   }
 
   // Clear all auth data
-  clearAuthData() {
+  clearAuthData(): void {
     if (typeof window === 'undefined') return;
     
     localStorage.removeItem('token');

@@ -14,7 +14,7 @@ const Dashboard = () => {
 };
 
 // Set the layout for this page
-Dashboard.getLayout = (page) => {
+Dashboard.getLayout = (page: React.ReactNode) => {
     return <InternalLayout head={{ title: 'Dashboard', description: 'User Dashboard' }}>{page}</InternalLayout>;
 };
 

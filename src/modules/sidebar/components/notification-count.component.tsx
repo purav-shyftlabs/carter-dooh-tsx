@@ -1,7 +1,12 @@
 import { CircularProgress } from '@/lib/material-ui';
 import styles from '../styles/components/notification-count.module.scss';
 
-const NotificationCount = props => {
+interface INotificationCount {
+  isLoading: boolean;
+  count: number | string;
+}
+
+const NotificationCount: React.FC<INotificationCount> = props => {
   const { isLoading, count } = props;
   if (isLoading) {
     return <CircularProgress size="18px" />;

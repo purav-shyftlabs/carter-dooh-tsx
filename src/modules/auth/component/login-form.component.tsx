@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useRouter } from 'next/router';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { CarterCheckbox, carterColors, CarterInput, Typography } from 'shyftlabs-dsl';
 import Link from 'next/link';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
@@ -14,8 +14,8 @@ import styles from '../styles/login-form.module.scss';
 
 const LoginForm = () => {
   const { replace } = useRouter();
-  const dispatch = useDispatch();
-  const { isLoading, error } = useSelector(state => state.auth);
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector(state => state.auth);
   const [isVisible, setIsVisible] = useState(false);
   
   const { touched, values, errors, handleChange, setFieldValue, handleSubmit, isValid } = useFormik({
@@ -37,7 +37,6 @@ const LoginForm = () => {
         replace(ROUTES.DASHBOARD);
       } catch (error) {
         console.error('Login error:', error);
-        logger.error('Login error:', error);
       }
     },
   });
@@ -96,7 +95,7 @@ const LoginForm = () => {
             onChange={() => setFieldValue('rememberMe', !values.rememberMe)}
           />
           <Link href={ROUTES.AUTH.FORGOT_PASSWORD} color={carterColors['links-blue']}>
-            <Typography color={carterColors['links-blue']} variant="subtitle-small" data-testid="login-forgot-password-link">
+            <Typography color={carterColors['links-blue']} variant="subtitle-medium" data-testid="login-forgot-password-link">
               Forgot Password?
             </Typography>
           </Link>

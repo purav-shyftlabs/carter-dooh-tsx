@@ -1,6 +1,7 @@
 import { FileCheck } from 'lucide-react';
 import { HomeIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
+import { NextRouter } from 'next/router';
 
 
 export const useSidebarMenuList = () => {
@@ -31,7 +32,7 @@ export const useSidebarMenuList = () => {
   };
 };
 
-export const isActiveRoute = (router, link) => {
+export const isActiveRoute = (router: NextRouter, link: string) => {
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const fullLink = basePath + link;
   const currentPath = router.asPath;

@@ -1,3 +1,4 @@
+import type React from 'react';
 export interface SubCategories {
   id: number;
   label: string;
@@ -9,9 +10,9 @@ export interface SubCategories {
 export type menuItem = {
   id: number;
   label: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   link?: string;
-  type?: 'button';
+  type?: string;
   show?: boolean;
   testId: string;
   assist: string;

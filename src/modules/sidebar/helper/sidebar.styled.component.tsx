@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { carterColors } from 'shyftlabs-dsl';
 
-export const SidebarContainer = styled.div`
+export const SidebarContainer = styled.div<{ collapsed: boolean; hasNestedSubItems: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -15,17 +15,16 @@ export const SidebarContainer = styled.div`
 
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    width: ${props => (props.collapsed ? '60px' : '200px')};;
+    width: ${props => (props.collapsed ? '60px' : '200px')};
   }
 
   @media (max-width: 480px) {
-    width: ${props => (props.collapsed ? '50px' : '180px')};;
+    width: ${props => (props.collapsed ? '50px' : '180px')};
   }
 
   @media (min-width: 1200px) {
     width: ${props => (props.collapsed ? (props.hasNestedSubItems ? '100px' : '80px') : '250px')};
   }
-    
 `;
 
 export const ToggleIcon = styled.div`

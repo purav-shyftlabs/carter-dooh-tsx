@@ -1,5 +1,19 @@
 import { Tooltip } from 'shyftlabs-dsl';
+import { menuItem } from '../types/typings';
 import SidebarItem from './sidebar-item.component';
+
+interface SidebarSectionProps {
+  menuItems: menuItem[];
+  getActiveSubItemIndex: (subCategories: any[] | undefined) => number;
+  expandedItems: Set<number>;
+  isSidebarCollapsed: boolean;
+  isActive: (link: string) => boolean;
+  toggleSubItems: (id: number) => void;
+  handleItemClick: (item: any) => void;
+  isInsightActive: (id: string) => boolean;
+  handleInsightSubItemClick: (id: number) => void;
+  classNames?: string;
+}
 
 const SidebarSection = ({
   menuItems,
@@ -12,7 +26,7 @@ const SidebarSection = ({
   isInsightActive,
   handleInsightSubItemClick,
   classNames,
-}) => {
+}: SidebarSectionProps) => {
   // Sort menu items: top items first, then bottom items
   const sortedMenuItems = [...menuItems].sort((a, b) => {
     if (a.position === 'bottom' && b.position !== 'bottom') return 1;
@@ -22,7 +36,7 @@ const SidebarSection = ({
 
   return (
     <div className={classNames}>
-      {sortedMenuItems.map((item, index) => {
+      {sortedMenuItems.map((item: any, index) => {
         const activeSubItemIndex = getActiveSubItemIndex(item.subCategories);
         const isItemExpanded = expandedItems.has(item.id);
         if (item.show === false) return null;
@@ -65,7 +79,7 @@ const SidebarSection = ({
             {!isSidebarCollapsed &&
               isItemExpanded &&
               item.subCategories &&
-              item.subCategories.map((subItem, index) => {
+              item.subCategories.map((subItem: any, index: number) => {
                 if (subItem.show === false) return null;
                 if (item.link === '/insights')
                   return (

@@ -38,3 +38,5 @@ export enum AGENT {
   WEB = 'web',
   MOBILE = 'mobile',
 }
+
+export const NUMERIC_ROUNDING_TWO_TOOLTIP = 'Values are rounded to two decimal places. Hover over a value to see the full number.';

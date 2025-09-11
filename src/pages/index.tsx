@@ -1,3 +1,3 @@
-import Dashboard from './dashboard';
+import Login from './auth/login';
 
-export default Dashboard;
+export default Login;
