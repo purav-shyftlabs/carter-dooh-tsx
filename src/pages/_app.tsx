@@ -14,6 +14,8 @@ import createEmotionCache from '@/common/emotion-cache';
 import { useStore, initializeAuthState } from '@/redux/store';
 import ErrorBoundary from '@/components/error-boundary/error-boundary.component';
 import { NextPageWithLayout } from '@/types/common';
+import ToastMessage from '@/components/toast-store-message/toast-store-message.component';
+import AlertProvider from '@/contexts/alert/alert.provider';
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -27,7 +29,7 @@ const App = (props: Props) => {
   const getLayout = Component.getLayout || (page => page);
   const initialAuthState = initializeAuthState();
   const store = useStore({
-    ...pageProps.initialReduxState,
+    ...pageProps.initialReduxState, 
     ...initialAuthState,
   });
 
@@ -39,8 +41,10 @@ const App = (props: Props) => {
        <CacheProvider value={emotionCache}>
       <ErrorBoundary>
         <Provider store={store}>
-          
-          {getLayout(<Component {...pageProps} />)}
+          <AlertProvider>
+            <ToastMessage />
+            {getLayout(<Component {...pageProps} />)}
+          </AlertProvider>
         </Provider>
       </ErrorBoundary>
     </CacheProvider>

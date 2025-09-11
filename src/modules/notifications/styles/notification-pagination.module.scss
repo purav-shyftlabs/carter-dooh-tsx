@@ -1,0 +1,39 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  gap: 24px;
+  .page_selection {
+    position: relative;
+    display: inline-block;
+
+    svg {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: $carter-text-500;
+      width: 16px;
+    }
+
+    select {
+      margin-left: 8px;
+      padding: 4px 28px 4px 13px;
+      border: 1px solid $carter-grey-300;
+      background-color: $white-100;
+      border-radius: 6px;
+      appearance: none;
+      text-align: center;
+    }
+  }
+  .page_info {
+    margin-left: 4px;
+  }
+  .actions_container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}

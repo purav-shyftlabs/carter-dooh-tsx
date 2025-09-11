@@ -1,0 +1,21 @@
+.container {
+  min-width: 70dvw;
+  background-color: $carter-layout-background;
+  min-height: 100%;
+  .close_icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .tabs_container {
+    margin: 16px 0;
+    padding: 0 24px;
+
+    .circle_icon {
+      width: 6px;
+      height: 6px;
+      border-radius: 100%;
+      background-color: $carter-red-700;
+    }
+  }
+}

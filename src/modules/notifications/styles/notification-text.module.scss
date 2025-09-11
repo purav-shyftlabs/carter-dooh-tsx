@@ -1,0 +1,39 @@
+.container {
+  color: $text-color-primary;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: left;
+  @include typography('xs');
+  color: $carter-text-900;
+
+  // Ensure proper spacing when items wrap
+  > * {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  span {
+    &:first-of-type {
+      word-break: keep-all;
+    }
+  }
+  .hyperlink_container {
+    @include typography('xs', 'medium');
+    color: $carter-links-blue;
+    padding: 0px;
+    span {
+      line-height: 20px;
+      text-decoration-line: underline;
+    }
+  }
+  .owner_name {
+    @include typography('xs', 'medium');
+  }
+  button {
+    border: none;
+    height: auto;
+  }
+}

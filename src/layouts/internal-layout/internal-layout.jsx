@@ -8,6 +8,8 @@ import { Drawer } from '@mui/material';
 import { useUserData } from './useUserData.hook';
 import SidebarComponent from '@/modules/sidebar/container/sidebar.container';
 import styles from './internal-layout.module.scss';
+import TopBar from './topbar/topbar.component';
+import logo from '@/assets/images/logo-nav.png';
 // import TopBar from './topbar/topbar.component';
 
 const InternalLayout = ({ children, head = {} }) => {
@@ -62,7 +64,7 @@ const InternalLayout = ({ children, head = {} }) => {
       </Head>
 
       {/* Main Content with Sidebar */}
-      {/* <TopBar logoSrc={client?.invertLogo || ''} /> */}
+      <TopBar logoSrc={logo?.src} />
 
       <div className={styles.layout}>
         <div className={styles.sidebar}>

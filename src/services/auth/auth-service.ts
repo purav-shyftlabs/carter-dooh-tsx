@@ -7,10 +7,10 @@ class AuthService {
 
   constructor() {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
-    this.apiPrefix = '/api/auth';
+    this.apiPrefix = '/api';
   }
 
-  
+
 
   // Safely parse JWT token
   parseJWT(token: string): Record<string, unknown> | null {
@@ -86,13 +86,14 @@ class AuthService {
     }
 
     try {
-      const response = await api.post('/public/user/login', {
+      const response = await api.post('/api/public/user/login', {
         email: email,
         password: password
       }, {
         headers: { ...utcHeader }
       });
-      console.log(response.data);
+      // wait for 1 second
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return response.data as { token?: string; refreshToken?: string; user?: unknown } | unknown;
     } catch (error) {
       console.error('Error during login:', error);
@@ -117,9 +118,9 @@ class AuthService {
   }
 
   // Register user
-  async register(userData: { email: string; password: string; firstName: string; lastName: string; [key: string]: unknown }): Promise<{ user: unknown; token: string; refreshToken: string }> {
+  async register(userData: { email: string; password: string; firstName: string; lastName: string;[key: string]: unknown }): Promise<{ user: unknown; token: string; refreshToken: string }> {
     const { email, password, firstName, lastName, ...otherData } = userData;
-    
+
     if (!email || !password || !firstName || !lastName) {
       throw new Error('Email, password, first name, and last name are required');
     }
@@ -145,9 +146,8 @@ class AuthService {
   // Logout user
   async logout(): Promise<void> {
     try {
-      await this.makeRequest(`${this.baseURL}${this.apiPrefix}/logout`, {
-        method: 'POST',
-        includeAuth: true,
+      await api.post('/api/user/logout', {
+        headers: { ...utcHeader }
       });
     } catch (error) {
       // Even if logout fails on server, we should clear local data
@@ -316,7 +316,7 @@ class AuthService {
   // Check if user is authenticated (has valid token)
   isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false;
-    
+
     const token = localStorage.getItem('token');
     if (!token) return false;
 
@@ -350,7 +350,7 @@ class AuthService {
   // Get stored user
   getUser(): unknown {
     if (typeof window === 'undefined') return null;
-    
+
     try {
       const userStr = localStorage.getItem('user');
       return userStr ? (JSON.parse(userStr) as unknown) : null;
@@ -363,7 +363,7 @@ class AuthService {
   // Get stored accounts
   getAccounts(): unknown {
     if (typeof window === 'undefined') return null;
-    
+
     try {
       const accountsStr = localStorage.getItem('accounts');
       return accountsStr ? (JSON.parse(accountsStr) as unknown) : null;
@@ -376,7 +376,7 @@ class AuthService {
   // Clear all auth data
   clearAuthData(): void {
     if (typeof window === 'undefined') return;
-    
+
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');

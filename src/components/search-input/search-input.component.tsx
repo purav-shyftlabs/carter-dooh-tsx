@@ -48,9 +48,9 @@ const SearchInput: React.FC<SearchInputProps> = (props: SearchInputProps) => {
           notchedOutline: styles.notched_outline,
           root: styles.root_input,
         } as CustomInputClasses,
-        startAdornment: (
+        endAdornment: (
           <InputAdornment position="start">
-            <SearchIcon width={18} height={18} />
+            <SearchIcon width={18} height={18} color="white" />
           </InputAdornment>
         ),
         ...(isLoading && {

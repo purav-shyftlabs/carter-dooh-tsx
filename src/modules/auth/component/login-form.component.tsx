@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import { useRouter } from 'next/router';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -11,20 +11,25 @@ import { login, authClearError } from '@/redux/actions';
 import ROUTES from '@/common/routes';
 import logger from '@/common/logger';
 import styles from '../styles/login-form.module.scss';
+import { AlertVariant } from '@/contexts/alert/alert.provider';
+import useAlert from '@/contexts/alert/alert.hook';
 
 const LoginForm = () => {
   const { replace } = useRouter();
   const dispatch = useAppDispatch();
   const { isLoading, error } = useAppSelector(state => state.auth);
   const [isVisible, setIsVisible] = useState(false);
+  const { showAlert } = useAlert();
   
-  const { touched, values, errors, handleChange, setFieldValue, handleSubmit, isValid } = useFormik({
+  const { touched, values, errors, handleChange, setFieldValue, handleSubmit, isValid, validateForm, setTouched } = useFormik({
     initialValues: {
       email: '',
       password: '',
       rememberMe: false,
     },
     validationSchema: loginSchema,
+    validateOnChange: false,
+    validateOnBlur: false,
     onSubmit: async (values) => {
       console.log('Form submitted with values:', values);
       console.log('Form is valid:', isValid);
@@ -40,16 +45,34 @@ const LoginForm = () => {
       }
     },
   });
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Trigger validation for all fields
+    const validationErrors = await validateForm();
+    
+    // Mark all fields as touched to show validation errors
+    setTouched({
+      email: true,
+      password: true,
+      rememberMe: true,
+    });
+    
+    // Only proceed if no validation errors
+    if (Object.keys(validationErrors).length === 0) {
+      handleSubmit(e);
+    }
+  };
+  useEffect(() => {
+    if (error) {
+      showAlert(String(error), AlertVariant.ERROR, 'login-error-toast');
+    }
+  }, [error, showAlert]);
   return (
-    <form onSubmit={handleSubmit} className={`${styles.container}`}>
-      {/* Display error message if login fails */}
-      {error && (
-        <div className={styles.errorMessage}>
-          <Typography color="error" variant="body-regular">
-            {error}
-          </Typography>
-        </div>
-      )}
+    <form onSubmit={handleFormSubmit} className={`${styles.container}`}>
+      
+      
       
       <div className={styles.formField}>
         <Typography variant="body-regular">Email Address</Typography>

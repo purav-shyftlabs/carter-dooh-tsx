@@ -1,0 +1,137 @@
+.topbar {
+  width: 100%;
+  background-color: $carter-brand-800;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+
+  .inner {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 8px 24px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 101;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    padding-left: 6px;
+    width: 225px;
+
+    &.logoCompact {
+      display: none;
+    }
+  }
+
+  .search {
+    flex-grow: 1;
+    max-width: 400px;
+    margin: 0 16px;
+    align-items: flex-start;
+  }
+
+  .right {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    align-items: flex-end;
+    margin-left: auto;
+  }
+
+  .iconButton {
+    background: $carter-brand-700;
+    border-radius: 6px;
+    border: none;
+    color: $white-100;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .notificationWrapper {
+    position: relative;
+    align-items: center;
+    display: inline-flex;
+    height: 32px;
+  }
+
+  .notificationButton {
+    background: $carter-brand-700;
+    border-radius: 6px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .notificationBadge {
+    position: absolute;
+    top: -10px;
+    left: 150x;
+    z-index: 1;
+  }
+  .icons_wrapper {
+    display: flex;
+    gap: 12px;
+  }
+  .approvalReqBadge {
+    position: absolute;
+    top: -10px;
+    right: 0px;
+    z-index: 1;
+  }
+
+  .iconWrapper {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .badgeWrapper {
+    position: absolute;
+    top: -10px;
+    right: -15px;
+    z-index: 1;
+  }
+
+  // Search Dialog Styles
+  .searchDialog {
+    background-color: $white-100;
+    padding: 16px;
+    min-width: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+
+  .searchList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .searchItem {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .searchHeading {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: $black-100;
+    margin-bottom: 8px;
+  }
+
+  .separator {
+    border-bottom: 1px solid #ddd;
+    margin: 8px 0;
+  }
+}

@@ -24,3 +24,16 @@ export type AuthUser = {
   accountId?: number;
   [key: string]: unknown;
 };
+
+export enum NotificationType {
+  /**  Advertiser notifications  */
+  Advertiser = 'ADVERTISER',
+  /**  Approval related notifications for Campaign, AdItem and Creative  */
+  Approval = 'APPROVAL',
+  /**  Campaign, AdItem and Creative notifications  */
+  Campaign = 'CAMPAIGN',
+  /**  User notifications  */
+  User = 'USER',
+  /**  Wallet related notifications  */
+  Wallet = 'WALLET'
+}

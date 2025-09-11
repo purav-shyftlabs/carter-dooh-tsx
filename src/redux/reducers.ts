@@ -1,5 +1,6 @@
 import { REDUX_ACTION } from '@/types/common';
 import { AuthUser } from '@/types';
+import { SnackbarVariant } from 'shyftlabs-dsl';
 import * as types from './types';
 
 export interface IAuthState {
@@ -11,8 +12,14 @@ export interface IAuthState {
   error: string | null;
 }
 
+export interface ICommonState {
+  alerts: Array<{ id: string; message: string; variant: SnackbarVariant }>;
+  message?: string | null;
+}
+
 export interface IRootState {
   auth: IAuthState;
+  common: ICommonState;
 }
 
 export const AUTH_INITIAL_STATE: IAuthState = {
@@ -22,6 +29,11 @@ export const AUTH_INITIAL_STATE: IAuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+};
+
+export const COMMON_INITIAL_STATE: ICommonState = {
+  alerts: [],
+  message: null,
 };
 
 const authReducer = (state: IAuthState = AUTH_INITIAL_STATE, action: REDUX_ACTION): IAuthState => {
@@ -58,9 +70,22 @@ const authReducer = (state: IAuthState = AUTH_INITIAL_STATE, action: REDUX_ACTIO
   }
 };
 
+const commonReducer = (state: ICommonState = COMMON_INITIAL_STATE, action: REDUX_ACTION): ICommonState => {
+  switch (action.type) {
+    case 'REMOVE_ALERT':
+      return {
+        ...state,
+        alerts: state.alerts.filter(alert => alert.id !== action.payload),
+      };
+    default:
+      return state;
+  }
+};
+
 const reducers = (state: IRootState | undefined, action: REDUX_ACTION) => {
   return {
     auth: authReducer(state?.auth, action),
+    common: commonReducer(state?.common, action),
   } as IRootState;
 };
 

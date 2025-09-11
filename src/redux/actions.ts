@@ -6,6 +6,9 @@ import authService from '@/services/auth/auth-service';
 export const authClearError = () => ({ type: types.AUTH_CLEAR_ERROR });
 export const authSetUser = (user: AuthUser) => ({ type: types.AUTH_SET_USER, payload: user });
 
+// Alert actions
+export const removeAlert = (id: string) => ({ type: 'REMOVE_ALERT', payload: id });
+
 export const login = (credentials: { email: string; password: string }) => async (dispatch: Dispatch) => {
   try {
     dispatch({ type: types.AUTH_LOGIN_REQUEST });
@@ -33,9 +36,10 @@ export const login = (credentials: { email: string; password: string }) => async
     dispatch({ type: types.AUTH_LOGIN_SUCCESS, payload });
     return payload;
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Login failed';
+    console.error('Login action error:', err);
+    const message =  (err as { message?: string }).message as string;
     dispatch({ type: types.AUTH_LOGIN_FAILURE, payload: message });
-    return Promise.reject(err);
+    throw new Error(message);
   }
 };
 

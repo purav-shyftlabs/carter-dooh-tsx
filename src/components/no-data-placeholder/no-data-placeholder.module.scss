@@ -1,0 +1,10 @@
+.empty_creative_container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  img {
+    margin-bottom: 8px;
+  }
+}

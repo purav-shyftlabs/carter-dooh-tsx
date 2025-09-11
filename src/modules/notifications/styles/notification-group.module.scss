@@ -1,0 +1,32 @@
+.container {
+  box-shadow: none;
+  .accordion_header {
+    background-color: $carter-grey-200;
+    .accordion_header_content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      .date_string {
+        @include typography('s', 'medium');
+        color: $carter-text-800;
+      }
+
+      .date_value {
+        @include typography('xs');
+        color: $carter-text-500;
+      }
+    }
+  }
+  .accordion_details {
+    padding: 0px;
+    .no_notifications_container {
+      margin: 12px 0 18px 0;
+    }
+  }
+}
+
+.list_container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}

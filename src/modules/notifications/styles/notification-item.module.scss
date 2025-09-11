@@ -1,0 +1,43 @@
+.container {
+  all: unset;
+  border-bottom: 1px solid $carter-grey-200;
+  padding: 10px 24px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+
+  width: 100%;
+  cursor: pointer;
+  .read_status {
+    width: 6px;
+    height: 6px;
+    border-radius: 100%;
+    margin: 12px;
+    background-color: $carter-grey-300;
+    &[data-unread='true'] {
+      background-color: $carter-red-700;
+    }
+  }
+  .time {
+    @include typography('xs');
+    color: $carter-text-500;
+    padding: 6px 0px;
+    margin-left: 12px;
+  }
+  .content {
+    flex: 1;
+    padding: 6px 12px;
+    max-width: 60dvw;
+  }
+  .type {
+    @include typography('xs', 'medium');
+    color: $carter-text-600;
+    background-color: $carter-grey-200;
+    padding: 6px 12px;
+    min-width: 110px;
+    text-align: center;
+    align-items: center;
+    display: flex;
+    align-self: center;
+  }
+}

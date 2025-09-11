@@ -1,0 +1,19 @@
+.mainContainer {
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: 100%;
+  padding: 16px;
+  z-index: 10000;
+}
+
+.toastContainer {
+  color: $black-100;
+  background-color: $white-100;
+  border-radius: 3px;
+  padding: 12px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+}

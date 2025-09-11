@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     // includePaths: [path.join(__dirname, 'src')],
     prependData: `@import "~@/styles/resources.scss";`,
   },
+  devIndicators: false
 };
 
 export default nextConfig;

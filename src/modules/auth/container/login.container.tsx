@@ -22,24 +22,10 @@ const Login = () => {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  // Show loading while checking auth state
-  if (isLoading) {
-    return (
-      <div className={styles.pageContainer}>
-        <Head>
-          <title>Loading...</title>
-        </Head>
-        <div className={styles.loadingContainer}>
-          <Typography variant="h1-bold">Loading...</Typography>
-        </div>
-      </div>
-    );
-  }
-
   // Don't render if user is authenticated (will redirect)
   if (isAuthenticated) {
     router.replace('/dashboard');
-  }
+  } 
 
   return (
       <div className={styles.pageContainer}>

@@ -1,8 +1,12 @@
 .root_input {
-  width: 100%;
-  border: 1.5px solid $grey-700;
+  width: 200%;
+  padding: 0 10px;
+  margin: 0 10px;
+  color: $white-100;
+  height: 32px;
+  border: 1.5px solid $carter-brand-700;
   border-radius: 5px;
-  background-color: $white-100;
+  background-color: $carter-brand-700;
   .notched_outline {
     border: none;
   }
