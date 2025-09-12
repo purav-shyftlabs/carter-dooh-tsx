@@ -7,6 +7,7 @@ import { Button, CarterDateRangePicker } from 'shyftlabs-dsl';
 import styles from '../styles/dashboard.module.scss';
 import DateTimeParser, { DateTimeType } from '@/lib/date-time-parser';
 import { DATE_FORMAT } from '@/common/constants';
+import styles_publisher from '../styles/components/publisher-dashboard.module.scss';
 
 const Dashboard = () => {
     const isMobile = useMediaQuery(`(min-width: 320px) and (max-width: 767px)`);
@@ -111,7 +112,7 @@ const Dashboard = () => {
             );
           }}
       />
-      <div style={{ display: 'flex', flexDirection: 'column', padding: '24px' }}>
+      <div className={styles_publisher.container}>
         <NetworkPerformance />
       </div>
         </div>
