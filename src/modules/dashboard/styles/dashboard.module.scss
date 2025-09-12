@@ -1,0 +1,39 @@
+.container {
+  min-height: 100%;
+  background-color: $carter-layout-background;
+  .actions_container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.button_group_container {
+  display: flex;
+  background-color: $carter-brand-100;
+  padding: 2px;
+  border-radius: 6px;
+  button {
+    &:hover {
+      &[data-active='true'] {
+        background-color: $carter-brand-600;
+      }
+    }
+  }
+}
+
+.pop_over {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  width: 100dvw;
+  background-color: $white-100;
+  border-bottom: 1px solid $grey-700;
+  .date_group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

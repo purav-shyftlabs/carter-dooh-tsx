@@ -9,11 +9,13 @@ import { Drawer, Popover } from '@/lib/material-ui';
 import MagnifyingGlass from '@/assets/images/magnifying_glass.svg';
 import ROUTES from '@/common/routes';
 import { IRootState } from '@/redux/reducers';
+import { useAppDispatch } from '@/redux/hooks';
 import AuthService from '@/services/auth/auth-service';
 import styles from '../topbar/topbar.module.scss';
 import useUser from '@/contexts/user-data/user-data.hook';
 import UserProfile from '@/components/user-profile/user-profile.component';
 import SearchInput from '@/components/search-input/search-input.component';
+import { toggleSidebar } from '@/redux/actions';
 
 enum TopBarVariant {
   FULL,
@@ -28,6 +30,7 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ logoSrc }) => {
+  const dispatch = useAppDispatch();
   const [variant, setVariant] = useState<TopBarVariant>(TopBarVariant.FULL);
   const globalSearchAE = useRef<HTMLElement | null>(null);
   const [isGlobalSearchVisible, setIsGlobalSearchVisible] = useState<boolean>(false);
@@ -122,7 +125,7 @@ const TopBar: React.FC<TopBarProps> = ({ logoSrc }) => {
         </div>
 
         {variant === TopBarVariant.COMPACT && (
-          <button className={styles.iconButton} onClick={() => {/* TODO: Implement sidebar toggle */}}>
+          <button className={styles.iconButton} onClick={() => dispatch(toggleSidebar())}>
             <Menu size={24} />
           </button>
         )}

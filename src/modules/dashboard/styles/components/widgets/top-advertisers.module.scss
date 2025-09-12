@@ -1,0 +1,30 @@
+.container {
+  background-color: $white-100;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  flex: 2;
+  max-width: 100%;
+
+  .header_container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    .button_group_container {
+      display: flex;
+      background-color: $carter-brand-100;
+      padding: 2px;
+      border-radius: 6px;
+      button {
+        &:hover {
+          &[data-active='true'] {
+            background-color: $carter-brand-600;
+          }
+        }
+      }
+    }
+  }
+}

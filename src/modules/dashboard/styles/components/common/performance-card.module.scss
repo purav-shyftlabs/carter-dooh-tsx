@@ -1,0 +1,38 @@
+.container {
+  background: var(--Grey-100, #fff);
+  box-shadow: 14px 17px 6px 0 rgba(174, 187, 193, 0.00), 9px 11px 6px 0 rgba(174, 187, 193, 0.01), 5px 6px 5px 0 rgba(174, 187, 193, 0.05), 2px 3px 4px 0 rgba(174, 187, 193, 0.09), 1px 1px 2px 0 rgba(174, 187, 193, 0.10);
+  border: 1px solid $carter-grey-300;
+  border-radius: 6px;
+  padding: 16px;
+  min-height: 112px;
+  flex: 1;
+  .info_container {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fluctuation_container {
+    display: flex;
+    align-items: center;
+    &[data-mode='growth'] {
+      color: $carter-green-700;
+    }
+    &[data-mode='shrink'] {
+      color: $carter-red-700;
+      svg {
+        transform: rotateX(180deg);
+      }
+    }
+  }
+  &:hover {
+    cursor: pointer;
+    border-color: $carter-brand-200;
+  }
+  &[data-active='true'] {
+    border-color: $carter-brand-500;
+  }
+}
+.activeCard {
+  background: linear-gradient(353deg, rgba(255, 194, 133, 0.12) 5.29%, rgba(98, 122, 228, 0.12) 94.2%);
+}

@@ -1,0 +1,35 @@
+.container {
+  background-color: $white-100;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  flex: 1;
+  max-width: 100%;
+
+  .header_container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .product_card {
+    display: flex;
+    gap: 6px;
+    max-width: 450px;
+
+    .product_info {
+      .product_name {
+        color: $black-400;
+        @include typography('xs');
+      }
+
+      .advertiser_name {
+        color: $text-color-secondary;
+        @include typography('xxs');
+      }
+    }
+  }
+}

@@ -14,7 +14,7 @@ export const utcHeader: Record<string, number> = {
   utcoffset: new Date().getTimezoneOffset(),
 };
 
-// Request interceptor to add UTC headers
+// Request interceptor to add UTC headers and JWT token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Add UTC headers to all requests
@@ -22,6 +22,18 @@ api.interceptors.request.use(
       ...(config.headers || {}),
       ...utcHeader,
     } as unknown) as InternalAxiosRequestConfig['headers'];
+
+    // Add JWT token if available
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers = ({
+          ...(config.headers || {}),
+          Authorization: `Bearer ${token}`,
+        } as unknown) as InternalAxiosRequestConfig['headers'];
+      }
+    }
+
     return config;
   },
   (error) => {

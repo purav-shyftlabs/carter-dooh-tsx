@@ -10,19 +10,40 @@ import SidebarComponent from '@/modules/sidebar/container/sidebar.container';
 import styles from './internal-layout.module.scss';
 import TopBar from './topbar/topbar.component';
 import logo from '@/assets/images/logo-nav.png';
+import { useAppDispatch } from '@/redux/hooks';
+import { setSidebarOpen } from '@/redux/actions';
 // import TopBar from './topbar/topbar.component';
 
 const InternalLayout = ({ children, head = {} }) => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { isAuthenticated, isLoading } = useSelector(state => state.auth);
   const { userDisplayName, userEmail, logout } = useUserData();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarOpen = useSelector(state => state.layout.sidebarOpen);
+  console.log(sidebarOpen,'sidebarOpen');
   const [mounted, setMounted] = useState(false);
 
   // Handle client-side mounting to prevent hydration mismatches
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Close sidebar on route change
+  useEffect(() => {
+    const handleRouteChange = () => {
+      dispatch(setSidebarOpen(false));
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+    };
+  }, [router.events, dispatch]);
+
+  // Close sidebar when clicking outside (for mobile)
+  const handleBackdropClick = () => {
+    dispatch(setSidebarOpen(false));
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -31,10 +52,7 @@ const InternalLayout = ({ children, head = {} }) => {
     }
   }, [isAuthenticated, isLoading, router, mounted]);
 
-  const toggleSidebar = (open) => {
-    setSidebarOpen(open);
-  };
-
+ 
   // Show loading while checking auth state or before mounting
   if (!mounted || isLoading) {
     return (
@@ -72,7 +90,7 @@ const InternalLayout = ({ children, head = {} }) => {
         </div>
         <Drawer 
           open={sidebarOpen} 
-          onClose={() => toggleSidebar(false)}
+          onClose={handleBackdropClick}
           variant="temporary"
         >
           <SidebarComponent />

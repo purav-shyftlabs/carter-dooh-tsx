@@ -2,9 +2,12 @@ import { Dispatch } from 'redux';
 import { AuthUser } from '@/types';
 import * as types from './types';
 import authService from '@/services/auth/auth-service';
+import DashboardService from '@/services/dashboard/dashboard.service';
+import { initializeStore } from './store';
 
 export const authClearError = () => ({ type: types.AUTH_CLEAR_ERROR });
 export const authSetUser = (user: AuthUser) => ({ type: types.AUTH_SET_USER, payload: user });
+const store = initializeStore();
 
 // Alert actions
 export const removeAlert = (id: string) => ({ type: 'REMOVE_ALERT', payload: id });
@@ -43,6 +46,9 @@ export const login = (credentials: { email: string; password: string }) => async
   }
 };
 
+export const toggleSidebar = () => ({ type: types.TOGGLE_SIDEBAR });
+export const setSidebarOpen = (open: boolean) => ({ type: types.SET_SIDEBAR_OPEN, payload: open });
+
 export const logout = () => async (dispatch: Dispatch) => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token');
@@ -51,3 +57,20 @@ export const logout = () => async (dispatch: Dispatch) => {
   }
   dispatch({ type: types.AUTH_LOGOUT });
 };
+
+// Dashboard actions
+export const fetchDashboardData = () => async (dispatch: Dispatch) => {
+  try {
+    dispatch({ type: 'DASHBOARD_FETCH_REQUEST' });
+    const dashboardService = new DashboardService();
+    const data = await dashboardService.getDashboardData();
+    dispatch({ type: 'DASHBOARD_FETCH_SUCCESS', payload: data });
+    return data;
+  } catch (error) {
+    console.error('Dashboard fetch error:', error);
+    const message = (error as { message?: string }).message || 'Failed to fetch dashboard data';
+    dispatch({ type: 'DASHBOARD_FETCH_FAILURE', payload: message });
+    throw error;
+  }
+};
+
