@@ -1,23 +1,26 @@
 import { useFormik } from 'formik';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { carterColors, CarterInput, Typography, Button } from 'shyftlabs-dsl';
 import Link from 'next/link';
 import { forgotPasswordSchema } from '@/common/schemas.yup';
 import EmailSentIcon from '@/assets/images/mail_folder.png';
-import authService from '@/services/auth/auth-service';
 import useAlert from '@/contexts/alert/alert.hook';
 import { AlertVariant } from '@/contexts/alert/alert.provider';
 import ROUTES from '@/common/routes';
 import styles from '../styles/forgot-password.module.scss';
 import useConfigs from '@/contexts/app-configs/app-configs.hooks';
+import { IRootState } from '@/redux/reducers';
+import { useAppDispatch } from '@/redux/hooks';
+import { forgotPassword } from '@/redux/actions';
 
 const ForgotPasswordForm = () => {
   const [isEmailSent, setIsEmailSent] = useState<boolean>(false);
   const { client } = useConfigs();
   const { showAlert } = useAlert();
-  const [error, setError] = useState<string>();
-  // use exported singleton
+  const dispatch = useAppDispatch();
+  const { isForgotPasswordLoading, error } = useSelector((state: IRootState) => state.auth);
 
   const { values, errors, handleSubmit, handleChange } = useFormik({
     initialValues: {
@@ -26,12 +29,12 @@ const ForgotPasswordForm = () => {
     validationSchema: forgotPasswordSchema,
     onSubmit: async ({ username }) => {
       try {
-        await authService.forgotPassword(username);
+        await dispatch(forgotPassword(username));
         showAlert('An email has been sent to you to reset your password', AlertVariant.SUCCESS);
         setIsEmailSent(true);
       } catch (e) {
-        const message = e instanceof Error ? e.message : 'Something went wrong';
-        setError(message);
+        // Error is handled by Redux and displayed via error state
+        console.error('Forgot password error:', e);
       }
     },
   });
@@ -67,16 +70,17 @@ const ForgotPasswordForm = () => {
                 }}
                 placeholder="Enter your email"
                 error={!!errors.username || !!error}
-                errorMessage={errors.username ?? error}
+                errorMessage={errors.username ?? error ?? undefined}
                 value={values.username}
                 onChange={handleChange}
               />
               <Button
                 className={styles.submit_button}
-                label="Contine"
+                label={isForgotPasswordLoading ? "Sending email..." : "Continue"} 
                 variant="primary"
                 type="submit"
-                disabled={!(!errors.username && values.username.length > 0)}
+                loading={isForgotPasswordLoading}
+                disabled={!(!errors.username && values.username.length > 0) || isForgotPasswordLoading}
               />
               <Link href={ROUTES.AUTH.LOGIN}>
                 <Typography fontFamily="Roboto" variant="body-large-semibold" color={carterColors['brand-600']}>

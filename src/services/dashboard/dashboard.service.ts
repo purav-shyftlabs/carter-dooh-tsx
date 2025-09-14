@@ -16,6 +16,8 @@ export interface DashboardData {
   users: {
     online: number;
   };
+  recentActivity?: Array<Record<string, unknown>>;
+  upcomingSchedules?: Array<Record<string, unknown>>;
 }
 
 export interface DashboardResponse {

@@ -8,6 +8,7 @@ import styles from '../styles/dashboard.module.scss';
 import DateTimeParser, { DateTimeType } from '@/lib/date-time-parser';
 import { DATE_FORMAT } from '@/common/constants';
 import styles_publisher from '../styles/components/publisher-dashboard.module.scss';
+import UpcomingSchedules from '../component/widgets/upcoming-schedules.component';
 
 const Dashboard = () => {
     const isMobile = useMediaQuery(`(min-width: 320px) and (max-width: 767px)`);
@@ -114,6 +115,7 @@ const Dashboard = () => {
       />
       <div className={styles_publisher.container}>
         <NetworkPerformance />
+        <UpcomingSchedules />
       </div>
         </div>
     );

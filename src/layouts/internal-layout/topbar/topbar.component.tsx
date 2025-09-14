@@ -15,7 +15,7 @@ import styles from '../topbar/topbar.module.scss';
 import useUser from '@/contexts/user-data/user-data.hook';
 import UserProfile from '@/components/user-profile/user-profile.component';
 import SearchInput from '@/components/search-input/search-input.component';
-import { toggleSidebar } from '@/redux/actions';
+import { toggleSidebar, toggleNotificationDrawer, setNotificationDrawerOpen } from '@/redux/actions';
 
 enum TopBarVariant {
   FULL,
@@ -36,7 +36,7 @@ const TopBar: React.FC<TopBarProps> = ({ logoSrc }) => {
   const [isGlobalSearchVisible, setIsGlobalSearchVisible] = useState<boolean>(false);
   const [notificationCount, setNotificationCount] = useState<number>(0);
 
-  const isNotificationDrawerVisible = useSelector((state: IRootState) => state.auth.isLoading);
+  const isNotificationDrawerVisible = useSelector((state: IRootState) => state.layout.isNotificationDrawerOpen);
 
   useEffect(() => {
     const handleResize = () => {
@@ -56,11 +56,11 @@ const TopBar: React.FC<TopBarProps> = ({ logoSrc }) => {
   }, []);
 
   const showNotificationDrawer = () => {
-    // TODO: Implement notification drawer toggle
+    dispatch(toggleNotificationDrawer());
   };
 
   const hideNotificationDrawer = () => {
-    // TODO: Implement notification drawer toggle
+    dispatch(setNotificationDrawerOpen(false));
   };
 
   const renderNotificationButton = () => (
@@ -121,7 +121,7 @@ const TopBar: React.FC<TopBarProps> = ({ logoSrc }) => {
     <div className={styles.topbar}>
       <div className={styles.inner}>
         <div className={`${styles.logo} ${variant === TopBarVariant.COMPACT ? styles.logoCompact : ''}`}>
-          <img src={logoSrc} alt="Logo" width={140} height={30} />
+          <img src={logoSrc} alt="Logo" width={148} height={27} />
         </div>
 
         {variant === TopBarVariant.COMPACT && (

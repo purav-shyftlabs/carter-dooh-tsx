@@ -48,6 +48,29 @@ export const login = (credentials: { email: string; password: string }) => async
 
 export const toggleSidebar = () => ({ type: types.TOGGLE_SIDEBAR });
 export const setSidebarOpen = (open: boolean) => ({ type: types.SET_SIDEBAR_OPEN, payload: open });
+export const toggleNotificationDrawer = () => ({ type: types.TOGGLE_NOTIFICATION_DRAWER });
+export const setNotificationDrawerOpen = (open: boolean) => ({ type: types.SET_NOTIFICATION_DRAWER_OPEN, payload: open });
+
+// Upcoming Schedules actions
+export const setUpcomingSchedules = (schedules: Array<Record<string, unknown>>) => ({ 
+  type: types.SET_UPCOMING_SCHEDULES, 
+  payload: schedules 
+});
+
+// Forgot password action
+export const forgotPassword = (email: string) => async (dispatch: Dispatch) => {
+  try {
+    dispatch({ type: types.AUTH_FORGOT_PASSWORD_REQUEST });
+    await authService.forgotPassword(email);
+    dispatch({ type: types.AUTH_FORGOT_PASSWORD_SUCCESS });
+    return true;
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    const message = (error as { message?: string }).message || 'Failed to send reset email';
+    dispatch({ type: types.AUTH_FORGOT_PASSWORD_FAILURE, payload: message });
+    throw error;
+  }
+};
 
 export const logout = () => async (dispatch: Dispatch) => {
   if (typeof window !== 'undefined') {
@@ -65,11 +88,17 @@ export const fetchDashboardData = () => async (dispatch: Dispatch) => {
     const dashboardService = new DashboardService();
     const data = await dashboardService.getDashboardData();
     dispatch({ type: 'DASHBOARD_FETCH_SUCCESS', payload: data });
+    // fan-out to specialized slices
+    dispatch({ type: 'RECENT_ACTIVITY_FETCH_SUCCESS', payload: data.recentActivity ?? [] });
+    dispatch({ type: 'UPCOMING_SCHEDULES_FETCH_SUCCESS', payload: data.upcomingSchedules ?? [] });
+    dispatch(setUpcomingSchedules(data.upcomingSchedules ?? []));
     return data;
   } catch (error) {
     console.error('Dashboard fetch error:', error);
     const message = (error as { message?: string }).message || 'Failed to fetch dashboard data';
     dispatch({ type: 'DASHBOARD_FETCH_FAILURE', payload: message });
+    dispatch({ type: 'RECENT_ACTIVITY_FETCH_FAILURE', payload: message });
+    dispatch({ type: 'UPCOMING_SCHEDULES_FETCH_FAILURE', payload: message });
     throw error;
   }
 };
