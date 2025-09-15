@@ -3,6 +3,8 @@ import styled from '@emotion/styled';
 import { ChevronDown } from 'lucide-react';
 import { Menu } from '@/lib/material-ui';
 import useUser from '@/contexts/user-data/user-data.hook';
+import { useSelector } from 'react-redux';
+import { IRootState } from '@/redux/reducers';
 
 const ProfileSection = styled.div`
   font-family: 'Roboto', sans-serif;
@@ -111,8 +113,11 @@ interface UserProfileProps {
   logout: () => void;
 }
 
+
 const UserProfile: React.FC<UserProfileProps> = ({ isLoading, logout }) => {
-  const { user } = useUser();
+  const { user } = useSelector((state: IRootState) => state.auth);
+  console.log(user,'user');
+
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   return (
     <ProfileSection id="user-profile">
@@ -120,14 +125,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoading, logout }) => {
         onClick={({ currentTarget }) => setAnchorEl(currentTarget)}
         style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
       >
-        <Avatar>{user?.username?.[0] ?? ''}</Avatar>
+        <Avatar>{user?.name?.[0] ?? ''}</Avatar>
 
         <UserBreadCrumbs>
           <Name>
             {isLoading && !user?.name ? (
               <PlaceholderText>Fetching name...</PlaceholderText>
             ) : (
-              <span title={user?.username ?? ''}>{user?.username}</span>
+              <span title={user?.name ?? ''}>{user?.name}</span>
             )}
           </Name>
         </UserBreadCrumbs>

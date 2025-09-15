@@ -19,9 +19,9 @@ const NetworkPerformance: React.FC<INetworkPerformance> = props => {
   const dispatch = useAppDispatch();
   const { data: dashboardData, isLoading } = useSelector((state: IRootState) => state.dashboard);
 
-  useEffect(() => {
-    dispatch(fetchDashboardData());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchDashboardData());
+  // }, [dispatch]);
 
   // Transform API data to performance cards
   const performanceCards = dashboardData ? [

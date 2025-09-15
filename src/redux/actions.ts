@@ -37,6 +37,23 @@ export const login = (credentials: { email: string; password: string }) => async
       payload.user && localStorage.setItem('user', JSON.stringify(payload.user));
     }
     dispatch({ type: types.AUTH_LOGIN_SUCCESS, payload });
+
+    // After login, fetch /users/me and store in redux
+    try {
+      // Clear any stale user before refetching
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
+      }
+      dispatch({ type: types.AUTH_SET_USER, payload: null });
+
+      const me = await authService.getMe();
+      if (me && typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(me));
+      }
+      dispatch({ type: types.AUTH_SET_USER, payload: me as AuthUser });
+    } catch (_e) {
+      // Non-blocking: keep auth state even if /users/me fails
+    }
     return payload;
   } catch (err) {
     console.error('Login action error:', err);

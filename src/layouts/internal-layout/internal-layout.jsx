@@ -9,6 +9,7 @@ import { useUserData } from './useUserData.hook';
 import SidebarComponent from '@/modules/sidebar/container/sidebar.container';
 import styles from './internal-layout.module.scss';
 import TopBar from './topbar/topbar.component';
+import UserDataProvider from '@/contexts/user-data/user-data.provider';
 import logo from '@/assets/images/logo-nav.png';
 import { useAppDispatch } from '@/redux/hooks';
 import { setSidebarOpen } from '@/redux/actions';
@@ -75,30 +76,32 @@ const InternalLayout = ({ children, head = {} }) => {
 
 
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>{head.title || 'Dashboard'}</title>
-        <meta name="description" content={head.description || 'Internal Dashboard'} />
-      </Head>
+    <UserDataProvider>
+      <div className={styles.container}>
+        <Head>
+          <title>{head.title || 'Dashboard'}</title>
+          <meta name="description" content={head.description || 'Internal Dashboard'} />
+        </Head>
 
-      {/* Main Content with Sidebar */}
-      <TopBar logoSrc={logo?.src} />
+        {/* Main Content with Sidebar */}
+        <TopBar logoSrc={logo?.src} />
 
-      <div className={styles.layout}>
-        <div className={styles.sidebar}>
-          <SidebarComponent />
+        <div className={styles.layout}>
+          <div className={styles.sidebar}>
+            <SidebarComponent />
+          </div>
+          <Drawer 
+            open={sidebarOpen} 
+            onClose={handleBackdropClick}
+            variant="temporary"
+          >
+            <SidebarComponent />
+          </Drawer>
+          <div className={styles.content}>{children}</div>
+          {/* {enableChatAgent && <ChatAgent />} */}
         </div>
-        <Drawer 
-          open={sidebarOpen} 
-          onClose={handleBackdropClick}
-          variant="temporary"
-        >
-          <SidebarComponent />
-        </Drawer>
-        <div className={styles.content}>{children}</div>
-        {/* {enableChatAgent && <ChatAgent />} */}
       </div>
-    </div>
+    </UserDataProvider>
   );
 };
 

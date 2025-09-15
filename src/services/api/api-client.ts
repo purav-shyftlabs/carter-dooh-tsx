@@ -10,9 +10,6 @@ const api: AxiosInstance = axios.create({
 });
 
 // UTC header utility
-export const utcHeader: Record<string, number> = {
-  utcoffset: new Date().getTimezoneOffset(),
-};
 
 // Request interceptor to add UTC headers and JWT token
 api.interceptors.request.use(
@@ -20,7 +17,6 @@ api.interceptors.request.use(
     // Add UTC headers to all requests
     config.headers = ({
       ...(config.headers || {}),
-      ...utcHeader,
     } as unknown) as InternalAxiosRequestConfig['headers'];
 
     // Add JWT token if available

@@ -12,9 +12,9 @@ const UpcomingSchedules: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items: upcomingSchedules, isLoading, error } = useSelector((state: IRootState) => state.upcomingSchedules);
 
-  useEffect(() => {
-    dispatch(fetchDashboardData());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchDashboardData());
+  // }, [dispatch]);
 
   if (isLoading) {
     return (

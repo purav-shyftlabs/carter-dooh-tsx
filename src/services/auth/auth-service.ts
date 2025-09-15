@@ -1,4 +1,4 @@
-import api, { utcHeader } from '../api/api-client';
+import api from '../api/api-client';
 
 // AuthService class for authentication logic
 class AuthService {
@@ -89,8 +89,6 @@ class AuthService {
       const response = await api.post('/auth/login', {
         email: email,
         password: password
-      }, {
-        headers: { ...utcHeader }
       });
       // wait for 1 second
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -108,7 +106,7 @@ class AuthService {
       throw new Error('Access token is required');
     }
     try {
-      const response = await api.post('/api/user/access-token-login', { accessToken }, { headers: { ...utcHeader } });
+      const response = await api.post('/api/user/access-token-login', { accessToken });
       return response.data as { token?: string; refreshToken?: string; user?: unknown } | unknown;
     } catch (error) {
       console.error('Error during access token login:', error);
@@ -146,9 +144,7 @@ class AuthService {
   // Logout user
   async logout(): Promise<void> {
     try {
-      await api.post('/api/user/logout', {
-        headers: { ...utcHeader }
-      });
+      await api.post('/api/user/logout');
     } catch (error) {
       // Even if logout fails on server, we should clear local data
       console.warn('Logout request failed:', error);
@@ -187,6 +183,20 @@ class AuthService {
     return (response as Record<string, unknown>).user;
   }
 
+  // Fetch current user via axios client using JWT (preferred)
+  async getMe(): Promise<unknown> {
+    try {
+      const response = await api.get('/users/me');
+      // API contract provided returns { success, message, data, timestamp }
+      const data = (response?.data && typeof response.data === 'object') ? (response.data as Record<string, unknown>) : {};
+      return (data as { data?: unknown }).data ?? null;
+    } catch (error) {
+      console.error('Error fetching current user (/users/me):', error);
+      const axiosErr = error as { response?: { data?: unknown } };
+      throw axiosErr.response?.data || error;
+    }
+  }
+
   // Update user profile
   async updateProfile(userData: Record<string, unknown>): Promise<unknown> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/profile`, {
@@ -222,8 +232,6 @@ class AuthService {
     try {
       const response = await api.post('/api/user/forgot-password', {
         email: email
-      }, {
-        headers: { ...utcHeader }
       });
       console.log(response.data);
       return response.data as unknown;
@@ -244,8 +252,6 @@ class AuthService {
       const response = await api.post('/api/user/reset-password', {
         token: token,
         newPassword: newPassword
-      }, {
-        headers: { ...utcHeader }
       });
       console.log(response.data);
       return response.data as unknown;
@@ -263,9 +269,7 @@ class AuthService {
     }
     try {
       const response = await api.get('/api/user/validate-reset-password-token', {
-        params: { token },
-        headers: { ...utcHeader },
-      });
+        params: { token }      });
       return response.data as { valid: boolean } | unknown;
     } catch (error) {
       console.error('Error during token validation:', error);
