@@ -63,6 +63,17 @@ export enum PermissionType {
   YieldManagement = 'YIELD'
 }
 
+export enum AccessLevel {
+  NO_ACCESS = 'NO_ACCESS',
+  VIEW_ACCESS = 'VIEW_ACCESS',
+  FULL_ACCESS = 'FULL_ACCESS',
+  CAMPAIGN_LEVEL = 'CAMPAIGN_LEVEL',
+  COMPREHENSIVE_ACCESS = 'COMPREHENSIVE_ACCESS',
+  MANAGE_WALLET = 'MANAGE_WALLET',
+  CREATIVE_REQUESTS = 'CREATIVE_REQUESTS',
+  ALL_REQUESTS = 'ALL_REQUESTS'
+}
+
 export enum RoleType {
   All = 'ALL',
   Admin = 'ADMIN',

@@ -1,10 +1,12 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { UserType } from '@/types';
+import { UserType, AccessLevel, PermissionType } from '@/types';
 import { Button, CarterTabs, CarterTabType } from 'shyftlabs-dsl';
 import InternalLayout from '@/layouts/internal-layout/internal-layout';
 import { PlusIcon } from '@/lib/icons';
 import useUser from '@/contexts/user-data/user-data.hook';
+import { useAppSelector } from '@/redux/hooks';
+import { checkAclFromState } from '@/common/acl';
 import ROUTES from '@/common/routes';
 import { NextPageWithLayout } from '@/types/common';
 import PageHeader from '@/components/page-header/page-header.component';
@@ -41,7 +43,16 @@ const Users: NextPageWithLayout = () => {
     });
   }
 
-  const hasFullAccess = permission?.USER_MANAGEMENT?.fullAccess;
+  const hasFullAccessFromRedux = useAppSelector(state =>
+    checkAclFromState(state, PermissionType.UserManagement, AccessLevel.FULL_ACCESS)
+  );
+
+  const flags = (permission as Record<string, unknown> | null | undefined)?.USER_MANAGEMENT as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const hasFullAccessFromFlags = Boolean(flags && (flags as { fullAccess?: boolean }).fullAccess);
+  const hasFullAccess = Boolean(hasFullAccessFromRedux || hasFullAccessFromFlags);
 
   return (
     <>
