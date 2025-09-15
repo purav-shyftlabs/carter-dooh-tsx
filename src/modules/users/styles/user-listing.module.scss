@@ -1,0 +1,22 @@
+.container {
+  .section_head {
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 16px 12px;
+    background-color: $white-100;
+  }
+  .horizontal_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .end_controls {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+    .sync_action {
+      height: 16px;
+    }
+  }
+}

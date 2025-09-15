@@ -1,25 +1,36 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { IRootState } from '@/redux/reducers';
-import { AuthUser } from '@/types';
+import { AuthUser, UserType } from '@/types';
+import { UserDataContext } from '@/contexts/user-data/user-data.provider';
 
 type UseUserReturn = {
   user: AuthUser | null;
   isPublisher: boolean;
   isAdvertiser: boolean;
   permission: Record<string, any> | null;
+  isLoading: boolean;
 };
 
 const useUser = (): UseUserReturn => {
-  const user = useSelector((state: IRootState) => state.auth.user) as AuthUser | null;
+  const context = useContext(UserDataContext);
 
-  const role = (user?.role ?? '').toString().toLowerCase();
-  const isPublisher = role === 'publisher';
-  const isAdvertiser = role === 'advertiser';
+  // Fallbacks using Redux in case context is not available
+  const userFromRedux = useSelector((state: IRootState) => state.auth.user) as AuthUser | null;
+  console.log(userFromRedux,'userFromRedux');
+  const role = (userFromRedux?.userType ?? '').toString().toLowerCase();
+  const isPublisherFromRedux = role === UserType.Publisher;
+  const isAdvertiserFromRedux = role === UserType.Advertiser;
+  const permissionFromRedux = useMemo(() => null, []);
 
-  const permission = useMemo(() => null, []);
+  const user = (context.user as AuthUser | null) ?? userFromRedux ?? null;
+  const isPublisher = context.isPublisher ?? isPublisherFromRedux;
+  const isAdvertiser = context.isAdvertiser ?? isAdvertiserFromRedux;
+  const permission = (context.permission as Record<string, any> | null) ?? permissionFromRedux;
+  const isLoading = Boolean(context.isLoading);
+  console.log(isPublisher,'isPublisher');
 
-  return { user, isPublisher, isAdvertiser, permission };
+  return { user, isPublisher, isAdvertiser, permission, isLoading };
 };
 
 export default useUser;

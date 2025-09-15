@@ -5,11 +5,16 @@ const AUTH_ROUTES = {
   LOGIN: '/auth/login',
   LOGOUT: '/api/auth/logout',
 };
+const USERS_ROUTES = {
+  ADD: '/users/add',
+  LIST: '/users',
+};
 const ROUTES = {
   DASHBOARD: '/dashboard',
   BILLBOARD: '/billboard',
   AUTH: AUTH_ROUTES,
   INSIGHTS: '/insights',
+  USERS:USERS_ROUTES,
   ACCOUNT: {
     BASE: '/account',
   },

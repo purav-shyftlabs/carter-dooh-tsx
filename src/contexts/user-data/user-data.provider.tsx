@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import authService from '@/services/auth/auth-service';
+import { UserType } from '@/types';
 
 export type TUserContext = {
   user?: Record<string, unknown> | null;
@@ -49,8 +50,8 @@ const UserDataProvider = ({ children }: { children: React.ReactNode }) => {
     return {
       user: userData ?? null,
       permission: permissions,
-      isAdvertiser: userType === 'ADVERTISER',
-      isPublisher: userType === 'PUBLISHER',
+      isAdvertiser: userType === UserType.Advertiser,
+      isPublisher: userType === UserType.Publisher,
       isLoading: Boolean(isLoading),
       isLoadingPermission: false,
       refetchUser,

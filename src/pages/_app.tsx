@@ -16,6 +16,7 @@ import ErrorBoundary from '@/components/error-boundary/error-boundary.component'
 import { NextPageWithLayout } from '@/types/common';
 import ToastMessage from '@/components/toast-store-message/toast-store-message.component';
 import AlertProvider from '@/contexts/alert/alert.provider';
+import UserDataProvider from '@/contexts/user-data/user-data.provider';
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -42,8 +43,10 @@ const App = (props: Props) => {
       <ErrorBoundary>
         <Provider store={store}>
           <AlertProvider>
-            <ToastMessage />
-            {getLayout(<Component {...pageProps} />)}
+            <UserDataProvider>
+              <ToastMessage />
+              {getLayout(<Component {...pageProps} />)}
+            </UserDataProvider>
           </AlertProvider>
         </Provider>
       </ErrorBoundary>

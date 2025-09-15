@@ -1,0 +1,138 @@
+.container {
+  padding: 0px 24px;
+  .input_wrapper {
+    padding: 24px;
+    background-color: $white-100;
+    margin: 24px 0px;
+    border-radius: 6px;
+    .title {
+      @include typography(sm, medium);
+      color: $text-color-primary;
+      line-height: 20px;
+      margin-bottom: 32px;
+    }
+  }
+  .section {
+    margin: 40px 0px 0px 0px;
+
+    .input_section {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .input_label {
+      @include typography(xs, medium);
+      color: $text-color-dark;
+      line-height: 16px;
+    }
+    .input_container {
+      margin-top: 6px;
+      .form_input {
+        height: 46px;
+        align-items: center;
+        gap: 10px;
+        align-self: stretch;
+      }
+      .input_error {
+        border: 1px solid $red-400;
+      }
+      .error {
+        margin-top: 4px;
+        color: $red-400;
+        @include typography(xxs);
+      }
+    }
+  }
+}
+
+.form_action {
+  display: flex;
+  gap: 24px;
+}
+
+.apiSection {
+  @include layout(flex, row, space-between, center, inherit, inherit, 20px);
+  width: 100%;
+}
+
+.info {
+  font-size: 12px;
+  padding-top: 12px;
+}
+
+.apiSection {
+  @include layout(flex, row, space-between, center);
+  gap: 20px;
+  width: 100%;
+}
+
+.apiTitle {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 21px;
+  padding-bottom: 32px;
+  padding-top: 32px;
+}
+
+.info {
+  font-size: 14px;
+  font-weight: 400;
+  span {
+    cursor: pointer;
+  }
+}
+
+.generate_title {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16.5px;
+  color: #616161;
+  margin-bottom: 40px;
+}
+
+.api_buttons {
+  max-width: 200px;
+}
+
+.api_info_title {
+  color: $text-color-secondary;
+  @include typography('xs', 'regular');
+}
+
+.self_section {
+  padding: 24px;
+  background-color: $white-100;
+  margin: 24px 0px;
+  border-radius: 6px;
+
+  .title {
+    @include typography(sm, medium);
+    color: $text-color-primary;
+    line-height: 20px;
+    margin-bottom: 32px;
+  }
+
+  .key_title {
+    @include typography('xs');
+    color: $text-color-dark;
+    margin-bottom: 12px;
+    &:last-of-type {
+      margin-top: 24px;
+    }
+  }
+
+  .danger_button {
+    border: 1px solid $carter-red-500;
+  }
+
+  .copy_warning {
+    margin-top: 12px;
+    background-color: $alert-blue;
+    border-color: $blue-200;
+  }
+}

@@ -1,0 +1,33 @@
+.container {
+  background-color: $white-100;
+  padding: 24px;
+  .title {
+    @include typography(sm, medium);
+    color: $text-color-primary;
+    line-height: 20px;
+    margin-bottom: 20px;
+  }
+
+  .key_title {
+    @include typography('xs');
+    color: $text-color-dark;
+    margin-bottom: 12px;
+    &:last-of-type {
+      margin-top: 24px;
+    }
+  }
+
+  .copy_warning {
+    margin-top: 12px;
+    background-color: $alert-blue;
+    border-color: $blue-200;
+  }
+
+  .info {
+    @include typography('xs');
+    margin-top: 12px;
+    span {
+      cursor: pointer;
+    }
+  }
+}

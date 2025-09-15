@@ -37,3 +37,35 @@ export enum NotificationType {
   /**  Wallet related notifications  */
   Wallet = 'WALLET'
 }
+
+export enum UserType {
+  Advertiser = 'ADVERTISER',
+  ApiUser = 'API_USER',
+  Publisher = 'PUBLISHER'
+}
+
+export enum PermissionType {
+  AccountSetup = 'ACCOUNT_SETUP',
+  AdvertiserManagement = 'ADVERTISER_MANAGEMENT',
+  AdInventoryPlacements = 'AD_INVENTORY_PLACEMENTS',
+  AllAdvertiserCampaigns = 'ALL_ADVERTISER_CAMPAIGNS',
+  AllPublisherCampaigns = 'ALL_PUBLISHER_CAMPAIGNS',
+  ApprovalRequests = 'APPROVAL_REQUESTS',
+  AudienceKeysValues = 'AUDIENCE_KEYS_VALUES',
+  CreativeTemplate = 'CREATIVE_TEMPLATE',
+  InsightDashboard = 'INSIGHT_DASHBOARD',
+  OffsiteCampaigns = 'OFFSITE_CAMPAIGNS',
+  OffsiteIntegrations = 'OFFSITE_INTEGRATIONS',
+  PublicApiAccess = 'PUBLIC_API_ACCESS',
+  ReportGeneration = 'REPORT_GENERATION',
+  UserManagement = 'USER_MANAGEMENT',
+  Wallet = 'WALLET',
+  YieldManagement = 'YIELD'
+}
+
+export enum RoleType {
+  All = 'ALL',
+  Admin = 'ADMIN',
+  StandardUser = 'STANDARD_USER',
+  CustomUser = 'CUSTOM_USER'
+}
