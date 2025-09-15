@@ -197,6 +197,23 @@ class AuthService {
     }
   }
 
+  // Switch account and return new token
+  async switchAccount(accountId: string | number): Promise<string> {
+    try {
+      const response = await api.post('/auth/switch-account', { accountId });
+      const envelope = (response?.data && typeof response.data === 'object') ? (response.data as Record<string, unknown>) : {};
+      const token = (envelope as { token?: string }).token || (envelope as { data?: { token?: string } }).data?.token || '';
+      if (!token) {
+        throw new Error('No token returned from switch-account');
+      }
+      return token;
+    } catch (error) {
+      console.error('Error switching account:', error);
+      const axiosErr = error as { response?: { data?: unknown } };
+      throw axiosErr.response?.data || error;
+    }
+  }
+
   // Update user profile
   async updateProfile(userData: Record<string, unknown>): Promise<unknown> {
     const response = await this.makeRequest(`${this.baseURL}${this.apiPrefix}/profile`, {

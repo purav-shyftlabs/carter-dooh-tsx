@@ -116,6 +116,12 @@ class UsersService {
     // API returns the updated user back
     return response.data?.data ?? response.data;
   }
+
+  async getAccountsByUser(): Promise<any[]> {
+    const response = await api.get(`/users/by-user`);
+    const data = response.data?.data ?? response.data;
+    return Array.isArray(data) ? data : [];
+  }
 }
 
 export default UsersService;

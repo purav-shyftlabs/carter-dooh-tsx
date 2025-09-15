@@ -5,6 +5,10 @@ import { Menu } from '@/lib/material-ui';
 import useUser from '@/contexts/user-data/user-data.hook';
 import { useSelector } from 'react-redux';
 import { IRootState } from '@/redux/reducers';
+import UsersService from '@/services/users/users.service';
+import authService from '@/services/auth/auth-service';
+import { useAppDispatch } from '@/redux/hooks';
+import { authSetUser } from '@/redux/actions';
 
 const ProfileSection = styled.div`
   font-family: 'Roboto', sans-serif;
@@ -115,10 +119,44 @@ interface UserProfileProps {
 
 
 const UserProfile: React.FC<UserProfileProps> = ({ isLoading, logout }) => {
+  const dispatch = useAppDispatch();
   const { user } = useSelector((state: IRootState) => state.auth);
-  console.log(user,'user');
-
+  const currentAccountId = String(user?.accountId ?? (user as any)?.currentAccountId ?? '');
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+  const [accounts, setAccounts] = React.useState<Array<any>>([]);
+
+  React.useEffect(() => {
+    const svc = new UsersService();
+    svc.getAccountsByUser().then((arr) => {
+      setAccounts(Array.isArray(arr) ? arr : []);
+    }).catch(() => {
+      setAccounts([]);
+    });
+  }, []);
+
+  const current = React.useMemo(() => accounts.find(a => String(a.accountId) === String(currentAccountId)), [accounts, currentAccountId]);
+  const others = React.useMemo(() => accounts.filter(a => String(a.accountId) !== String(currentAccountId)), [accounts, currentAccountId]);
+  const handleSwitchAccount = async (accountId: string | number) => {
+    try {
+      const newToken = await authService.switchAccount(accountId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', newToken);
+      }
+      const me = await authService.getMe();
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(me));
+      }
+      dispatch(authSetUser(me as any));
+      setAnchorEl(null);
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to switch account', e);
+    }
+  };
+
   return (
     <ProfileSection id="user-profile">
       <IconButton
@@ -132,17 +170,21 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoading, logout }) => {
             {isLoading && !user?.name ? (
               <PlaceholderText>Fetching name...</PlaceholderText>
             ) : (
-              <span title={user?.name ?? ''}>{user?.name}</span>
+              <span title={user?.name ?? ''}>
+                {user?.name}
+                {/* {current?.accountName ? ` — ${current.accountName}` : ''} */}
+              </span>
             )}
           </Name>
         </UserBreadCrumbs>
       </IconButton>
       <MoreMenu
         options={[
-          {
-            label: 'Logout',
-            onClick: logout,
-          },
+          ...others.map(o => ({
+            label: o.accountName || String(o.accountId),
+            onClick: () => handleSwitchAccount(o.accountId),
+          })),
+          { label: 'Logout', onClick: logout },
         ]}
         Icon={() => <ChevronDown size={16} />}
         anchorEl={anchorEl}

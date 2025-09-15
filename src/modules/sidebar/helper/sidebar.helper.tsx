@@ -2,9 +2,25 @@ import { FileCheck } from 'lucide-react';
 import { HomeIcon, SettingsIcon, UsersIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
 import { NextRouter } from 'next/router';
+import { useAppSelector } from '@/redux/hooks';
+import { checkAclFromState } from '@/common/acl';
+import { AccessLevel, PermissionType } from '@/types';
 
 
 export const useSidebarMenuList = () => {
+  const hasDashboardView = useAppSelector(state =>
+    checkAclFromState(state, PermissionType.InsightDashboard, AccessLevel.VIEW_ACCESS)
+  );
+  const hasBillboardView = useAppSelector(state =>
+    checkAclFromState(state, PermissionType.AdInventoryPlacements, AccessLevel.VIEW_ACCESS)
+  );
+  const hasUsersView = useAppSelector(state =>
+    checkAclFromState(state, PermissionType.UserManagement, AccessLevel.VIEW_ACCESS)
+  );
+  const hasSettingsView = useAppSelector(state =>
+    checkAclFromState(state, PermissionType.AccountSetup, AccessLevel.VIEW_ACCESS)
+  );
+
   const MenuItems = [
     {
       id: 1,
@@ -12,7 +28,7 @@ export const useSidebarMenuList = () => {
       icon: <HomeIcon width={16} height={16} />,
       type: 'button',
       link: ROUTES.DASHBOARD,
-      show: true,
+      // show: hasDashboardView,
       testId: 'dashboard',
       assist: 'dashboard',
     },
@@ -21,7 +37,7 @@ export const useSidebarMenuList = () => {
       label: 'Billboard',
       icon: <FileCheck width={16} height={16} />,
       link: ROUTES.BILLBOARD,
-      show: true,
+      // show: hasBillboardView,
       testId: 'billboard',
       assist: 'billboard',
     },
@@ -30,14 +46,14 @@ export const useSidebarMenuList = () => {
       label: 'Users',
       icon: <UsersIcon width={16} height={16} />,
       link: ROUTES.USERS.LIST,
-      show: true,
+      show: hasUsersView,
     },
     {
       id: 4,
       label: 'Settings',
       icon: <SettingsIcon width={16} height={16} />,
       link: ROUTES.ACCOUNT.BASE,
-      show:  true,
+      show:  hasSettingsView,
       testId: 'settings',
       assist: 'settings',
       position: 'bottom',

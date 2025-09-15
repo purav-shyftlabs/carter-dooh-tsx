@@ -13,6 +13,10 @@ import UserDataProvider from '@/contexts/user-data/user-data.provider';
 import logo from '@/assets/images/logo-nav.png';
 import { useAppDispatch } from '@/redux/hooks';
 import { setSidebarOpen } from '@/redux/actions';
+import { checkAclFromState } from '@/common/acl';
+import { AccessLevel, PermissionType } from '@/types';
+import ROUTES from '@/common/routes';
+import UnauthorizedPage from '@/modules/access-control-layer/components/unauthorized.component';
 // import TopBar from './topbar/topbar.component';
 
 const InternalLayout = ({ children, head = {} }) => {
@@ -23,6 +27,17 @@ const InternalLayout = ({ children, head = {} }) => {
   const sidebarOpen = useSelector(state => state.layout.sidebarOpen);
   console.log(sidebarOpen,'sidebarOpen');
   const [mounted, setMounted] = useState(false);
+
+  // ACL guard per route (compute early so hooks run consistently)
+  const routeToPermissionEarly = [
+    // { match: ROUTES.DASHBOARD, permissionType: PermissionType.InsightDashboard },
+    // { match: ROUTES.BILLBOARD, permissionType: PermissionType.AdInventoryPlacements },
+    { match: ROUTES.USERS.LIST, permissionType: PermissionType.UserManagement },
+    { match: ROUTES.ACCOUNT.BASE, permissionType: PermissionType.AccountSetup },
+  ];
+  const currentPathEarly = router.asPath && typeof router.asPath === 'string' ? router.asPath.split('?')[0] : '';
+  const requiredEarly = routeToPermissionEarly.find(r => currentPathEarly === r.match || currentPathEarly.startsWith(r.match + '/'));
+  const hasAccessEarly = useSelector(state => (requiredEarly ? checkAclFromState(state, requiredEarly.permissionType, AccessLevel.VIEW_ACCESS) : true));
 
   // Handle client-side mounting to prevent hydration mismatches
   useEffect(() => {
@@ -72,7 +87,11 @@ const InternalLayout = ({ children, head = {} }) => {
   if (!isAuthenticated) {
     router.replace('/auth/login');
   }
-  // const { sidebar } = useSelector((state) => state.common);
+  // ACL guard done earlier (hasAccessEarly)
+
+  const unauthorizedView = (
+   <UnauthorizedPage />
+  );
 
 
   return (
@@ -97,7 +116,7 @@ const InternalLayout = ({ children, head = {} }) => {
           >
             <SidebarComponent />
           </Drawer>
-          <div className={styles.content}>{children}</div>
+          <div className={styles.content}>{hasAccessEarly ? children : unauthorizedView}</div>
           {/* {enableChatAgent && <ChatAgent />} */}
         </div>
       </div>
