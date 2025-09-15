@@ -18,7 +18,7 @@ import RolesPermissionsComponent, {
   publisher_permissions,
 } from '@/components/roles-permissions-component/roles-permissions.component';
 import { USER_ROLE, USER_TYPE as CONST_USER_TYPE } from '@/common/constants';
-import UsersService, { CreateUserPayload } from '@/services/users/users.service';
+import UsersService, { CreateUserPayload, UpdateUserPayload } from '@/services/users/users.service';
 
 const validationSchema = yup.object().shape({
   firstName: yup.string().trim().required('Please enter first name'),
@@ -61,7 +61,7 @@ const UserForm: any = () => {
       firstName: '',
       lastName: '',
       email: '',
-      timeZoneName: 'America/Los_Angeles',
+      timeZoneName: 'UTC',
       userType: isAdvertiser ? UserType.Advertiser : UserType.Publisher,
       allowAllAdvertisers: true,
       brands: '',
@@ -108,32 +108,120 @@ const UserForm: any = () => {
               }))
           : [];
 
-        // Transform form data to match API payload structure
-        const payload: CreateUserPayload = {
-          currentAccountId: Number(loggedInUser?.accountId) || 1,
-          name: `${values.firstName} ${values.lastName}`,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          email: values.email,
-          timezoneName: values.timeZoneName,
-          userType: values.userType,
-          roleType: values.roleType,
-          allowAllBrands: values.userType === UserType.Publisher ? values.allowAllAdvertisers : true,
-          allowAllBrandsList: values.brands ? values.brands.split(',').map(brand => brand.trim()) : [],
-          permissions: permissionsArray,
-        };
-
-        // Call the API to create user
-        await usersService.createUser(payload);
-        
-        showAlert('User created successfully', AlertVariant.SUCCESS);
-        router.push(ROUTES.USERS.LIST);
+        const id = router.query.id as string | undefined;
+        if (id) {
+          // Update flow: only send fields supported by PATCH
+          const updatePayload: UpdateUserPayload = {
+            name: `${values.firstName} ${values.lastName}`,
+            roleType: values.roleType,
+            permissions: permissionsArray,
+          };
+          await usersService.updateUser(id, updatePayload);
+          showAlert('User updated successfully', AlertVariant.SUCCESS);
+          router.push(ROUTES.USERS.LIST);
+        } else {
+          // Create flow
+          const payload: CreateUserPayload = {
+            currentAccountId: Number(loggedInUser?.accountId) || 1,
+            name: `${values.firstName} ${values.lastName}`,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            timezoneName: values.timeZoneName,
+            userType: values.userType,
+            roleType: values.roleType,
+            allowAllBrands: values.userType === UserType.Publisher ? values.allowAllAdvertisers : true,
+            allowAllBrandsList: values.brands ? values.brands.split(',').map(brand => brand.trim()) : [],
+            permissions: permissionsArray,
+          };
+          await usersService.createUser(payload);
+          showAlert('User created successfully', AlertVariant.SUCCESS);
+          router.push(ROUTES.USERS.LIST);
+        }
       } catch (error) {
-        console.error('Error creating user:', error);
-        showAlert('Failed to create user. Please try again.', AlertVariant.ERROR);
+        console.error('Error submitting user form:', error);
+        showAlert('Failed to submit user form. Please try again.', AlertVariant.ERROR);
       }
     },
   });
+
+  // Load user data for edit mode
+  React.useEffect(() => {
+    const id = router.query.id as string | undefined;
+    if (!id) return;
+
+    const reverseMapPermissionLevel = (apiLevel: string): string => {
+      switch (apiLevel) {
+        case 'FULL_ACCESS':
+          return 'View and Edit';
+        case 'VIEW_ACCESS':
+          return 'View Only';
+        case 'CAMPAIGN_LEVEL':
+          return 'Campaign Level';
+        case 'MANAGE_WALLET':
+          return 'Manage Wallet';
+        case 'CREATIVE_REQUESTS':
+          return 'Creative Requests';
+        case 'ALL_REQUESTS':
+          return 'All Requests';
+        case 'NO_ACCESS':
+        default:
+          return 'No Access';
+      }
+    };
+
+    const loadUser = async () => {
+      try {
+        const u = await usersService.getUserById(id);
+        const name: string = String(u?.name ?? '').trim();
+        const [firstName, ...rest] = name.split(' ');
+        const lastName = rest.join(' ');
+
+        // Build permissions object expected by RolesPermissionsComponent
+        const permissionsFromApiArr = Array.isArray(u?.permissions) ? u.permissions : [];
+        const permissionsObj = (permissionsFromApiArr as Array<{ permissionType: string; accessLevel: string }>).
+          reduce((acc: Record<string, string>, p) => {
+            if (p && p.permissionType) {
+              acc[p.permissionType] = reverseMapPermissionLevel(String(p.accessLevel || 'NO_ACCESS'));
+            }
+            return acc;
+          }, {} as Record<string, string>);
+
+        const apiRole = String(u?.roleType ?? '').toUpperCase();
+        const mappedRole: string =
+          apiRole === 'ADMIN'
+            ? USER_ROLE.SUPER_USER
+            : apiRole === 'STANDARD_USER'
+            ? USER_ROLE.BASIC_USER
+            : apiRole === 'CUSTOM_USER'
+            ? USER_ROLE.CUSTOM_USER
+            : (isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.BASIC_USER);
+
+        const mapped = {
+          firstName: firstName || '',
+          lastName: lastName || '',
+          email: String(u?.email ?? ''),
+          timeZoneName: String(u?.timezoneName ?? u?.timeZoneName ?? 'America/Los_Angeles'),
+          userType: String(u?.userType ?? '').toUpperCase() === 'ADVERTISER' ? UserType.Advertiser : UserType.Publisher,
+          allowAllAdvertisers: Boolean(u?.allowAllAdvertisers ?? u?.allowAllBrands ?? true),
+          brands: Array.isArray(u?.allowAllBrandsList) ? String(u.allowAllBrandsList.join(', ')) : '',
+          roleType: mappedRole,
+          permissions:
+            Object.keys(permissionsObj).length > 0
+              ? (permissionsObj as any)
+              : (isAdvertiser ? (advertiser_permissions as any) : (publisher_permissions as any)),
+        } as typeof formik.values;
+
+        formik.resetForm({ values: mapped });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load user for edit', e);
+      }
+    };
+
+    loadUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.query.id]);
 
   return (
     <form id="user_form" onSubmit={formik.handleSubmit}>
@@ -215,9 +303,7 @@ const UserForm: any = () => {
               <div className={styles.input_container}>
                 <CarterSelect
                   options={[
-                    { label: 'UTC', value: 'UTC' },
-                    { label: 'America/Los_Angeles', value: 'America/Los_Angeles' },
-                    { label: 'America/New_York', value: 'America/New_York' },
+                    { label: 'UTC', value: 'UTC' }
                   ]}
                   disabled={!hasFullAccess}
                   errorMessage={formik.touched.timeZoneName ? (formik.errors.timeZoneName as string) ?? '' : ''}

@@ -3,11 +3,13 @@ import useSWR from 'swr';
 import { DataTable, SearchInput, PriorityFilters, ColumnToggle } from 'shyftlabs-dsl';
 import UsersService, { UsersListParams } from '@/services/users/users.service';
 import Avatar from 'react-avatar';
+import Link from 'next/link';
 import useUser from '@/contexts/user-data/user-data.hook';
 import styles from '../styles/user-listing.module.scss';
 import { statusFiler } from '../helper/users.common';
 import { useQueryHelper } from '@/common/query-helper.hook';
 import { RoleType, UserType } from '@/types';
+import { carterColors } from 'shyftlabs-dsl';
 
 type IUserListingProps = {
   userType?: string;
@@ -96,10 +98,11 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
         const displayName = (name && name.trim().length > 0) ? name : (email || '').split('@')[0];
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Avatar name={displayName} size={28 as any} round={true} textSizeRatio={2} />
-            <span>{displayName}</span>
+            <Avatar name={displayName} size={26 as any} round={true} textSizeRatio={2.4} />
+            <Link href={`/users/user/${row?.original?.id ?? ''}`} style={{ textDecoration: 'none', color: carterColors['links-blue'], fontWeight: 500 }}>
+              {displayName}
+            </Link>
           </div>
-          
         );
       },
     },

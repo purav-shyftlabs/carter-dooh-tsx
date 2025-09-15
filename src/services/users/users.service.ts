@@ -62,6 +62,15 @@ export type CreateUserResponse = {
   timestamp: string;
 };
 
+export type UpdateUserPayload = {
+  name?: string;
+  roleType?: string;
+  permissions?: Array<{
+    permissionType: string;
+    accessLevel: string;
+  }>;
+};
+
 class UsersService {
   async getUsers(params: UsersListParams): Promise<UsersListResponse> {
     const query = {
@@ -95,6 +104,17 @@ class UsersService {
   async createUser(payload: CreateUserPayload): Promise<CreateUserResponse> {
     const response = await api.post('/user', payload);
     return response.data as CreateUserResponse;
+  }
+
+  async getUserById(id: string | number): Promise<any> {
+    const response = await api.get(`/user/${id}`);
+    return response.data?.data ?? response.data;
+  }
+
+  async updateUser(id: string | number, payload: UpdateUserPayload): Promise<any> {
+    const response = await api.patch(`/user/${id}`, payload);
+    // API returns the updated user back
+    return response.data?.data ?? response.data;
   }
 }
 
