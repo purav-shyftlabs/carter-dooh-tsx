@@ -1,0 +1,361 @@
+import React from 'react';
+import { Field, useFormik } from 'formik';
+import * as yup from 'yup';
+import { useRouter } from 'next/router';
+import InternalLayout from '@/layouts/internal-layout/internal-layout';
+import PageHeader from '@/components/page-header/page-header.component';
+import { Button as CarterButton, CarterInput, CarterRadioGroup, CarterSelect } from 'shyftlabs-dsl';
+import useUser from '@/contexts/user-data/user-data.hook';
+import ROUTES from '@/common/routes';
+import useAlert from '@/contexts/alert/alert.hook';
+import { AlertVariant } from '@/contexts/alert/alert.provider';
+import { AccessLevel, PermissionType, UserType } from '@/types';
+import styles from '../styles/user-form.module.scss';
+import { checkAclFromState } from '@/common/acl';
+import { useAppSelector } from '@/redux/hooks';
+import RolesPermissionsComponent, {
+  advertiser_permissions,
+  publisher_permissions,
+} from '@/components/roles-permissions-component/roles-permissions.component';
+import { USER_ROLE, USER_TYPE as CONST_USER_TYPE } from '@/common/constants';
+import UsersService, { CreateUserPayload } from '@/services/users/users.service';
+
+const validationSchema = yup.object().shape({
+  firstName: yup.string().trim().required('Please enter first name'),
+  lastName: yup.string().trim().required('Please enter last name'),
+  email: yup
+    .string()
+    .trim()
+    .email('Please enter valid email')
+    .required('Please enter email'),
+  timeZoneName: yup.string().trim().required('Please select timezone'),
+  userType: yup.mixed<UserType>().oneOf([UserType.Advertiser, UserType.Publisher]).required('Please select type'),
+  allowAllAdvertisers: yup.boolean().optional(),
+  brands: yup.string().when(['userType', 'allowAllAdvertisers'], {
+    is: (userType: UserType, allowAllAdvertisers: boolean) =>
+      userType === UserType.Advertiser || (userType === UserType.Publisher && allowAllAdvertisers === false),
+    then: schema => schema.trim().required('Please select at least one brand'),
+    otherwise: schema => schema.optional(),
+  }),
+});
+
+const UserForm: any = () => {
+  const router = useRouter();
+  const { user: loggedInUser, isAdvertiser, permission } = useUser();
+  const { showAlert } = useAlert();
+  const usersService = new UsersService();
+
+  const hasFullAccessFromRedux = useAppSelector(state =>
+    checkAclFromState(state, PermissionType.UserManagement, AccessLevel.FULL_ACCESS)
+  );
+
+  const flags = (permission as Record<string, unknown> | null | undefined)?.USER_MANAGEMENT as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const hasFullAccessFromFlags = Boolean(flags && (flags as { fullAccess?: boolean }).fullAccess);
+  const hasFullAccess = Boolean(hasFullAccessFromRedux || hasFullAccessFromFlags);
+  
+  const formik = useFormik({
+    initialValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      timeZoneName: 'America/Los_Angeles',
+      userType: isAdvertiser ? UserType.Advertiser : UserType.Publisher,
+      allowAllAdvertisers: true,
+      brands: '',
+      roleType: isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.BASIC_USER,
+      permissions: isAdvertiser ? advertiser_permissions : publisher_permissions,
+    },
+    validationSchema,
+    onSubmit: async values => {
+      try {
+        // Transform permissions object to array format
+        const mapPermissionLevel = (level: string) => {
+          switch (level) {
+            case 'View and Edit':
+            case 'Full Access':
+            case 'Comprehensive Level':
+            case 'All Levels':
+              return 'FULL_ACCESS';
+            case 'View Only':
+              return 'VIEW_ACCESS';
+            case 'Campaign Level':
+              return 'CAMPAIGN_LEVEL';
+            case 'Manage Wallet':
+              return 'MANAGE_WALLET';
+            case 'Creative Requests':
+              return 'CREATIVE_REQUESTS';
+            case 'All Requests':
+              return 'ALL_REQUESTS';
+            case 'No Access':
+            default:
+              return 'NO_ACCESS';
+          }
+        };
+
+        const permissionsArray = values.permissions 
+          ? Object.entries(values.permissions)
+              .filter(([permissionType]) =>
+                [PermissionType.UserManagement, PermissionType.AccountSetup].includes(
+                  permissionType as PermissionType
+                )
+              )
+              .map(([permissionType, accessLevel]) => ({
+                permissionType,
+                accessLevel: mapPermissionLevel(accessLevel || 'No Access'),
+              }))
+          : [];
+
+        // Transform form data to match API payload structure
+        const payload: CreateUserPayload = {
+          currentAccountId: Number(loggedInUser?.accountId) || 1,
+          name: `${values.firstName} ${values.lastName}`,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          timezoneName: values.timeZoneName,
+          userType: values.userType,
+          roleType: values.roleType,
+          allowAllBrands: values.userType === UserType.Publisher ? values.allowAllAdvertisers : true,
+          allowAllBrandsList: values.brands ? values.brands.split(',').map(brand => brand.trim()) : [],
+          permissions: permissionsArray,
+        };
+
+        // Call the API to create user
+        await usersService.createUser(payload);
+        
+        showAlert('User created successfully', AlertVariant.SUCCESS);
+        router.push(ROUTES.USERS.LIST);
+      } catch (error) {
+        console.error('Error creating user:', error);
+        showAlert('Failed to create user. Please try again.', AlertVariant.ERROR);
+      }
+    },
+  });
+
+  return (
+    <form id="user_form" onSubmit={formik.handleSubmit}>
+      <PageHeader
+        title={router.query.id ? 'Edit User' : 'Add New User'}
+        ActionComponent={() => (
+          <div className={styles.form_action}>
+            <CarterButton
+              data-testid="cancel-button"
+              onClick={() => router.back()}
+              size="small"
+              variant="text-only"
+              type="button"
+              label="Cancel"
+            />
+            {hasFullAccess && (
+              <CarterButton
+                data-testid={router.query.id ? 'user-update-button' : 'user-submit-button'}
+                variant="primary"
+                type="submit"
+                size="small"
+                label={router.query.id ? 'Update User' : 'Create User'}
+                disabled={!formik.isValid || !formik.dirty}
+              />
+            )}
+          </div>
+        )}
+      />
+      <div className={styles.container}>
+        <section className={styles.section}>
+          <div className={styles.input_wrapper}>
+            <p className={styles.title}> User details </p>
+            <div className={styles.grid}>
+              <div className={styles.input_container}>
+                <CarterInput
+                  data-testid="firstName"
+                  id="firstName"
+                  type="text"
+                  error={Boolean(formik.touched.firstName && !!formik.errors.firstName)}
+                  labelProps={{ label: 'First Name *' }}
+                  disabled={!hasFullAccess}
+                  placeholder="Enter first name"
+                  name="firstName"
+                  errorMessage={formik.touched.firstName ? (formik.errors.firstName as string) ?? '' : ''}
+                  value={formik.values.firstName}
+                  onChange={formik.handleChange}
+                />
+              </div>
+              <div className={styles.input_container}>
+                <CarterInput
+                  data-testid="lastName"
+                  id="lastName"
+                  type="text"
+                  disabled={!hasFullAccess}
+                  error={Boolean(formik.touched.lastName && !!formik.errors.lastName)}
+                  labelProps={{ label: 'Last Name *' }}
+                  placeholder="Enter last name"
+                  name="lastName"
+                  errorMessage={formik.touched.lastName ? (formik.errors.lastName as string) ?? '' : ''}
+                  value={formik.values.lastName}
+                  onChange={formik.handleChange}
+                />
+              </div>
+              <div className={styles.input_container}>
+                <CarterInput
+                  data-testid="email"
+                  id="email"
+                  type="text"
+                  disabled={!hasFullAccess}
+                  error={Boolean(formik.touched.email && !!formik.errors.email)}
+                  labelProps={{ label: 'Email Address *' }}
+                  placeholder="Enter email"
+                  name="email"
+                  errorMessage={formik.touched.email ? (formik.errors.email as string) ?? '' : ''}
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                />
+              </div>
+              <div className={styles.input_container}>
+                <CarterSelect
+                  options={[
+                    { label: 'UTC', value: 'UTC' },
+                    { label: 'America/Los_Angeles', value: 'America/Los_Angeles' },
+                    { label: 'America/New_York', value: 'America/New_York' },
+                  ]}
+                  disabled={!hasFullAccess}
+                  errorMessage={formik.touched.timeZoneName ? (formik.errors.timeZoneName as string) ?? '' : ''}
+                  label="Timezone"
+                  placeholder="Select Timezone"
+                  value={formik.values.timeZoneName}
+                  id="timeZoneName"
+                  width="100%"
+                  onChange={({ target }) => {
+                    formik.setFieldValue('timeZoneName', (target as any).value);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.input_wrapper}>
+            <p className={styles.title}> Configure User </p>
+            <div className={styles.input_container}>
+              <span className={styles.input_label}>User Type *</span>
+              <CarterRadioGroup
+                value={formik.values.userType}
+                onValueChange={value =>
+                  formik.setValues(prev => ({
+                    ...prev,
+                    userType: value,
+                    allowAllAdvertisers: value === UserType.Advertiser ? false : prev.allowAllAdvertisers,
+                    roleType: value === UserType.Advertiser ? USER_ROLE.SUPER_USER : USER_ROLE.BASIC_USER,
+                    permissions: value === UserType.Advertiser ? advertiser_permissions : publisher_permissions,
+                  }))
+                }
+                options={
+                  isAdvertiser
+                    ? [{ label: 'Advertiser', value: UserType.Advertiser }]
+                    : [
+                        { label: 'Advertiser', value: UserType.Advertiser },
+                        { label: 'Publisher', value: UserType.Publisher },
+                      ]
+                }
+                radioFirst={true}
+                disabled={!hasFullAccess}
+                textProps={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}
+              />
+            </div>
+          </div>
+        </section>
+        {formik.values.userType === UserType.Publisher && (
+          <section className={styles.section}>
+            <div className={styles.input_wrapper}>
+              <p className={styles.title}> Brand Access </p>
+              <div className={styles.input_container}>
+                <span className={styles.input_label}>Brand Access *</span>
+                <CarterRadioGroup
+                  value={formik.values.allowAllAdvertisers ? 'true' : 'false'}
+                  onValueChange={newValue =>
+                    formik.setValues(prev => ({
+                      ...prev,
+                      allowAllAdvertisers: newValue === 'true',
+                      brands: '',
+                    }))
+                  }
+                  options={[
+                    { label: 'Allow all brands', value: 'true' },
+                    { label: 'Allow Specific Brands', value: 'false' },
+                  ]}
+                  radioFirst={true}
+                  disabled={!hasFullAccess}
+                  textProps={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}
+                />
+              </div>
+              {!formik.values.allowAllAdvertisers && (
+                <div className={styles.input_container}>
+                  <CarterInput
+                    data-testid="brands"
+                    id="brands"
+                    type="text"
+                    disabled={!hasFullAccess}
+                    error={Boolean(formik.touched.brands && !!formik.errors.brands)}
+                    labelProps={{ label: 'Brands *' }}
+                    placeholder="Enter brand names (comma separated)"
+                    name="brands"
+                    errorMessage={formik.touched.brands ? (formik.errors.brands as string) ?? '' : ''}
+                    value={formik.values.brands}
+                    onChange={formik.handleChange}
+                  />
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+        {formik.values.userType === UserType.Advertiser && (
+          <section className={styles.section}>
+            <div className={styles.input_wrapper}>
+              <p className={styles.title}> Assign Brands </p>
+              <div className={styles.input_container}>
+                <span className={styles.input_label}>Brands *</span>
+                <CarterInput
+                  data-testid="brands"
+                  id="brands"
+                  type="text"
+                  disabled={!hasFullAccess}
+                  error={Boolean(formik.touched.brands && !!formik.errors.brands)}
+                  labelProps={{ label: '' }}
+                  placeholder="Enter brand names (comma separated)"
+                  name="brands"
+                  errorMessage={formik.touched.brands ? (formik.errors.brands as string) ?? '' : ''}
+                  value={formik.values.brands}
+                  onChange={formik.handleChange}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+        {!!formik.values.userType && (
+          <div className={styles.input_wrapper}>
+            <p className={styles.title}> Roles and Permissions </p>
+            <div className={styles.input_container}>
+              <RolesPermissionsComponent
+                userType={
+                  formik.values.userType === UserType.Advertiser
+                    ? CONST_USER_TYPE.ADVERTISER
+                    : CONST_USER_TYPE.PUBLISHER
+                }
+                onUpdatePermissions={(role, permissions) => {
+                  formik.setFieldValue('roleType', role);
+                  formik.setFieldValue('permissions', permissions);
+                }}
+                defaultRole={formik.values.roleType as any}
+                defaultPermissions={formik.values.permissions as any}
+                disabled={!hasFullAccess}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </form>
+  );
+};
+
+UserForm.getLayout = (page: React.ReactNode) => <InternalLayout>{page}</InternalLayout>;    
+export default UserForm;

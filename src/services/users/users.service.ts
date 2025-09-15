@@ -38,6 +38,30 @@ export type UsersListResponse = {
   timestamp: string;
 };
 
+export type CreateUserPayload = {
+  currentAccountId: number;
+  name: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  timezoneName: string;
+  userType: string;
+  roleType: string;
+  allowAllBrands: boolean;
+  allowAllBrandsList: string[];
+  permissions: Array<{
+    permissionType: string;
+    accessLevel: string;
+  }>;
+};
+
+export type CreateUserResponse = {
+  success: boolean;
+  message: string;
+  data?: any;
+  timestamp: string;
+};
+
 class UsersService {
   async getUsers(params: UsersListParams): Promise<UsersListResponse> {
     const query = {
@@ -66,6 +90,11 @@ class UsersService {
 
   async resendInvitation(id: string | number): Promise<void> {
     await api.post(`/user/${id}/resend-invite`);
+  }
+
+  async createUser(payload: CreateUserPayload): Promise<CreateUserResponse> {
+    const response = await api.post('/user', payload);
+    return response.data as CreateUserResponse;
   }
 }
 

@@ -2,6 +2,7 @@ import React, { useMemo, useState, useMemo as useReactMemo, useEffect } from 're
 import useSWR from 'swr';
 import { DataTable, SearchInput, PriorityFilters, ColumnToggle } from 'shyftlabs-dsl';
 import UsersService, { UsersListParams } from '@/services/users/users.service';
+import Avatar from 'react-avatar';
 import useUser from '@/contexts/user-data/user-data.hook';
 import styles from '../styles/user-listing.module.scss';
 import { statusFiler } from '../helper/users.common';
@@ -77,7 +78,7 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
       id: String(u.id),
       name: u.name,
       email: u.email,
-      advertisers: '—',
+      advertisers: u.allowAllAdvertisers?"All Advertisers":u.allowAllBrandsList?.join(', '),
       role: (u.roleType || '')
         .replace(/_/g, ' ')
         .replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -86,7 +87,22 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
   }, [data]);
 
   const columns: any[] = [
-    { header: 'Name', accessorKey: 'name' },
+    {
+      header: 'Name',
+      accessorKey: 'name',
+      cell: ({ row }: any) => {
+        const name: string = row?.original?.name ?? '';
+        const email: string = row?.original?.email ?? '';
+        const displayName = (name && name.trim().length > 0) ? name : (email || '').split('@')[0];
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Avatar name={displayName} size={28 as any} round={true} textSizeRatio={2} />
+            <span>{displayName}</span>
+          </div>
+          
+        );
+      },
+    },
     { header: 'Email', accessorKey: 'email' },
     { header: 'Advertisers', accessorKey: 'advertisers' },
     { header: 'Role', accessorKey: 'role' },

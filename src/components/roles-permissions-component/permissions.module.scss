@@ -1,0 +1,109 @@
+.mainDiv {
+  background-color: $white-100;
+  height: max-content;
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  display: block;
+  justify-content: space-between;
+}
+
+.tableContainer {
+  color: $text-color-secondary;
+  padding-bottom: 100px;
+}
+
+.permissionsTable {
+  width: 100%;
+  border-collapse: collapse; /* Merge borders between cells */
+}
+
+.permissionsTable th {
+  width: 25vw;
+  padding: 0;
+  &:first-of-type {
+    width: 30vw;
+  }
+}
+
+.permissionsTable td {
+  text-align: left;
+  border-bottom: none;
+}
+
+.tableHeadCell {
+  cursor: pointer;
+  background-color: $grey-300;
+  &[data-id='true']:not(:last-of-type) {
+    div {
+      background-color: $carter-brand-600;
+      margin: 16px 16px 0px 16px;
+    }
+    div > span {
+      color: $grey-100;
+    }
+  }
+  &[data-id='true']:last-of-type {
+    div {
+      background-color: $carter-brand-600;
+      margin: 16px 0px 0px 0px;
+    }
+    div > span {
+      color: $grey-100;
+    }
+  }
+
+  .role_info_wrapper {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    align-items: flex-start;
+    padding: 12px 32px 24px 32px;
+    border-radius: 8px 8px 0px 0px;
+
+    :first-child {
+      margin-bottom: 4px;
+    }
+  }
+}
+
+.tableBodyCell {
+  background-color: $grey-300;
+  position: relative;
+
+  div {
+    height: 100%;
+    margin: 0px 16px 0px 16px;
+  }
+
+  &[data-id='true']:not(:last-of-type) {
+    margin: 0px !important;
+    padding: 0px !important;
+    height: 65px;
+
+    .permission_info_wrapper {
+      background-color: $white-100;
+      width: stretch;
+      margin: 0px 16px 0px 16px;
+      display: flex;
+      position: absolute;
+      top: 0;
+      padding-left: 32px;
+      align-items: center;
+    }
+    div > span {
+      color: $grey-100;
+    }
+  }
+  &[data-id='true']:last-of-type {
+    background-color: $white-100;
+  }
+  &[data-id='false'] {
+    pointer-events: none;
+    cursor: not-allowed;
+    div > div > div > div > div {
+      background-color: $grey-300 !important;
+      border: 1px solid $text-100;
+    }
+  }
+}

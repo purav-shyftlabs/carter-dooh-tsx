@@ -39,4 +39,31 @@ export enum AGENT {
   MOBILE = 'mobile',
 }
 
+export enum PERMISSION_LEVELS {
+  FULL_ACCESS = 'View and Edit',
+  MANAGE_WALLET = 'Manage Wallet',
+  FULL_ACCESS_REPORT = 'Full Access',
+  FULL_ACCESS_PUBLIC_KEY = 'Full Access',
+  APPROVAL_ACCESS = 'Approval',
+  VIEW_ACCESS = 'View Only',
+  VIEW_ONLY = 'View Only',
+  CAMPAIGN_LEVEL = 'Campaign Level',
+  COMPREHENSIVE_ACCESS = 'Comprehensive Level',
+  CREATIVE_REQUESTS = 'Creative Requests',
+  ALL_LEVELS = 'All Levels',
+  NO_ACCESS = 'No Access',
+  ALL_REQUESTS = 'All Requests',
+}
+
+export enum USER_ROLE {
+  CUSTOM_USER = 'CUSTOM_USER',
+  SUPER_USER = 'ADMIN',
+  BASIC_USER = 'BASIC_USER',
+}
+
+export enum USER_TYPE {
+  PUBLISHER = 'publisher',
+  ADVERTISER = 'advertiser',
+}
+
 export const NUMERIC_ROUNDING_TWO_TOOLTIP = 'Values are rounded to two decimal places. Hover over a value to see the full number.';
