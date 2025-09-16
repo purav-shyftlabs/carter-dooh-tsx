@@ -18,7 +18,7 @@ export type TUserContext = {
 
 export const UserDataContext = React.createContext<TUserContext>({ isLoading: false, refetchUser: async () => {} });
 
-const createFetcher = (dispatch: any) => async () => {
+const createFetcher = (dispatch: ReturnType<typeof useDispatch>) => async () => {
   try {
     console.log('Fetching user data from /users/me API...');
     const me = await authService.getMe();
@@ -124,9 +124,9 @@ const UserDataProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [isClient, hasToken, mutate]);
 
-  const refetchUser = async () => {
+  const refetchUser = React.useCallback(async () => {
     await mutate();
-  };
+  }, [mutate]);
 
   const contextValue: TUserContext = useMemo(() => {
     if (!isClient) return { isLoading: true, refetchUser: async () => {} };

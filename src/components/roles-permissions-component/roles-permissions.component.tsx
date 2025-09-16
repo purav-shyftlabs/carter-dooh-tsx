@@ -81,7 +81,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
   onlyReadable = false,
   disabled,
 }) => {
-  const configs = useConfigs() as any;
+  const configs = useConfigs();
   const enableAPIExpose = configs?.enableAPIExpose;
   const showYieldManagementPermission = configs?.showYieldManagementPermission;
   const enableSocialCampaign = configs?.enableSocialCampaign;
@@ -154,6 +154,16 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
     return userAccessLevel !== null && userAccessLevel !== AccessLevel.NO_ACCESS;
   };
 
+  // Helper function to check if current user has NO_ACCESS for a permission type (blocks entire row)
+  const hasUserNoAccessToPermission = (permissionType: PermissionType): boolean => {
+    const store = getStore();
+    if (!store) return false;
+    
+    const state = store.getState();
+    const userAccessLevel = getAccessLevelFromState(state, permissionType);
+    return userAccessLevel === AccessLevel.NO_ACCESS;
+  };
+
   // Helper function to get permission type from row content
   const getPermissionTypeFromContent = (content: string): PermissionType | null => {
     const contentToPermissionMap: Record<string, PermissionType> = {
@@ -163,9 +173,16 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
       'Offsite Integrations': PermissionType.OffsiteIntegrations,
       'Offsite Campaigns': PermissionType.OffsiteCampaigns,
       'All Advertiser\'s Campaigns': PermissionType.AllAdvertiserCampaigns,
+      'All Publisher\'s Campaigns': PermissionType.AllPublisherCampaigns,
       'Report Generation': PermissionType.ReportGeneration,
       'Wallets': PermissionType.Wallet,
       'Insights Management': PermissionType.InsightDashboard,
+      'Ad Inventory and Placements': PermissionType.AdInventoryPlacements,
+      'Audience and Key/values': PermissionType.AudienceKeysValues,
+      'Creative Templates': PermissionType.CreativeTemplate,
+      'Advertisers Management': PermissionType.AdvertiserManagement,
+      'Approval Requests': PermissionType.ApprovalRequests,
+      'Yield Management': PermissionType.YieldManagement,
     };
     return contentToPermissionMap[content] || null;
   };
@@ -1355,9 +1372,12 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
               (item: Record<string, { role: string; content: string | React.ReactNode }>, index: number) => {
                 // Determine permission type for this feature row
                 const permissionType = getPermissionTypeFromContent(typeof item.c1.content === 'string' ? item.c1.content : '');
+                
+                // Check if current user has NO_ACCESS to this permission (blocks entire row)
+                const isRowBlocked = permissionType ? hasUserNoAccessToPermission(permissionType) : false;
 
                 return (
-                  <TableRow key={index}>
+                  <TableRow key={index} className={isRowBlocked ? styles.disabledRow : ''}>
                     {Object.keys(item).map(key => {
                       const isOperatorColumn = item[key].role === USER_ROLE.OPERATOR_USER;
                       const isAdminColumn = item[key].role === USER_ROLE.SUPER_USER;
@@ -1365,7 +1385,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
                       const isPermissionBlocked = (isOperatorColumn || isAdminColumn) && permissionType
                         ? !canUserEditPermissionRow(permissionType)
                         : false;
-                      const finalDisabled = isColumnDisabled || isPermissionBlocked;
+                      const finalDisabled = isColumnDisabled || isPermissionBlocked || isRowBlocked;
 
                       return (
                         <TableCell

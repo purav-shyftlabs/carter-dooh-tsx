@@ -69,8 +69,8 @@ export const useQueryHelper = () => {
   const updateFilterQuery = useCallback(
     (key: string, value: string | number | boolean | undefined | null | Record<string, unknown>) => {
       // Support DSL components that pass option objects
-      const extracted = (value && typeof value === 'object' && 'value' in (value as any))
-        ? (value as any).value
+      const extracted = (typeof value === 'object' && value !== null && 'value' in value)
+        ? (value as { value: unknown }).value
         : value;
       const nextVal = extracted === undefined || extracted === null ? '' : String(extracted);
       replaceQuery({ [key]: nextVal, page: '1' });
@@ -82,11 +82,11 @@ export const useQueryHelper = () => {
     <T extends ReadonlyArray<Readonly<{ key: string; defaultValue?: string }>>>(
       defs: T
     ): { [K in T[number] as K['key']]: string } => {
-      const out = {} as any;
+      const out: Record<string, string> = {};
       defs.forEach(({ key, defaultValue }) => {
         out[key] = queryParams[key] ?? (defaultValue !== undefined ? String(defaultValue) : '');
       });
-      return out;
+      return out as { [K in T[number] as K['key']]: string };
     },
     [queryParams]
   );

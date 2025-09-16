@@ -57,7 +57,7 @@ export type CreateUserPayload = {
 export type CreateUserResponse = {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
   timestamp: string;
 };
 
@@ -68,6 +68,25 @@ export type UpdateUserPayload = {
     permissionType: string;
     accessLevel: string;
   }>;
+};
+
+export type UserPermissionDTO = {
+  permissionType: string;
+  accessLevel: string;
+};
+
+export type UserDetailsDTO = {
+  id: string | number;
+  name?: string;
+  email?: string;
+  timezoneName?: string;
+  timeZoneName?: string;
+  userType?: string;
+  roleType?: string;
+  allowAllAdvertisers?: boolean;
+  allowAllBrands?: boolean;
+  allowAllBrandsList?: string[];
+  permissions?: UserPermissionDTO[];
 };
 
 class UsersService {
@@ -114,21 +133,21 @@ class UsersService {
     return response.data as CreateUserResponse;
   }
 
-  async getUserById(id: string | number): Promise<any> {
+  async getUserById(id: string | number): Promise<UserDetailsDTO> {
     const response = await api.get(`/user/${id}`);
-    return response.data?.data ?? response.data;
+    return (response.data?.data ?? response.data) as UserDetailsDTO;
   }
 
-  async updateUser(id: string | number, payload: UpdateUserPayload): Promise<any> {
+  async updateUser(id: string | number, payload: UpdateUserPayload): Promise<UserDetailsDTO> {
     const response = await api.patch(`/user/${id}`, payload);
     // API returns the updated user back
-    return response.data?.data ?? response.data;
+    return (response.data?.data ?? response.data) as UserDetailsDTO;
   }
 
-  async getAccountsByUser(): Promise<any[]> {
+  async getAccountsByUser(): Promise<Array<Record<string, unknown>>> {
     const response = await api.get(`/users/by-user`);
     const data = response.data?.data ?? response.data;
-    return Array.isArray(data) ? data : [];
+    return (Array.isArray(data) ? data : []) as Array<Record<string, unknown>>;
   }
 }
 

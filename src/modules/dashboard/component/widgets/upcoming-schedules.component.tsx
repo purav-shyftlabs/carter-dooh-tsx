@@ -1,15 +1,24 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import styles from '../../styles/components/widgets/upcoming-schedules.module.scss';
 import ScheduleCard from '@/components/schedule-card/schedule-card.component';
 import { Typography, carterColors } from 'shyftlabs-dsl';
 import { IRootState } from '@/redux/reducers';
-import { useAppDispatch } from '@/redux/hooks';
-import { fetchDashboardData } from '@/redux/actions';
+// import { useAppDispatch } from '@/redux/hooks';
+// import { fetchDashboardData } from '@/redux/actions';
 import NoDataPlaceholder from '@/components/no-data-placeholder/no-data-placeholder.component';
 
+type UpcomingSchedule = {
+  id?: string | number;
+  name?: string;
+  location?: string;
+  billboardName?: string;
+  imageUrl?: string;
+  timeRemaining?: string;
+  startTime?: string;
+};
+
 const UpcomingSchedules: React.FC = () => {
-  const dispatch = useAppDispatch();
   const { items: upcomingSchedules, isLoading, error } = useSelector((state: IRootState) => state.upcomingSchedules);
 
   // useEffect(() => {
@@ -70,14 +79,14 @@ const UpcomingSchedules: React.FC = () => {
             className={styles.no_data_placeholder}
           />
         ) : (
-          upcomingSchedules.map((schedule: any, index: number) => (
+          upcomingSchedules.map((schedule: UpcomingSchedule, index: number) => (
             <ScheduleCard
               key={schedule.id || index}
-              title={schedule.name || schedule.name || 'Untitled Schedule'}
+              title={schedule.name || 'Untitled Schedule'}
               location={schedule.location || schedule.billboardName || 'Unknown Location'}
-              imageSrc={schedule.imageUrl}
-              id={schedule.id || index.toString()}
-              startingIn={schedule.timeRemaining || schedule.startTime || 'TBD'}
+              imageSrc={schedule.imageUrl || ''}
+              id={String(schedule.id ?? index)}
+              startingIn={String(schedule.timeRemaining ?? schedule.startTime ?? 'TBD')}
             />
           ))
         )}

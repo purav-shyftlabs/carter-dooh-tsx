@@ -1,5 +1,5 @@
 import React from 'react';
-import { Field, useFormik } from 'formik';
+import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useRouter } from 'next/router';
 import InternalLayout from '@/layouts/internal-layout/internal-layout';
@@ -36,9 +36,9 @@ const validationSchema = yup.object().shape({
   }),
 });
 
-const UserForm: any = () => {
+const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactNode } = () => {
   const router = useRouter();
-  const { user: loggedInUser, isAdvertiser, permission } = useUser();
+  const { isAdvertiser, permission } = useUser();
   const { showAlert } = useAlert();
   const usersService = new UsersService();
 
@@ -202,7 +202,7 @@ const UserForm: any = () => {
           allowAllAdvertisers: Boolean(u?.allowAllAdvertisers ?? u?.allowAllBrands ?? true),
           brands: Array.isArray(u?.allowAllBrandsList) ? String(u.allowAllBrandsList.join(', ')) : '',
           roleType: mappedRole,
-          permissions: (permissionsObj as any),
+          permissions: permissionsObj,
         } as typeof formik.values;
 
         formik.resetForm({ values: mapped });
@@ -310,8 +310,8 @@ const UserForm: any = () => {
                   value={formik.values.timeZoneName}
                   id="timeZoneName"
                   width="100%"
-                  onChange={({ target }) => {
-                    formik.setFieldValue('timeZoneName', (target as any).value);
+                  onChange={({ target }: { target: { value: string } }) => {
+                    formik.setFieldValue('timeZoneName', target.value);
                   }}
                 />
               </div>
@@ -413,8 +413,8 @@ const UserForm: any = () => {
                   formik.setFieldValue('roleType', role);
                   formik.setFieldValue('permissions', permissions);
                 }}
-                defaultRole={formik.values.roleType as any}
-                defaultPermissions={formik.values.permissions as any}
+                defaultRole={formik.values.roleType as unknown as typeof USER_ROLE[keyof typeof USER_ROLE]}
+                defaultPermissions={formik.values.permissions as unknown as Record<string, import('@/common/constants').PERMISSION_LEVELS>}
                 disabled={!hasFullAccess}
               />
             </div>

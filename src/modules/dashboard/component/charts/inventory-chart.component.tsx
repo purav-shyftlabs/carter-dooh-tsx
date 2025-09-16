@@ -61,7 +61,7 @@ const InventoryChart: React.FC<InventoryChartProps> = ({ data, activeInventory }
           tickMargin={16}
           tickFormatter={val => val}
         />
-        <YAxis domain={[0, (dataMax: any) => Math.max(dataMax, 1)]} tickMargin={12} />
+        <YAxis domain={[0, (dataMax: number) => Math.max(dataMax, 1)]} tickMargin={12} />
         <Tooltip labelFormatter={label => label} />
         {availableLines.map(item => (
           <Line

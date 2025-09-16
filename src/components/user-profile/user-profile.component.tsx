@@ -2,13 +2,14 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { ChevronDown } from 'lucide-react';
 import { Menu } from '@/lib/material-ui';
-import useUser from '@/contexts/user-data/user-data.hook';
+// import useUser from '@/contexts/user-data/user-data.hook';
 import { useSelector } from 'react-redux';
 import { IRootState } from '@/redux/reducers';
 import UsersService from '@/services/users/users.service';
 import authService from '@/services/auth/auth-service';
 import { useAppDispatch } from '@/redux/hooks';
 import { authSetUser } from '@/redux/actions';
+import { AuthUser } from '@/types';
 
 const ProfileSection = styled.div`
   font-family: 'Roboto', sans-serif;
@@ -121,20 +122,28 @@ interface UserProfileProps {
 const UserProfile: React.FC<UserProfileProps> = ({ isLoading, logout }) => {
   const dispatch = useAppDispatch();
   const { user } = useSelector((state: IRootState) => state.auth);
-  const currentAccountId = String(user?.accountId ?? (user as any)?.currentAccountId ?? '');
+  const currentAccountId = String(
+    user?.accountId ?? (user as { currentAccountId?: string | number })?.currentAccountId ?? ''
+  );
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
-  const [accounts, setAccounts] = React.useState<Array<any>>([]);
+  type Account = { accountId: string | number; accountName?: string };
+  const [accounts, setAccounts] = React.useState<Array<Account>>([]);
 
   React.useEffect(() => {
     const svc = new UsersService();
     svc.getAccountsByUser().then((arr) => {
-      setAccounts(Array.isArray(arr) ? arr : []);
+      const safe: Array<Account> = Array.isArray(arr)
+        ? arr
+            .filter((a): a is Account => a && (typeof (a as Account).accountId === 'string' || typeof (a as Account).accountId === 'number'))
+            .map(a => ({ accountId: (a as Account).accountId, accountName: (a as Account).accountName }))
+        : [];
+      setAccounts(safe);
     }).catch(() => {
       setAccounts([]);
     });
   }, []);
 
-  const current = React.useMemo(() => accounts.find(a => String(a.accountId) === String(currentAccountId)), [accounts, currentAccountId]);
+  // const current = React.useMemo(() => accounts.find(a => String(a.accountId) === String(currentAccountId)), [accounts, currentAccountId]);
   const others = React.useMemo(() => accounts.filter(a => String(a.accountId) !== String(currentAccountId)), [accounts, currentAccountId]);
   const handleSwitchAccount = async (accountId: string | number) => {
     try {
@@ -146,13 +155,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ isLoading, logout }) => {
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(me));
       }
-      dispatch(authSetUser(me as any));
+      dispatch(authSetUser(me as AuthUser));
       setAnchorEl(null);
       if (typeof window !== 'undefined') {
         window.location.reload();
       }
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('Failed to switch account', e);
     }
   };

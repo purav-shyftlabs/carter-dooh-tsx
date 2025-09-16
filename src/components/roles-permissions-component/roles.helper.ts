@@ -62,7 +62,7 @@ export const DefaultPermForAdminBasic = {
   },
 };
 
-export const getRoles = (user: any) => {
+export const getRoles = (user: { userType: USER_TYPE; roleType: USER_ROLE }) => {
   if (user.userType === USER_TYPE.PUBLISHER) {
     if (user.roleType === USER_ROLE.SUPER_USER) {
       return DefaultPermForAdminBasic.publisher.admin;

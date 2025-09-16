@@ -1,14 +1,14 @@
 import React, { useMemo, useState, useMemo as useReactMemo, useEffect } from 'react';
 import useSWR from 'swr';
 import { DataTable, SearchInput, PriorityFilters, ColumnToggle } from 'shyftlabs-dsl';
-import UsersService, { UsersListParams } from '@/services/users/users.service';
+import UsersService, { UsersListParams, UsersListResponse, UserListItem } from '@/services/users/users.service';
 import Avatar from 'react-avatar';
 import Link from 'next/link';
 import useUser from '@/contexts/user-data/user-data.hook';
 import styles from '../styles/user-listing.module.scss';
 import { statusFiler } from '../helper/users.common';
 import { useQueryHelper } from '@/common/query-helper.hook';
-import { RoleType, UserType } from '@/types';
+import { RoleType } from '@/types';
 import { carterColors } from 'shyftlabs-dsl';
 
 type IUserListingProps = {
@@ -20,7 +20,7 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
   const { user } = useUser();
 
   const accountId = (user?.accountId as unknown as number) || 1;
-  const { getQueriesForAPI, getRegularQuery, getFilterQuery, updateRegularQuery, updateFilterQuery } = useQueryHelper();
+  const { getQueriesForAPI, updateRegularQuery, updateFilterQuery } = useQueryHelper();
   const q = getQueriesForAPI([
     { key: 'page', defaultValue: '1' },
     { key: 'limit', defaultValue: '10' },
@@ -52,10 +52,9 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
     setSearch(q.search ?? '');
     setRoleFilter(q.userRole ?? '');
     setStatusFilter(q.status ?? '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.page, q.limit, q.search, q.userRole, q.status]);
 
-  const { data, isLoading, isValidating, error } = useSWR(
+  const { data, isLoading, isValidating, error } = useSWR<UsersListResponse>(
     { key: 'users-list', accountId, userType, pageNo, pageSize, search, roleFilter, statusFilter, sortBy, sortDesc },
     async ({ accountId: acc, pageNo: p, pageSize: ps, userType: ut }) => {
       const req: UsersListParams = {
@@ -84,13 +83,22 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
     { revalidateOnMount: true, revalidateOnFocus: false }
   );
 
-  const rows = useReactMemo(() => {
-    const items = data?.data?.items ?? [];
-    return items.map((u: any) => ({
+  type Row = {
+    id: string;
+    name: string;
+    email: string;
+    advertisers: string;
+    role: string;
+    lastActive: string;
+  };
+
+  const rows = useReactMemo<Row[]>(() => {
+    const items: UserListItem[] = data?.data?.items ?? [];
+    return items.map((u: UserListItem & { allowAllAdvertisers?: boolean; allowAllBrandsList?: string[]; roleType?: string }) => ({
       id: String(u.id),
       name: u.name,
       email: u.email,
-      advertisers: u.allowAllAdvertisers?"All Advertisers":u.allowAllBrandsList?.join(', '),
+      advertisers: u.allowAllAdvertisers ? 'All Advertisers' : (u.allowAllBrandsList || []).join(', '),
       role: (u.roleType || '')
         .replace(/_/g, ' ')
         .replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -98,17 +106,18 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
     }));
   }, [data]);
 
-  const columns: any[] = [
+  type CellArgs = { row: { original: Row } };
+  const columns: Array<{ header: string; accessorKey: keyof Row; cell?: (args: CellArgs) => React.ReactElement }> = [
     {
       header: 'Name',
       accessorKey: 'name',
-      cell: ({ row }: any) => {
+      cell: ({ row }) => {
         const name: string = row?.original?.name ?? '';
         const email: string = row?.original?.email ?? '';
         const displayName = (name && name.trim().length > 0) ? name : (email || '').split('@')[0];
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Avatar name={displayName} size={26 as any} round={true} textSizeRatio={2.4} />
+            <Avatar name={displayName} size={"26"} round={true} textSizeRatio={2.4} />
             <Link href={`/users/user/${row?.original?.id ?? ''}`} style={{ textDecoration: 'none', color: carterColors['links-blue'], fontWeight: 500 }}>
               {displayName}
             </Link>
@@ -127,21 +136,26 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
     return columns.filter((c) => columnVisibility[c.accessorKey] !== false);
   }, [columns, columnVisibility]);
 
-  const roleOptions = [
-    { label: 'All Roles', value: '' },
-    { label: 'Admin', value: RoleType.Admin  },
-    { label: 'Operator User', value: RoleType.OperatorUser  },
-    { label: 'Custom User', value: RoleType.CustomUser  },
-  ];
+  type Option = { label: string; value: string };
+  const roleOptions: Option[] = useMemo(
+    () => [
+      { label: 'All Roles', value: '' },
+      { label: 'Admin', value: RoleType.Admin },
+      { label: 'Operator User', value: RoleType.OperatorUser },
+      { label: 'Custom User', value: RoleType.CustomUser },
+    ],
+    []
+  );
 
   const roleInitialOption = useMemo(() => roleOptions.find(o => o.value === roleFilter) ?? roleOptions[0], [roleOptions, roleFilter]);
-  const statusInitialOption = useMemo(() => statusFiler.find((o: any) => o.value === statusFilter) ?? statusFiler[0], [statusFilter]);
+  const statusInitialOption = useMemo(() => (statusFiler as Array<{ label: string; value: string }>).find((o) => o.value === statusFilter) ?? (statusFiler as Array<{ label: string; value: string }>)[0], [statusFilter]);
 
   const handleColumnVisibilityChange = (
     updaterOrValue: ((prev: Record<string, boolean>) => Record<string, boolean>) | Record<string, boolean>
   ) => {
     if (typeof updaterOrValue === 'function') {
-      setColumnVisibility((prev: Record<string, boolean>) => (updaterOrValue as any)(prev));
+      const fn = updaterOrValue as (prev: Record<string, boolean>) => Record<string, boolean>;
+      setColumnVisibility((prev: Record<string, boolean>) => fn(prev));
     } else {
       setColumnVisibility(updaterOrValue as Record<string, boolean>);
     }
@@ -168,29 +182,29 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
           />
           <PriorityFilters
             placeholder="Roles"
-            initialValue={roleInitialOption as any}
-            onChange={(selected: any) => {
-              const value = selected?.value as string;
+            initialValue={roleInitialOption as unknown as Option}
+            onChange={(selected: { value?: string } | null) => {
+              const value = selected?.value ?? '';
               setRoleFilter(value ?? '');
               updateFilterQuery('userRole', value);
               setPageNo(1);
             }}
             mode="single"
             options={roleOptions}
-            {...({ closeMenuOnSelect: false } as any)}
+            {...({ closeMenuOnSelect: false } as { closeMenuOnSelect: boolean })}
           />
           <PriorityFilters
             placeholder="Status"
             mode="single"
-            initialValue={statusInitialOption as any}
-            onChange={(selected: any) => {
-              const value = selected?.value as string;
+            initialValue={statusInitialOption as unknown as { label: string; value: string }}
+            onChange={(selected: { value?: string } | null) => {
+              const value = selected?.value ?? '';
               setStatusFilter(value ?? '');
               updateFilterQuery('status', value);
               setPageNo(1);
             }}
             options={statusFiler}
-            {...({ closeMenuOnSelect: false } as any)}
+            {...({ closeMenuOnSelect: false } as { closeMenuOnSelect: boolean })}
           />
           <div className={styles.end_controls}>
             <ColumnToggle

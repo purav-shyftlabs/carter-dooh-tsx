@@ -13,7 +13,7 @@ import UpcomingSchedules from '../component/widgets/upcoming-schedules.component
 const Dashboard = () => {
     const isMobile = useMediaQuery(`(min-width: 320px) and (max-width: 767px)`);
     const timeZone = 'EST';
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [, setAnchorEl] = useState<null | HTMLElement>(null);
     const [dates, setDates] = useState<{ startDate: DateTimeType; endDate: DateTimeType }>({ startDate: DateTimeParser.tz('2024-01-01', timeZone), endDate: DateTimeParser.tz('2024-01-01', timeZone) });
     const minimumStartDate = DateTimeParser().isBefore(dates.startDate) ? dates.startDate.clone().add(1, 'hour') : DateTimeParser();
     const isDateRangeAllowed = (dates: { startDate: DateTimeType; endDate: DateTimeType }) => {
@@ -23,42 +23,6 @@ const Dashboard = () => {
         console.log(alert);
     };
     const [dateFilter, setDateFilter] = useState<'custom' | '7' | '30'>('7');
-    const datePickerProps = {
-        value: { startDate: dates.startDate, endDate: dates.endDate },
-        withTimezone: true,
-        timeZone,
-        calendarProps: {
-          startDatePicker: {
-            views: ['year', 'day'] as any,
-            format: DATE_FORMAT.MM_DD_YYYY,
-    
-            label: 'Start Date',
-            maxDateTime: dates.endDate,
-            minDateTime: minimumStartDate,
-          },
-          endDatePicker: {
-            views: ['year', 'day'] as any,
-            format: DATE_FORMAT.MM_DD_YYYY,
-            label: 'End Date',
-            disablePast: false,
-            minDateTime: dates.startDate,
-            maxDateTime: DateTimeParser.tz(timeZone),
-          },
-        },
-        onChange: ({ startDate, endDate }: any) => {
-          if (!isDateRangeAllowed({ startDate, endDate })) {
-            showAlert({
-              title: 'Please note that the maximum allowed date difference is one year',
-              variant: 'danger',
-            });
-            return;
-          }
-          setDates({
-            startDate: DateTimeParser.tz(startDate, timeZone).startOf('day'),
-            endDate: DateTimeParser.tz(endDate, timeZone).endOf('day'),
-          });
-        },
-      };
     
     return (
         <div className={styles.container}>
@@ -90,7 +54,42 @@ const Dashboard = () => {
                     }}
                   />
                 ) : (
-                  <CarterDateRangePicker {...datePickerProps} />
+                  <CarterDateRangePicker
+                    value={{ startDate: dates.startDate, endDate: dates.endDate }}
+                    withTimezone
+                    timeZone={timeZone}
+                    calendarProps={{
+                      startDatePicker: {
+                        views: ['year', 'day'],
+                        format: DATE_FORMAT.MM_DD_YYYY,
+                        label: 'Start Date',
+                        maxDateTime: dates.endDate,
+                        minDateTime: minimumStartDate,
+                      },
+                      endDatePicker: {
+                        views: ['year', 'day'],
+                        format: DATE_FORMAT.MM_DD_YYYY,
+                        label: 'End Date',
+                        disablePast: false,
+                        minDateTime: dates.startDate,
+                        maxDateTime: DateTimeParser.tz(timeZone),
+                      },
+                    }}
+                    onChange={(value) => {
+                      const { startDate, endDate } = value as { startDate: DateTimeType; endDate: DateTimeType };
+                      if (!isDateRangeAllowed({ startDate, endDate })) {
+                        showAlert({
+                          title: 'Please note that the maximum allowed date difference is one year',
+                          variant: 'danger',
+                        });
+                        return;
+                      }
+                      setDates({
+                        startDate: DateTimeParser.tz(startDate, timeZone).startOf('day'),
+                        endDate: DateTimeParser.tz(endDate, timeZone).endOf('day'),
+                      });
+                    }}
+                  />
                 )}
                 <div className={styles.button_group_container}>
                   <Button
