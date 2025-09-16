@@ -1,4 +1,3 @@
-import environments from './environments';
 
 export const DATE_FORMAT = {
   MMM_DD_YYYY: 'MMM DD, YYYY',
@@ -42,10 +41,10 @@ export enum AGENT {
 export enum PERMISSION_LEVELS {
   FULL_ACCESS = 'View and Edit',
   MANAGE_WALLET = 'Manage Wallet',
-  FULL_ACCESS_REPORT = 'Full Access',
-  FULL_ACCESS_PUBLIC_KEY = 'Full Access',
+  FULL_ACCESS_REPORT = 'Full Access Report',
+  FULL_ACCESS_PUBLIC_KEY = 'Full Access Public Key',
   APPROVAL_ACCESS = 'Approval',
-  VIEW_ACCESS = 'View Only',
+  VIEW_ACCESS = 'View Access',
   VIEW_ONLY = 'View Only',
   CAMPAIGN_LEVEL = 'Campaign Level',
   COMPREHENSIVE_ACCESS = 'Comprehensive Level',
@@ -58,7 +57,7 @@ export enum PERMISSION_LEVELS {
 export enum USER_ROLE {
   CUSTOM_USER = 'CUSTOM_USER',
   SUPER_USER = 'ADMIN',
-  BASIC_USER = 'BASIC_USER',
+  OPERATOR_USER = 'OPERATOR_USER',
 }
 
 export enum USER_TYPE {

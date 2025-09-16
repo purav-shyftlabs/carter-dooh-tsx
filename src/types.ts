@@ -77,6 +77,6 @@ export enum AccessLevel {
 export enum RoleType {
   All = 'ALL',
   Admin = 'ADMIN',
-  StandardUser = 'STANDARD_USER',
+  OperatorUser = 'OPERATOR_USER',
   CustomUser = 'CUSTOM_USER'
 }

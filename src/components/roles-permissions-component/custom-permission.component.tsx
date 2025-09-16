@@ -6,7 +6,6 @@ const CustomPermission: React.FC<CustomPermission> = ({
   options,
   onPermissionSelect,
   selectedPermission,
-  permissionKey,
   disabled,
 }) => {
   return (

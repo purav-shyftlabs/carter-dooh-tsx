@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { AccessLevel, PermissionType } from '@/types';
 import { Typography } from 'shyftlabs-dsl';
 import { Table, TableHead, TableRow, TableCell, TableBody, TableContainer } from '@/lib/material-ui';
@@ -86,8 +86,8 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
   const showYieldManagementPermission = configs?.showYieldManagementPermission;
   const enableSocialCampaign = configs?.enableSocialCampaign;
 
-  const initPermissions = (defaultPermissionsList: PERMISSIONS | undefined) => {
-    let overridePermissions: any = {};
+  const initPermissions = useCallback((defaultPermissionsList: PERMISSIONS | undefined) => {
+    let overridePermissions: Record<string, PERMISSION_LEVELS> = {};
 
     if (userType === USER_TYPE.PUBLISHER) {
       overridePermissions = { ...publisher_permissions };
@@ -108,27 +108,24 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
       });
     }
     return overridePermissions;
-  };
+  }, [userType]);
 
-  const initRole = () => {
+  const initRole = useCallback(() => {
     if (defaultRole) {
       return defaultRole;
     }
     return null;
-  };
+  }, [defaultRole]);
 
-  const { permission: userPermission, isAdvertiser, isLoading } = useUser(); // using as userPermission to avoid readability conflict
-  const hasCreativeFullAccess = useAppSelector(state =>
-    checkAclFromState(state, PermissionType.CreativeTemplate, AccessLevel.FULL_ACCESS)
-  );
+  const { isAdvertiser, isLoading } = useUser();
   const hasOffsiteCampaignsNoAccess = useAppSelector(state =>
     checkAclFromState(state, PermissionType.OffsiteCampaigns, AccessLevel.NO_ACCESS)
   );
   const user = useAppSelector(state => state.auth.user);
-  const showStandard = Boolean((user as any)?.showStandard ?? true);
-  const showAdmin = Boolean((user as any)?.showAdmin ?? true);
-  const [permissions, setPermissions] = useState<any>({});
-  const [customPermissions, setCustomPermissions] = useState<any>({});
+  const showOperator = Boolean((user as { showOperator?: boolean })?.showOperator ?? true);
+  const showAdmin = Boolean((user as { showAdmin?: boolean })?.showAdmin ?? true);
+  const [permissions, setPermissions] = useState<Record<string, PERMISSION_LEVELS>>({});
+  const [customPermissions, setCustomPermissions] = useState<Record<string, PERMISSION_LEVELS>>({});
   const [role, setRole] = useState<USER_ROLE | null>(initRole());
 
   // Helper function to check if current user can assign a specific permission level
@@ -180,15 +177,15 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
   useEffect(() => {
     const newRole = initRole();
     setRole(newRole);
-  }, [defaultRole]);
+  }, [defaultRole, initRole]);
 
   useEffect(() => {
     setPermissions(initPermissions(defaultPermissions));
     setCustomPermissions(initPermissions(defaultPermissions));
-  }, [defaultPermissions]);
+  }, [defaultPermissions, initPermissions]);
 
   const onCustomPermissionSelect = (option: PERMISSION_LEVELS, key: string) => {
-    const per: any = { ...permissions };
+    const per: Record<string, PERMISSION_LEVELS> = { ...permissions };
     per[key] = option;
 
     onUpdatePermissions(role as USER_ROLE, per);
@@ -202,8 +199,8 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
     [USER_TYPE.PUBLISHER]: {
       columns: [
         {
-          label: 'Standard',
-          role: USER_ROLE.BASIC_USER,
+          label: 'Operator',
+          role: USER_ROLE.OPERATOR_USER,
         },
         {
           label: 'Admin',
@@ -221,7 +218,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Ad Inventory and Placements',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.VIEW_ONLY,
         //   },
         //   c3: {
@@ -253,7 +250,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Audience and Key/values',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.VIEW_ONLY,
         //   },
         //   c3: {
@@ -285,7 +282,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'All Publisher’s Campaigns',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.VIEW_ONLY,
         //   },
         //   c3: {
@@ -317,7 +314,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'All Advertisers Campaigns',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.VIEW_ONLY,
         //   },
         //   c3: {
@@ -349,7 +346,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Creative Templates',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.VIEW_ONLY,
         //   },
         //   c3: {
@@ -385,7 +382,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Report Generation',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.CAMPAIGN_LEVEL,
         //   },
         //   c3: {
@@ -418,7 +415,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Advertisers Management',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.VIEW_ONLY,
         //   },
         //   c3: {
@@ -450,7 +447,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'User Management',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.VIEW_ONLY,
           },
           c3: {
@@ -461,7 +458,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.UserManagement)}
+                disabled={disabled}
                 options={
                   [
                     PERMISSION_LEVELS.NO_ACCESS,
@@ -482,7 +479,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Approval Requests',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.NO_ACCESS,
         //   },
         //   c3: {
@@ -514,7 +511,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Wallets',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.VIEW_ONLY,
         //   },
         //   c3: {
@@ -547,7 +544,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Insights Management',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.NO_ACCESS,
         //   },
         //   c3: {
@@ -573,7 +570,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Account Settings',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.NO_ACCESS,
           },
           c3: {
@@ -584,7 +581,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.AccountSetup)}
+                disabled={disabled}
                 options={
                   [
                     PERMISSION_LEVELS.NO_ACCESS,
@@ -605,7 +602,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Public API Access',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.NO_ACCESS,
           },
           c3: {
@@ -616,7 +613,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.PublicApiAccess)}
+                disabled={disabled}
                 options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.FULL_ACCESS_PUBLIC_KEY].filter(level => canUserAssignPermissionLevel(PermissionType.PublicApiAccess, level as PERMISSION_LEVELS)) as Array<string>}
                 permissionKey={PermissionType.PublicApiAccess}
                 onPermissionSelect={handlePermissionSelect(PermissionType.PublicApiAccess)}
@@ -631,7 +628,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Yield Management',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: PERMISSION_LEVELS.NO_ACCESS,
         //   },
         //   c3: {
@@ -663,7 +660,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Offsite Integrations',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.NO_ACCESS,
           },
           c3: {
@@ -674,7 +671,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.OffsiteIntegrations)}
+                disabled={disabled}
                 options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.FULL_ACCESS].filter(level => canUserAssignPermissionLevel(PermissionType.OffsiteIntegrations, level as PERMISSION_LEVELS)) as Array<string>}
                 permissionKey={PermissionType.OffsiteIntegrations}
                 onPermissionSelect={handlePermissionSelect(PermissionType.OffsiteIntegrations)}
@@ -689,7 +686,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Offsite Campaigns',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.NO_ACCESS,
           },
           c3: {
@@ -700,7 +697,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.OffsiteCampaigns)}
+                disabled={disabled}
                 options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.FULL_ACCESS].filter(level => canUserAssignPermissionLevel(PermissionType.OffsiteCampaigns, level as PERMISSION_LEVELS)) as Array<string>}
                 permissionKey={PermissionType.OffsiteCampaigns}
                 onPermissionSelect={handlePermissionSelect(PermissionType.OffsiteCampaigns)}
@@ -714,8 +711,8 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
     [USER_TYPE.ADVERTISER]: {
       columns: [
         {
-          label: 'Standard',
-          role: USER_ROLE.BASIC_USER,
+          label: 'Operator',
+          role: USER_ROLE.OPERATOR_USER,
         },
         {
           label: 'Admin',
@@ -727,75 +724,75 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         },
       ],
       rows: [
-        {
-          c1: {
-            role: 'none',
-            content: 'All Advertiser\'s Campaigns',
-          },
-          c2: {
-            role: USER_ROLE.BASIC_USER,
-            content: PERMISSION_LEVELS.VIEW_ONLY,
-          },
-          c3: {
-            role: USER_ROLE.SUPER_USER,
-            content: PERMISSION_LEVELS.FULL_ACCESS,
-          },
-          c4: {
-            role: USER_ROLE.CUSTOM_USER,
-            content: (
-              <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.AllAdvertiserCampaigns)}
-                options={
-                  [
-                    PERMISSION_LEVELS.NO_ACCESS,
-                    PERMISSION_LEVELS.VIEW_ONLY,
-                    PERMISSION_LEVELS.FULL_ACCESS,
-                  ].filter(level => canUserAssignPermissionLevel(PermissionType.AllAdvertiserCampaigns, level as PERMISSION_LEVELS)) as Array<string>
-                }
-                permissionKey={PermissionType.AllAdvertiserCampaigns}
-                onPermissionSelect={handlePermissionSelect(PermissionType.AllAdvertiserCampaigns)}
-                selectedPermission={permissions[PermissionType.AllAdvertiserCampaigns] as PERMISSION_LEVELS}
-              />
-            ),
-          },
-        },
-        {
-          c1: {
-            role: 'none',
-            content: 'Report Generation',
-          },
-          c2: {
-            role: USER_ROLE.BASIC_USER,
-            content: PERMISSION_LEVELS.CAMPAIGN_LEVEL,
-          },
-          c3: {
-            role: USER_ROLE.SUPER_USER,
-            content: PERMISSION_LEVELS.CAMPAIGN_LEVEL,
-          },
-          c4: {
-            role: USER_ROLE.CUSTOM_USER,
-            content: (
-              <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.ReportGeneration)}
-                options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.CAMPAIGN_LEVEL].filter(level => canUserAssignPermissionLevel(PermissionType.ReportGeneration, level as PERMISSION_LEVELS)) as Array<string>}
-                permissionKey={PermissionType.ReportGeneration}
-                onPermissionSelect={handlePermissionSelect(PermissionType.ReportGeneration)}
-                selectedPermission={
-                  role !== USER_ROLE.CUSTOM_USER && userType !== USER_TYPE.PUBLISHER
-                    ? (advertiser_permissions[PermissionType.ReportGeneration] as PERMISSION_LEVELS)
-                    : (permissions[PermissionType.ReportGeneration] as PERMISSION_LEVELS)
-                }
-              />
-            ),
-          },
-        },
+        // {
+        //   c1: {
+        //     role: 'none',
+        //     content: 'All Advertiser\'s Campaigns',
+        //   },
+        //   c2: {
+        //     role: USER_ROLE.OPERATOR_USER,
+        //     content: PERMISSION_LEVELS.VIEW_ONLY,
+        //   },
+        //   c3: {
+        //     role: USER_ROLE.SUPER_USER,
+        //     content: PERMISSION_LEVELS.FULL_ACCESS,
+        //   },
+        //   c4: {
+        //     role: USER_ROLE.CUSTOM_USER,
+        //     content: (
+        //       <CustomPermission
+        //         disabled={disabled}
+        //         options={
+        //           [
+        //             PERMISSION_LEVELS.NO_ACCESS,
+        //             PERMISSION_LEVELS.VIEW_ONLY,
+        //             PERMISSION_LEVELS.FULL_ACCESS,
+        //           ].filter(level => canUserAssignPermissionLevel(PermissionType.AllAdvertiserCampaigns, level as PERMISSION_LEVELS)) as Array<string>
+        //         }
+        //         permissionKey={PermissionType.AllAdvertiserCampaigns}
+        //         onPermissionSelect={handlePermissionSelect(PermissionType.AllAdvertiserCampaigns)}
+        //         selectedPermission={permissions[PermissionType.AllAdvertiserCampaigns] as PERMISSION_LEVELS}
+        //       />
+        //     ),
+        //   },
+        // },
+        // {
+        //   c1: {
+        //     role: 'none',
+        //     content: 'Report Generation',
+        //   },
+        //   c2: {
+        //     role: USER_ROLE.OPERATOR_USER,
+        //     content: PERMISSION_LEVELS.CAMPAIGN_LEVEL,
+        //   },
+        //   c3: {
+        //     role: USER_ROLE.SUPER_USER,
+        //     content: PERMISSION_LEVELS.CAMPAIGN_LEVEL,
+        //   },
+        //   c4: {
+        //     role: USER_ROLE.CUSTOM_USER,
+        //     content: (
+        //       <CustomPermission
+        //         disabled={disabled}
+        //         options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.CAMPAIGN_LEVEL].filter(level => canUserAssignPermissionLevel(PermissionType.ReportGeneration, level as PERMISSION_LEVELS)) as Array<string>}
+        //         permissionKey={PermissionType.ReportGeneration}
+        //         onPermissionSelect={handlePermissionSelect(PermissionType.ReportGeneration)}
+        //         selectedPermission={
+        //           role !== USER_ROLE.CUSTOM_USER && userType !== USER_TYPE.PUBLISHER
+        //             ? (advertiser_permissions[PermissionType.ReportGeneration] as PERMISSION_LEVELS)
+        //             : (permissions[PermissionType.ReportGeneration] as PERMISSION_LEVELS)
+        //         }
+        //       />
+        //     ),
+        //   },
+        // },
         {
           c1: {
             role: 'none',
             content: 'User Management',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.VIEW_ONLY,
           },
           c3: {
@@ -806,7 +803,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.UserManagement)}
+                disabled={disabled}
                 options={
                   [
                     PERMISSION_LEVELS.NO_ACCESS,
@@ -821,71 +818,71 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             ),
           },
         },
-        {
-          c1: {
-            role: 'none',
-            content: 'Wallets',
-          },
-          c2: {
-            role: USER_ROLE.BASIC_USER,
-            content: PERMISSION_LEVELS.VIEW_ONLY,
-          },
-          c3: {
-            role: USER_ROLE.SUPER_USER,
-            content: PERMISSION_LEVELS.MANAGE_WALLET,
-          },
-          c4: {
-            role: USER_ROLE.CUSTOM_USER,
-            content: (
-              <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.Wallet)}
-                options={
-                  [
-                    PERMISSION_LEVELS.NO_ACCESS,
-                    PERMISSION_LEVELS.VIEW_ONLY,
-                    PERMISSION_LEVELS.MANAGE_WALLET,
-                  ].filter(level => canUserAssignPermissionLevel(PermissionType.Wallet, level as PERMISSION_LEVELS)) as Array<string>
-                }
-                permissionKey={PermissionType.Wallet}
-                onPermissionSelect={handlePermissionSelect(PermissionType.Wallet)}
-                selectedPermission={permissions[PermissionType.Wallet] as PERMISSION_LEVELS}
-              />
-            ),
-          },
-        },
-        {
-          c1: {
-            role: 'none',
-            content: 'Insights Management',
-          },
-          c2: {
-            role: USER_ROLE.BASIC_USER,
-            content: PERMISSION_LEVELS.NO_ACCESS,
-          },
-          c3: {
-            role: USER_ROLE.SUPER_USER,
-            content: PERMISSION_LEVELS.VIEW_ONLY,
-          },
-          c4: {
-            role: USER_ROLE.CUSTOM_USER,
-            content: (
-              <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.InsightDashboard)}
-                options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.VIEW_ONLY].filter(level => canUserAssignPermissionLevel(PermissionType.InsightDashboard, level as PERMISSION_LEVELS)) as Array<string>}
-                permissionKey={PermissionType.InsightDashboard}
-                onPermissionSelect={handlePermissionSelect(PermissionType.InsightDashboard)}
-                selectedPermission={permissions[PermissionType.InsightDashboard] as PERMISSION_LEVELS}
-              />
-            ),
-          },
-        },
+        // {
+        //   c1: {
+        //     role: 'none',
+        //     content: 'Wallets',
+        //   },
+        //   c2: {
+        //     role: USER_ROLE.OPERATOR_USER,
+        //     content: PERMISSION_LEVELS.VIEW_ONLY,
+        //   },
+        //   c3: {
+        //     role: USER_ROLE.SUPER_USER,
+        //     content: PERMISSION_LEVELS.MANAGE_WALLET,
+        //   },
+        //   c4: {
+        //     role: USER_ROLE.CUSTOM_USER,
+        //     content: (
+        //       <CustomPermission
+        //         disabled={disabled}
+        //         options={
+        //           [
+        //             PERMISSION_LEVELS.NO_ACCESS,
+        //             PERMISSION_LEVELS.VIEW_ONLY,
+        //             PERMISSION_LEVELS.MANAGE_WALLET,
+        //           ].filter(level => canUserAssignPermissionLevel(PermissionType.Wallet, level as PERMISSION_LEVELS)) as Array<string>
+        //         }
+        //         permissionKey={PermissionType.Wallet}
+        //         onPermissionSelect={handlePermissionSelect(PermissionType.Wallet)}
+        //         selectedPermission={permissions[PermissionType.Wallet] as PERMISSION_LEVELS}
+        //       />
+        //     ),
+        //   },
+        // },
+        // {
+        //   c1: {
+        //     role: 'none',
+        //     content: 'Insights Management',
+        //   },
+        //   c2: {
+        //     role: USER_ROLE.OPERATOR_USER,
+        //     content: PERMISSION_LEVELS.NO_ACCESS,
+        //   },
+        //   c3: {
+        //     role: USER_ROLE.SUPER_USER,
+        //     content: PERMISSION_LEVELS.VIEW_ONLY,
+        //   },
+        //   c4: {
+        //     role: USER_ROLE.CUSTOM_USER,
+        //     content: (
+        //       <CustomPermission
+        //         disabled={disabled}
+        //         options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.VIEW_ONLY].filter(level => canUserAssignPermissionLevel(PermissionType.InsightDashboard, level as PERMISSION_LEVELS)) as Array<string>}
+        //         permissionKey={PermissionType.InsightDashboard}
+        //         onPermissionSelect={handlePermissionSelect(PermissionType.InsightDashboard)}
+        //         selectedPermission={permissions[PermissionType.InsightDashboard] as PERMISSION_LEVELS}
+        //       />
+        //     ),
+        //   },
+        // },
         {
           c1: {
             role: 'none',
             content: 'Public API Access',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.NO_ACCESS,
           },
           c3: {
@@ -896,7 +893,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.PublicApiAccess)}
+                disabled={disabled}
                 options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.FULL_ACCESS_REPORT].filter(level => canUserAssignPermissionLevel(PermissionType.PublicApiAccess, level as PERMISSION_LEVELS)) as Array<string>}
                 permissionKey={PermissionType.PublicApiAccess}
                 onPermissionSelect={handlePermissionSelect(PermissionType.PublicApiAccess)}
@@ -911,7 +908,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Offsite Campaigns',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: PERMISSION_LEVELS.NO_ACCESS,
           },
           c3: {
@@ -922,7 +919,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             role: USER_ROLE.CUSTOM_USER,
             content: (
               <CustomPermission
-                disabled={disabled || !canUserEditPermissionRow(PermissionType.OffsiteCampaigns)}
+                disabled={disabled}
                 options={[PERMISSION_LEVELS.NO_ACCESS, PERMISSION_LEVELS.FULL_ACCESS].filter(level => canUserAssignPermissionLevel(PermissionType.OffsiteCampaigns, level as PERMISSION_LEVELS)) as Array<string>}
                 permissionKey={PermissionType.OffsiteCampaigns}
                 onPermissionSelect={handlePermissionSelect(PermissionType.OffsiteCampaigns)}
@@ -940,7 +937,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
       columns: [
         {
           label: 'Access Levels',
-          role: USER_ROLE.BASIC_USER,
+          role: USER_ROLE.OPERATOR_USER,
         },
       ],
       rows: [
@@ -950,7 +947,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Ad Inventory and Placements',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.AD_INVENTORY_PLACEMENTS,
         //   },
         // },
@@ -960,7 +957,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Audience and Key/values',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.AUDIENCE_KEYS_VALUES,
         //   },
         // },
@@ -970,7 +967,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'All Publisher’s Campaigns',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.ALL_PUBLISHER_CAMPAIGNS,
         //   },
         // },
@@ -980,7 +977,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'All Advertiser’s Campaigns',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.ALL_ADVERTISER_CAMPAIGNS,
         //   },
         // },
@@ -990,7 +987,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Creative Templates',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.CREATIVE_TEMPLATE,
         //   },
         // },
@@ -1000,7 +997,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Report Generation',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.REPORT_GENERATION,
         //   },
         // },
@@ -1010,7 +1007,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Advertisers Management',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.ADVERTISER_MANAGEMENT,
         //   },
         // },
@@ -1020,7 +1017,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'User Management',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: defaultPermissions?.USER_MANAGEMENT,
           },
         },
@@ -1030,7 +1027,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Approval Requests',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.APPROVAL_REQUESTS,
         //   },
         // },
@@ -1040,7 +1037,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Wallets',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.WALLET,
         //   },
         // },
@@ -1050,7 +1047,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Insights Management',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.INSIGHT_DASHBOARD,
         //   },
         // },
@@ -1060,7 +1057,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Account Settings',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: defaultPermissions?.ACCOUNT_SETTINGS,
           },
         },
@@ -1070,7 +1067,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
         //     content: 'Yield Management',
         //   },
         //   c2: {
-        //     role: USER_ROLE.BASIC_USER,
+        //     role: USER_ROLE.OPERATOR_USER,
         //     content: defaultPermissions?.YIELD_MANAGEMENT,
         //   },
         // },
@@ -1080,7 +1077,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Public API Access',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: defaultPermissions?.PUBLIC_API_ACCESS,
           },
         },
@@ -1090,7 +1087,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Offsite Integrations',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: defaultPermissions?.OFFSITE_INTEGRATIONS,
           },
         },
@@ -1100,7 +1097,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             content: 'Offsite Campaigns',
           },
           c2: {
-            role: USER_ROLE.BASIC_USER,
+            role: USER_ROLE.OPERATOR_USER,
             content: defaultPermissions?.OFFSITE_CAMPAIGNS,
           },
         },
@@ -1267,7 +1264,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
     setRole(userRole);
     const per: Record<string, PERMISSION_LEVELS> = {};
     Object.keys(userType === USER_TYPE.ADVERTISER ? advertiser_permissions : publisher_permissions).forEach(key => {
-      const permission: any = { ...customPermissions };
+      const permission: Record<string, PERMISSION_LEVELS> = { ...customPermissions };
       per[key] = permission[key];
     });
     onUpdatePermissions(userRole, per);
@@ -1277,25 +1274,26 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
     return null;
   }
 
-  const renderPermissionContent = (content: any) => {
+  const renderPermissionContent = (content: string | React.ReactNode | Record<string, boolean>) => {
     if (!content) return 'No Access';
 
     if (typeof content === 'string') {
       return content;
     }
 
-    if (typeof content === 'object') {
-      if (content.fullAccess) return 'Full Access';
-      if (content.fullAccessReport) return 'Full Access Report';
-      if (content.fullAccessPublicKey) return 'Full Access Public Key';
-      if (content.viewAccess) return 'View Only';
-      if (content.campaignLevel) return 'Campaign Level';
-      if (content.comprehensiveAccess) return 'Comprehensive Access';
-      if (content.manageWallet) return 'Manage Wallet';
-      if (content.approvalAccess) return 'Approval Access';
-      if (content.allRequests) return 'All Requests';
-      if (content.creativeRequests) return 'Creative Requests';
-      if (content.noAccess) return 'No Access';
+    if (typeof content === 'object' && !React.isValidElement(content)) {
+      const contentObj = content as Record<string, boolean>;
+      if (contentObj.fullAccess) return 'Full Access';
+      if (contentObj.fullAccessReport) return 'Full Access Report';
+      if (contentObj.fullAccessPublicKey) return 'Full Access Public Key';
+      if (contentObj.viewAccess) return 'View Only';
+      if (contentObj.campaignLevel) return 'Campaign Level';
+      if (contentObj.comprehensiveAccess) return 'Comprehensive Access';
+      if (contentObj.manageWallet) return 'Manage Wallet';
+      if (contentObj.approvalAccess) return 'Approval Access';
+      if (contentObj.allRequests) return 'All Requests';
+      if (contentObj.creativeRequests) return 'Creative Requests';
+      if (contentObj.noAccess) return 'No Access';
     }
 
     if (React.isValidElement(content)) {
@@ -1314,9 +1312,9 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
               <TableCell>User Roles</TableCell>
               {(onlyReadable ? readableMeta : meta)[userType.toLowerCase() as USER_TYPE]?.columns.map(
                 (item: { role: USER_ROLE; label: string }) => {
-                  const isStandardColumn = item.role === USER_ROLE.BASIC_USER;
+                  const isOperatorColumn = item.role === USER_ROLE.OPERATOR_USER;
                   const isAdminColumn = item.role === USER_ROLE.SUPER_USER;
-                  const isColumnDisabled = (isStandardColumn && !showStandard) || (isAdminColumn && !showAdmin);
+                  const isColumnDisabled = (isOperatorColumn && !showOperator) || (isAdminColumn && !showAdmin);
                   
                   return (
                     <TableCell
@@ -1337,8 +1335,8 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
                               ? 'user-custom-role-option'
                               : item.label == 'Admin'
                               ? 'user-admin-role-option'
-                              : item.label == 'Standard'
-                              ? 'user-standard-role-option'
+                              : item.label == 'Operator'
+                              ? 'user-operator-role-option'
                               : undefined
                           }
                         >
@@ -1354,26 +1352,28 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
           </TableHead>
           <TableBody>
             {(onlyReadable ? readableMeta : meta)[userType.toLowerCase() as USER_TYPE]?.rows.map(
-              (item: any, index: number) => {
-                // Check if the entire row should be disabled based on user permissions
-                const permissionType = getPermissionTypeFromContent(item.c1.content);
-                const isRowDisabled = permissionType ? !canUserEditPermissionRow(permissionType) : false;
-                
+              (item: Record<string, { role: string; content: string | React.ReactNode }>, index: number) => {
+                // Determine permission type for this feature row
+                const permissionType = getPermissionTypeFromContent(typeof item.c1.content === 'string' ? item.c1.content : '');
+
                 return (
-                  <TableRow key={index} className={isRowDisabled ? styles.disabledRow : ''}>
+                  <TableRow key={index}>
                     {Object.keys(item).map(key => {
-                      const isStandardColumn = item[key].role === USER_ROLE.BASIC_USER;
+                      const isOperatorColumn = item[key].role === USER_ROLE.OPERATOR_USER;
                       const isAdminColumn = item[key].role === USER_ROLE.SUPER_USER;
-                      const isColumnDisabled = (isStandardColumn && !showStandard) || (isAdminColumn && !showAdmin);
-                      
+                      const isColumnDisabled = (isOperatorColumn && !showOperator) || (isAdminColumn && !showAdmin);
+                      const isPermissionBlocked = (isOperatorColumn || isAdminColumn) && permissionType
+                        ? !canUserEditPermissionRow(permissionType)
+                        : false;
+                      const finalDisabled = isColumnDisabled || isPermissionBlocked;
+
                       return (
                         <TableCell
                           key={key}
-                          className={`${styles.tableBodyCell} ${isColumnDisabled ? styles.disabledColumn : ''} ${isRowDisabled ? styles.disabledRow : ''}`}
+                          className={`${styles.tableBodyCell} ${finalDisabled ? styles.disabledColumn : ''}`}
                           data-id={role === item[key].role}
                           data-first={item[key].role === 'none'}
-                          data-disabled-column={isColumnDisabled}
-                          data-disabled-row={isRowDisabled}
+                          data-disabled-column={finalDisabled}
                         >
                           <div className={styles.permission_info_wrapper} data-testid="user-access-permission">
                             {key === 'c1' ? item[key].content : renderPermissionContent(item[key].content)}
@@ -1396,7 +1396,7 @@ export default RolesPermissionsComponent;
 export interface RolePermission {
   key: number;
   module: string;
-  standardOption: string;
+  operatorOption: string;
   adminOption: string;
   customOption: string;
 }

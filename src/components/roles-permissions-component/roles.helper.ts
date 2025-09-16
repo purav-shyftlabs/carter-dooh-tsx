@@ -3,7 +3,7 @@ import { USER_ROLE, USER_TYPE } from '@/common/constants';
 
 export const DefaultPermForAdminBasic = {
   publisher: {
-    standardUser: [
+    operatorUser: [
       { accessLevel: AccessLevel.VIEW_ACCESS, permissionType: PermissionType.AdInventoryPlacements },
       { accessLevel: AccessLevel.VIEW_ACCESS, permissionType: PermissionType.AudienceKeysValues },
       { accessLevel: AccessLevel.VIEW_ACCESS, permissionType: PermissionType.AllPublisherCampaigns },
@@ -41,7 +41,7 @@ export const DefaultPermForAdminBasic = {
     ],
   },
   advertiser: {
-    standardUser: [
+    operatorUser: [
       { accessLevel: AccessLevel.VIEW_ACCESS, permissionType: PermissionType.AllAdvertiserCampaigns },
       { accessLevel: AccessLevel.CAMPAIGN_LEVEL, permissionType: PermissionType.ReportGeneration },
       { accessLevel: AccessLevel.VIEW_ACCESS, permissionType: PermissionType.UserManagement },
@@ -67,13 +67,13 @@ export const getRoles = (user: any) => {
     if (user.roleType === USER_ROLE.SUPER_USER) {
       return DefaultPermForAdminBasic.publisher.admin;
     }
-    return DefaultPermForAdminBasic.publisher.standardUser;
+    return DefaultPermForAdminBasic.publisher.operatorUser;
   }
   if (user.userType === USER_TYPE.ADVERTISER) {
     if (user.roleType === USER_ROLE.SUPER_USER) {
       return DefaultPermForAdminBasic.advertiser.admin;
     }
-    return DefaultPermForAdminBasic.advertiser.standardUser;
+    return DefaultPermForAdminBasic.advertiser.operatorUser;
   }
   return [];
 };

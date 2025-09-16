@@ -13,10 +13,7 @@ import { AccessLevel, PermissionType, UserType } from '@/types';
 import styles from '../styles/user-form.module.scss';
 import { checkAclFromState } from '@/common/acl';
 import { useAppSelector } from '@/redux/hooks';
-import RolesPermissionsComponent, {
-  advertiser_permissions,
-  publisher_permissions,
-} from '@/components/roles-permissions-component/roles-permissions.component';
+import RolesPermissionsComponent from '@/components/roles-permissions-component/roles-permissions.component';
 import { USER_ROLE, USER_TYPE as CONST_USER_TYPE } from '@/common/constants';
 import UsersService, { CreateUserPayload, UpdateUserPayload } from '@/services/users/users.service';
 
@@ -65,8 +62,8 @@ const UserForm: any = () => {
       userType: isAdvertiser ? UserType.Advertiser : UserType.Publisher,
       allowAllAdvertisers: true,
       brands: '',
-      roleType: isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.BASIC_USER,
-      permissions: isAdvertiser ? advertiser_permissions : publisher_permissions,
+      roleType: isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.OPERATOR_USER,
+      permissions: {} as Record<string, string>,
     },
     validationSchema,
     onSubmit: async values => {
@@ -96,7 +93,7 @@ const UserForm: any = () => {
         };
 
         const permissionsArray = values.permissions 
-          ? Object.entries(values.permissions)
+          ? Object.entries(values.permissions as Record<string, string>)
               .filter(([permissionType]) =>
                 [PermissionType.UserManagement, PermissionType.AccountSetup].includes(
                   permissionType as PermissionType
@@ -104,7 +101,7 @@ const UserForm: any = () => {
               )
               .map(([permissionType, accessLevel]) => ({
                 permissionType,
-                accessLevel: mapPermissionLevel(accessLevel || 'No Access'),
+                accessLevel: mapPermissionLevel(String(accessLevel ?? 'No Access')),
               }))
           : [];
 
@@ -122,7 +119,6 @@ const UserForm: any = () => {
         } else {
           // Create flow
           const payload: CreateUserPayload = {
-            currentAccountId: Number(loggedInUser?.accountId) || 1,
             name: `${values.firstName} ${values.lastName}`,
             firstName: values.firstName,
             lastName: values.lastName,
@@ -130,7 +126,7 @@ const UserForm: any = () => {
             timezoneName: values.timeZoneName,
             userType: values.userType,
             roleType: values.roleType,
-            allowAllBrands: values.userType === UserType.Publisher ? values.allowAllAdvertisers : true,
+            allowAllBrands: values.userType === UserType.Advertiser ? false : values.allowAllAdvertisers,
             allowAllBrandsList: values.brands ? values.brands.split(',').map(brand => brand.trim()) : [],
             permissions: permissionsArray,
           };
@@ -191,11 +187,11 @@ const UserForm: any = () => {
         const mappedRole: string =
           apiRole === 'ADMIN'
             ? USER_ROLE.SUPER_USER
-            : apiRole === 'STANDARD_USER'
-            ? USER_ROLE.BASIC_USER
+            : apiRole === 'OPERATOR_USER'
+            ? USER_ROLE.OPERATOR_USER
             : apiRole === 'CUSTOM_USER'
             ? USER_ROLE.CUSTOM_USER
-            : (isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.BASIC_USER);
+            : (isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.OPERATOR_USER);
 
         const mapped = {
           firstName: firstName || '',
@@ -206,10 +202,7 @@ const UserForm: any = () => {
           allowAllAdvertisers: Boolean(u?.allowAllAdvertisers ?? u?.allowAllBrands ?? true),
           brands: Array.isArray(u?.allowAllBrandsList) ? String(u.allowAllBrandsList.join(', ')) : '',
           roleType: mappedRole,
-          permissions:
-            Object.keys(permissionsObj).length > 0
-              ? (permissionsObj as any)
-              : (isAdvertiser ? (advertiser_permissions as any) : (publisher_permissions as any)),
+          permissions: (permissionsObj as any),
         } as typeof formik.values;
 
         formik.resetForm({ values: mapped });
@@ -223,6 +216,11 @@ const UserForm: any = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query.id]);
 
+  console.log(formik.values,'formik.values');
+  console.log(formik.errors,'formik.errors');
+  console.log(formik.isValid,'formik.isValid');
+  console.log(formik.dirty,'formik.dirty');
+  // log 
   return (
     <form id="user_form" onSubmit={formik.handleSubmit}>
       <PageHeader
@@ -332,8 +330,7 @@ const UserForm: any = () => {
                     ...prev,
                     userType: value,
                     allowAllAdvertisers: value === UserType.Advertiser ? false : prev.allowAllAdvertisers,
-                    roleType: value === UserType.Advertiser ? USER_ROLE.SUPER_USER : USER_ROLE.BASIC_USER,
-                    permissions: value === UserType.Advertiser ? advertiser_permissions : publisher_permissions,
+                    roleType: value === UserType.Advertiser ? USER_ROLE.SUPER_USER : USER_ROLE.OPERATOR_USER,
                   }))
                 }
                 options={

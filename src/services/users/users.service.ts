@@ -39,7 +39,6 @@ export type UsersListResponse = {
 };
 
 export type CreateUserPayload = {
-  currentAccountId: number;
   name: string;
   firstName: string;
   lastName: string;
@@ -73,17 +72,26 @@ export type UpdateUserPayload = {
 
 class UsersService {
   async getUsers(params: UsersListParams): Promise<UsersListResponse> {
-    const query = {
+    const query: Record<string, string | number> = {
       accountId: String(params.accountId ?? ''),
-      search: String(params.search ?? ''),
-      userRole: String(params.userRole ?? ''),
-      userType: String(params.userType ?? ''),
-      status: String(params.status ?? ''),
       page: String(params.page ?? 1),
       limit: String(params.limit ?? 10),
       sortBy: String(params.sortBy ?? 'name'),
       sortType: String(params.sortType ?? 0),
-    } as const;
+    };
+
+    if (params.search && String(params.search).trim() !== '') {
+      query.search = String(params.search).trim();
+    }
+    if (params.userRole && String(params.userRole).trim() !== '') {
+      query.userRole = String(params.userRole).trim();
+    }
+    if (params.userType && String(params.userType).trim() !== '') {
+      query.userType = String(params.userType).trim();
+    }
+    if (params.status && String(params.status).trim() !== '') {
+      query.status = String(params.status).trim();
+    }
 
     const response = await api.get('/user', { params: query });
     return response.data as UsersListResponse;

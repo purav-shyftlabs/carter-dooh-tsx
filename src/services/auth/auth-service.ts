@@ -266,11 +266,10 @@ class AuthService {
     }
 
     try {
-      const response = await api.post('/api/user/reset-password', {
-        token: token,
-        newPassword: newPassword
+      const response = await api.post('/auth/reset-password', {
+        token,
+        newPassword,
       });
-      console.log(response.data);
       return response.data as unknown;
     } catch (error) {
       console.error('Error during reset password:', error);

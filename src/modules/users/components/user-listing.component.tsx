@@ -62,13 +62,23 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
         accountId: String(acc),
         page: Number(p),
         limit: Number(ps),
-        userType: String(ut ?? ''),
-        search: String(search ?? ''),
-        userRole: String(roleFilter ?? ''),
-        status: String(statusFilter ?? ''),
         sortBy: String(sortBy),
         sortType: Number(apiSortType),
       };
+
+      if (ut && String(ut).trim() !== '') {
+        req.userType = String(ut).trim();
+      }
+      if (search && String(search).trim() !== '') {
+        req.search = String(search).trim();
+      }
+      if (roleFilter && String(roleFilter).trim() !== '') {
+        req.userRole = String(roleFilter).trim();
+      }
+      if (statusFilter && String(statusFilter).trim() !== '') {
+        req.status = String(statusFilter).trim();
+      }
+
       return usersService.getUsers(req);
     },
     { revalidateOnMount: true, revalidateOnFocus: false }
@@ -120,7 +130,7 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
   const roleOptions = [
     { label: 'All Roles', value: '' },
     { label: 'Admin', value: RoleType.Admin  },
-    { label: 'Standard User', value: RoleType.StandardUser  },
+    { label: 'Operator User', value: RoleType.OperatorUser  },
     { label: 'Custom User', value: RoleType.CustomUser  },
   ];
 
