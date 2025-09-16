@@ -50,7 +50,7 @@ export const useSidebarMenuList = () => {
     },
     {
       id: 4,
-      label: 'Settings',
+      label: 'Account Settings',
       icon: <SettingsIcon width={16} height={16} />,
       link: ROUTES.ACCOUNT.BASE,
       show:  hasSettingsView,

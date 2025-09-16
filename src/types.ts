@@ -45,7 +45,7 @@ export enum UserType {
 }
 
 export enum PermissionType {
-  AccountSetup = 'ACCOUNT_SETUP',
+  AccountSetup = 'ACCOUNT_SETTINGS',
   AdvertiserManagement = 'ADVERTISER_MANAGEMENT',
   AdInventoryPlacements = 'AD_INVENTORY_PLACEMENTS',
   AllAdvertiserCampaigns = 'ALL_ADVERTISER_CAMPAIGNS',

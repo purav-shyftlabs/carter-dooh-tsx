@@ -17,7 +17,7 @@ export interface UserListingPropTypes {
 }
 
 export interface UserPermissionType {
-  ACCOUNT_SETUP: {
+  ACCOUNT_SETTINGS: {
     viewAccess: boolean;
     fullAccess: boolean;
     noAccess: boolean;

@@ -320,8 +320,9 @@ const UserForm: any = () => {
             </div>
           </div>
 
-          <div className={styles.input_wrapper}>
+          <div className={`${styles.input_wrapper}`}>
             <p className={styles.title}> Configure User </p>
+            <div className={styles.configure_user}>
             <div className={styles.input_container}>
               <span className={styles.input_label}>User Type *</span>
               <CarterRadioGroup
@@ -348,13 +349,9 @@ const UserForm: any = () => {
                 textProps={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}
               />
             </div>
-          </div>
-        </section>
-        {formik.values.userType === UserType.Publisher && (
-          <section className={styles.section}>
-            <div className={styles.input_wrapper}>
-              <p className={styles.title}> Brand Access </p>
-              <div className={styles.input_container}>
+            {formik.values.userType === UserType.Publisher && (
+
+            <div className={styles.input_container}>
                 <span className={styles.input_label}>Brand Access *</span>
                 <CarterRadioGroup
                   value={formik.values.allowAllAdvertisers ? 'true' : 'false'}
@@ -374,7 +371,8 @@ const UserForm: any = () => {
                   textProps={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}
                 />
               </div>
-              {!formik.values.allowAllAdvertisers && (
+            )}
+             {!formik.values.allowAllAdvertisers && (
                 <div className={styles.input_container}>
                   <CarterInput
                     data-testid="brands"
@@ -389,34 +387,21 @@ const UserForm: any = () => {
                     value={formik.values.brands}
                     onChange={formik.handleChange}
                   />
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-        {formik.values.userType === UserType.Advertiser && (
-          <section className={styles.section}>
-            <div className={styles.input_wrapper}>
-              <p className={styles.title}> Assign Brands </p>
-              <div className={styles.input_container}>
-                <span className={styles.input_label}>Brands *</span>
-                <CarterInput
-                  data-testid="brands"
-                  id="brands"
-                  type="text"
-                  disabled={!hasFullAccess}
-                  error={Boolean(formik.touched.brands && !!formik.errors.brands)}
-                  labelProps={{ label: '' }}
-                  placeholder="Enter brand names (comma separated)"
-                  name="brands"
-                  errorMessage={formik.touched.brands ? (formik.errors.brands as string) ?? '' : ''}
-                  value={formik.values.brands}
-                  onChange={formik.handleChange}
-                />
+                  </div>
+                )}
               </div>
+          </div>
+          
+        </section>
+          {/* <section className={styles.section}>
+            <div className={styles.input_wrapper}>
+              <p className={styles.title}> Brand Access </p>
+        
+             
             </div>
           </section>
-        )}
+        )} */}
+       
         {!!formik.values.userType && (
           <div className={styles.input_wrapper}>
             <p className={styles.title}> Roles and Permissions </p>

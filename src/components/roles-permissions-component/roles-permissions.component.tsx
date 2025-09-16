@@ -94,6 +94,9 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
   const hasOffsiteCampaignsNoAccess = useAppSelector(state =>
     checkAclFromState(state, PermissionType.OffsiteCampaigns, AccessLevel.NO_ACCESS)
   );
+  const user = useAppSelector(state => state.auth.user);
+  const showStandard = Boolean((user as any)?.showStandard ?? true);
+  const showAdmin = Boolean((user as any)?.showAdmin ?? true);
   const [permissions, setPermissions] = useState<any>({});
   const [customPermissions, setCustomPermissions] = useState<any>({});
   const [role, setRole] = useState<USER_ROLE | null>(initRole());
@@ -986,7 +989,7 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
           },
           c2: {
             role: USER_ROLE.BASIC_USER,
-            content: defaultPermissions?.ACCOUNT_SETUP,
+            content: defaultPermissions?.ACCOUNT_SETTINGS,
           },
         },
         // {
@@ -1239,16 +1242,21 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
               <TableCell>User Roles</TableCell>
               {(onlyReadable ? readableMeta : meta)[userType.toLowerCase() as USER_TYPE]?.columns.map(
                 (item: { role: USER_ROLE; label: string }) => {
+                  const isStandardColumn = item.role === USER_ROLE.BASIC_USER;
+                  const isAdminColumn = item.role === USER_ROLE.SUPER_USER;
+                  const isColumnDisabled = (isStandardColumn && !showStandard) || (isAdminColumn && !showAdmin);
+                  
                   return (
                     <TableCell
-                      onClick={() => (disabled ? undefined : onRoleChange(item.role))}
+                      onClick={() => (disabled || isColumnDisabled ? undefined : onRoleChange(item.role))}
                       key={item.role}
-                      className={styles.tableHeadCell}
+                      className={`${styles.tableHeadCell} ${isColumnDisabled ? styles.disabledColumn : ''}`}
                       data-id={role === item.role}
+                      data-disabled-column={isColumnDisabled}
                     >
                       <div
                         className={styles.role_info_wrapper}
-                        onClick={() => (disabled ? undefined : onRoleChange(item.role))}
+                        onClick={() => (disabled || isColumnDisabled ? undefined : onRoleChange(item.role))}
                       >
                         <Typography
                           variant="body-semibold"
@@ -1276,18 +1284,25 @@ const RolesPermissionsComponent: React.FC<RolesPermissionsProps> = ({
             {(onlyReadable ? readableMeta : meta)[userType.toLowerCase() as USER_TYPE]?.rows.map(
               (item: any, index: number) => (
                 <TableRow key={index}>
-                  {Object.keys(item).map(key => (
-                    <TableCell
-                      key={key}
-                      className={styles.tableBodyCell}
-                      data-id={role === item[key].role}
-                      data-first={item[key].role === 'none'}
-                    >
-                      <div className={styles.permission_info_wrapper} data-testid="user-access-permission">
-                        {key === 'c1' ? item[key].content : renderPermissionContent(item[key].content)}
-                      </div>
-                    </TableCell>
-                  ))}
+                  {Object.keys(item).map(key => {
+                    const isStandardColumn = item[key].role === USER_ROLE.BASIC_USER;
+                    const isAdminColumn = item[key].role === USER_ROLE.SUPER_USER;
+                    const isColumnDisabled = (isStandardColumn && !showStandard) || (isAdminColumn && !showAdmin);
+                    
+                    return (
+                      <TableCell
+                        key={key}
+                        className={`${styles.tableBodyCell} ${isColumnDisabled ? styles.disabledColumn : ''}`}
+                        data-id={role === item[key].role}
+                        data-first={item[key].role === 'none'}
+                        data-disabled-column={isColumnDisabled}
+                      >
+                        <div className={styles.permission_info_wrapper} data-testid="user-access-permission">
+                          {key === 'c1' ? item[key].content : renderPermissionContent(item[key].content)}
+                        </div>
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ),
             )}
