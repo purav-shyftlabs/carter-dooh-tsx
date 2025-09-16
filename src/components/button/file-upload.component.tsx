@@ -99,7 +99,7 @@ const FileUploadButton: React.FC<IFileUploadButton> = forwardRef<TFileUploadActi
         <input
           data-testid="fileUploadInput"
           type="file"
-          accept=".pdf"
+          accept="image/*"
           className={styles.fileInput}
           ref={fileInputRef}
           {...inputProps}

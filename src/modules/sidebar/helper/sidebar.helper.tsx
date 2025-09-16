@@ -50,6 +50,13 @@ export const useSidebarMenuList = () => {
     },
     {
       id: 4,
+      label: 'Brand',
+      icon: <FileCheck width={16} height={16} />,
+      link: ROUTES.BRAND.LIST,
+      // show: hasBrandView,
+    },
+    {
+      id: 4,
       label: 'Account Settings',
       icon: <SettingsIcon width={16} height={16} />,
       link: ROUTES.ACCOUNT.BASE,

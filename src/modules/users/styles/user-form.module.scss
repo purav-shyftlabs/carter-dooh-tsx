@@ -151,3 +151,22 @@
   flex-direction: column;
   gap: 24px;
 }
+
+.upload_content_button {
+  border:1px solid $carter-brand-600;
+  background: none;
+  font-weight: 600;
+  color: $carter-brand-600;
+  border-radius: 6px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  width: 50%;
+  justify-content: center;
+}
+
+.brand_logo_container{
+  margin-bottom: 24px !important;
+}

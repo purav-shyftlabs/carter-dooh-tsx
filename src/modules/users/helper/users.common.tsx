@@ -17,6 +17,19 @@ export const UsersPageInfo = {
   actionButton: 'New User',
 };
 
+export const BrandPageInfo = {
+  title: 'Brand Management',
+  actionButton: 'New Brand',
+  all: {
+    label: 'All',
+    tab: 'all',
+  },
+  archived: {
+    label: 'Archived',
+    tab: 'archived',
+  },
+};
+
 export const usersVars = {
   statusToggle: {
     testId: 'enable-disabled-user',
