@@ -24,36 +24,43 @@ const NetworkPerformance: React.FC<INetworkPerformance> = props => {
   // }, [dispatch]);
 
   // Transform API data to performance cards
-  const performanceCards = dashboardData ? [
+  const performanceCards =  [
     {
       key: 'billboards',
       title: 'Active Billboards',
-      value: dashboardData.billboards.active.toString(),
-      change: `+${dashboardData.billboards.growthFromLastMonth}%`,
-      changeType: dashboardData.billboards.growthFromLastMonth >= 0 ? 'positive' as const : 'negative' as const,
+      // value: dashboardData.billboards.active.toString(),
+      value: '100',
+      // change: `+${dashboardData.billboards.growthFromLastMonth}%`,
+      change: '+10%',
+      // changeType: dashboardData.billboards.growthFromLastMonth >= 0 ? 'positive' as const : 'negative' as const,
+      changeType: 'positive' as const,
     },
     {
       key: 'schedules',
       title: 'Upcoming Schedules',
-      value: dashboardData.schedules.upcomingIn24h.toString(),
+      // value: dashboardData.schedules.upcomingIn24h.toString(),
+      value: '100',
       change: '24h',
       changeType: 'positive' as const,
     },
     {
       key: 'content',
       title: 'Total Content',
-      value: dashboardData.content.total.toString(),
-      change: `+${dashboardData.content.weeklyGrowth}%`,
-      changeType: dashboardData.content.weeklyGrowth >= 0 ? 'positive' as const : 'negative' as const,
+      // value: dashboardData.content.total.toString(),
+      value: '100',
+      // change: `+${dashboardData.content.weeklyGrowth}%`,
+      change: '+10%',
+      changeType: 'positive' as const,
     },
     {
       key: 'users',
       title: 'Online Users',
-      value: dashboardData.users.online.toString(),
-      change: 'Active',
+      // value: dashboardData.users.online.toString(),
+      value: '100',
+      change: '+10%',
       changeType: 'positive' as const,
     },
-  ] : [];
+  ];
 
   // Chart data based on selected KPI
   const getChartData = (selectedKPI: string) => {

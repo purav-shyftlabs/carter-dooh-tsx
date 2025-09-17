@@ -14,6 +14,12 @@ const BRAND_ROUTES = {
   LIST: '/brand',
   ADD: '/brand/add',
 };
+
+const CONTENT_ROUTES = {
+  LIST: '/content',
+  ADD: '/content/add',
+};
+
 const ROUTES = {
   DASHBOARD: '/dashboard',
   BILLBOARD: '/billboard',
@@ -21,6 +27,7 @@ const ROUTES = {
   INSIGHTS: '/insights',
   USERS:USERS_ROUTES,
   BRAND: BRAND_ROUTES,
+  CONTENT: CONTENT_ROUTES,
   ACCOUNT: {
     BASE: '/account',
   },

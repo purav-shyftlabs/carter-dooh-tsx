@@ -1,4 +1,4 @@
-import { FileCheck } from 'lucide-react';
+import { FileCheck, FolderOpenDot, FolderOpen } from 'lucide-react';
 import { HomeIcon, SettingsIcon, UsersIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
 import { NextRouter } from 'next/router';
@@ -17,9 +17,9 @@ export const useSidebarMenuList = () => {
   const hasUsersView = useAppSelector(state =>
     checkAclFromState(state, PermissionType.UserManagement, AccessLevel.VIEW_ACCESS)
   );
-  const hasSettingsView = useAppSelector(state =>
-    checkAclFromState(state, PermissionType.AccountSetup, AccessLevel.VIEW_ACCESS)
-  );
+  // const hasSettingsView = useAppSelector(state =>
+  //   checkAclFromState(state, PermissionType.AccountSetup, AccessLevel.VIEW_ACCESS)
+  // );
 
   const MenuItems = [
     {
@@ -43,24 +43,32 @@ export const useSidebarMenuList = () => {
     },
     {
       id: 3,
+      label: 'Content',
+      icon: <FolderOpen width={16} height={16} />,
+      link: ROUTES.CONTENT.LIST,
+      // show: hasContentView,
+    },
+    {
+      id: 4,
       label: 'Users',
       icon: <UsersIcon width={16} height={16} />,
       link: ROUTES.USERS.LIST,
       show: hasUsersView,
     },
     {
-      id: 4,
+      id: 5,
       label: 'Brand',
       icon: <FileCheck width={16} height={16} />,
       link: ROUTES.BRAND.LIST,
       // show: hasBrandView,
     },
+
     {
-      id: 4,
+      id: 6,
       label: 'Account Settings',
       icon: <SettingsIcon width={16} height={16} />,
       link: ROUTES.ACCOUNT.BASE,
-      show:  hasSettingsView,
+      // show:  hasSettingsView,
       testId: 'settings',
       assist: 'settings',
       position: 'bottom',

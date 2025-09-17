@@ -19,7 +19,46 @@ type UpcomingSchedule = {
 };
 
 const UpcomingSchedules: React.FC = () => {
-  const { items: upcomingSchedules, isLoading, error } = useSelector((state: IRootState) => state.upcomingSchedules);
+  const { items, isLoading, error } = useSelector((state: IRootState) => state.upcomingSchedules);
+
+  // dummy data
+  const upcomingSchedules = [
+    {
+      id: 1,
+      name: 'Schedule 1',
+      location: 'Location 1',
+      imageUrl: 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcRhO19TV174QcqD38GCJshP-jF23gdJ6QyiaUmZ5nlVHCfKIsgPxDsD1ZM97CnWqYlVr89tpQlhPt4Jv2DFIgy66pAzPCdgkje3htp9d7I1F0-KLp6JxhoDNA',
+      timeRemaining: '10 minutes',
+      startTime: '2025-01-01',
+    },
+    {
+      id: 2,
+      name: 'Schedule 2',
+      location: 'Location 2',
+      imageUrl:'https://www.apple.com/v/iphone-17-pro/a/images/overview/welcome/hero__bdntboqignj6_xlarge.jpg',
+      timeRemaining: '10 hours',
+      startTime: '2025-01-01',
+    },
+    
+    {
+      id: 3,
+      name: 'Schedule 3',
+      location: 'Location 3',
+      imageUrl: 'https://images.ctfassets.net/hnk2vsx53n6l/5kbabItNDd1ROzqcCXTEGh/648d0493d314bb0e2a589f069fc11d63/4b1775f90ba30df9386d0c2cb8c6855362d2d50b.png?w=1200&h=1200&fm=avif&f=center&fit=fill&q=80',
+      timeRemaining: '10 hours',
+      startTime: '2025-01-01',
+    },
+    
+    {
+      id: 4,
+      name: 'Schedule 4',
+      location: 'Location 4',
+      imageUrl: 'https://shop.teamsg.in/cdn/shop/files/2_3703c8e1-f59d-4282-8a12-b91cf97ffdb9.jpg?v=1749553327&width=533',
+      timeRemaining: '10 days',
+      startTime: '2025-01-01',
+    },
+    
+  ];
 
   // useEffect(() => {
   //   dispatch(fetchDashboardData());

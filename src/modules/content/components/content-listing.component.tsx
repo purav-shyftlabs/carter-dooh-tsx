@@ -5,33 +5,34 @@ import styles from '../styles/user-listing.module.scss';
 import { carterColors } from 'shyftlabs-dsl';
 
 // Brand data type based on your table schema
-type Brand = {
+type Content = {
   id: number;
   account_id: number;
   brand_logo_url: string;
   name: string;
-  industry: string;
-  status: string;
+  type: string;
+  location: string;
   publisher_share_perc: number;
   metadata: Record<string, unknown>;
   allow_all_products: boolean;
   parent_company_id: number;
   custom_id: string;
+  owner: string;
 };
 
-type IBrandListingProps = {
+type IContentListingProps = {
   userType?: string;
 };
 
 // Dummy brand data
-const dummyBrands: Brand[] = [
+const dummyContents: Content[] = [
   {
     id: 1,
     account_id: 1001,
     brand_logo_url: 'https://via.placeholder.com/50x50/4A90E2/FFFFFF?text=AC',
     name: 'Apple Computers',
-    industry: 'Technology',
-    status: 'active',
+    type: 'Technology',
+    location: 'active',
     publisher_share_perc: 15.5,
     metadata: { 
       description: 'Leading technology company', 
@@ -40,15 +41,16 @@ const dummyBrands: Brand[] = [
     },
     allow_all_products: true,
     parent_company_id: 1,
-    custom_id: 'BRAND-001'
+    custom_id: 'BRAND-001',
+    owner: 'Owner 1'
   },
   {
     id: 2,
     account_id: 1001,
     brand_logo_url: 'https://via.placeholder.com/50x50/7ED321/FFFFFF?text=MS',
     name: 'Microsoft Corporation',
-    industry: 'Technology',
-    status: 'active',
+    type: 'Technology',
+    location: 'active',
     publisher_share_perc: 12.0,
     metadata: { 
       description: 'Software and cloud services', 
@@ -57,15 +59,16 @@ const dummyBrands: Brand[] = [
     },
     allow_all_products: false,
     parent_company_id: 2,
-    custom_id: 'BRAND-002'
+    custom_id: 'BRAND-002',
+    owner: 'Owner 2'
   },
   {
     id: 3,
     account_id: 1002,
     brand_logo_url: 'https://via.placeholder.com/50x50/F5A623/FFFFFF?text=AM',
     name: 'Amazon',
-    industry: 'E-commerce',
-    status: 'active',
+    type: 'E-commerce',
+    location: 'active',
     publisher_share_perc: 18.75,
     metadata: { 
       description: 'Global e-commerce and cloud computing', 
@@ -74,15 +77,16 @@ const dummyBrands: Brand[] = [
     },
     allow_all_products: true,
     parent_company_id: 3,
-    custom_id: 'BRAND-003'
+    custom_id: 'BRAND-003',
+    owner: 'Owner 3'
   },
   {
     id: 4,
     account_id: 1001,
     brand_logo_url: 'https://via.placeholder.com/50x50/BD10E0/FFFFFF?text=GO',
     name: 'Google',
-    industry: 'Technology',
-    status: 'archived',
+    type: 'Technology',
+    location: 'archived',
     publisher_share_perc: 20.0,
     metadata: { 
       description: 'Search engine and advertising', 
@@ -91,15 +95,16 @@ const dummyBrands: Brand[] = [
     },
     allow_all_products: false,
     parent_company_id: 4,
-    custom_id: 'BRAND-004'
+    custom_id: 'BRAND-004',
+    owner: 'Owner 4'
   },
   {
     id: 5,
     account_id: 1003,
     brand_logo_url: 'https://via.placeholder.com/50x50/50E3C2/FFFFFF?text=FB',
     name: 'Meta Platforms',
-    industry: 'Social Media',
-    status: 'active',
+    type: 'Social Media',
+    location: 'active',
     publisher_share_perc: 14.25,
     metadata: { 
       description: 'Social networking and virtual reality', 
@@ -108,15 +113,16 @@ const dummyBrands: Brand[] = [
     },
     allow_all_products: true,
     parent_company_id: 5,
-    custom_id: 'BRAND-005'
+    custom_id: 'BRAND-005',
+    owner: 'Owner 5'
   },
   {
     id: 6,
     account_id: 1002,
     brand_logo_url: 'https://via.placeholder.com/50x50/9013FE/FFFFFF?text=TW',
     name: 'Twitter',
-    industry: 'Social Media',
-    status: 'archived',
+    type: 'Social Media',
+    location: 'archived',
     publisher_share_perc: 8.5,
     metadata: { 
       description: 'Social networking platform', 
@@ -125,18 +131,19 @@ const dummyBrands: Brand[] = [
     },
     allow_all_products: false,
     parent_company_id: 6,
-    custom_id: 'BRAND-006'
+    custom_id: 'BRAND-006',
+    owner: 'Owner 6'
   }
 ];
 
-const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
+const ContentListing: React.FC<IContentListingProps> = ({ userType }) => {
   const [pageNo, setPageNo] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [search, setSearch] = useState<string>('');
-  const [industryFilter, setIndustryFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [locationFilter, setLocationFilter] = useState<string>('');
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
-
+  const [ownerFilter, setOwnerFilter] = useState<string>('');
   const sortBy = 'name';
   const sortDesc = false;
   const sorting = useMemo(() => [{ id: sortBy, desc: sortDesc }], [sortBy, sortDesc]);
@@ -144,62 +151,70 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
   type Row = {
     id: string;
     name: string;
-    industry: string;
-    status: string;
+    type: string;
+    location: string;
     publisherShare: string;
     allowAllProducts: string;
     customId: string;
+    owner: string;
+    parentCompany: string;
   };
 
   // Filter and process brand data
-  const filteredBrands = useReactMemo(() => {
-    let filtered = dummyBrands;
+  const filteredContents = useReactMemo(() => {
+    let filtered = dummyContents;
 
     // Filter by tab type (all vs archived)
     if (userType === 'archived') {
-      filtered = filtered.filter(brand => brand.status === 'archived');
+      filtered = filtered.filter(content => content.location === 'archived');
     } else if (userType === 'all') {
-      filtered = filtered.filter(brand => brand.status === 'active');
+      filtered = filtered.filter(content => content.location === 'active');
     }
 
     if (search) {
-      filtered = filtered.filter(brand => 
-        brand.name.toLowerCase().includes(search.toLowerCase()) ||
-        brand.industry.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter(content => 
+        content.name.toLowerCase().includes(search.toLowerCase()) ||
+        content.type.toLowerCase().includes(search.toLowerCase())
       );
     }
 
-    if (industryFilter) {
-      filtered = filtered.filter(brand => brand.industry === industryFilter);
+    if (typeFilter) {
+      filtered = filtered.filter(content => content.type === typeFilter);
     }
 
-    if (statusFilter) {
-      filtered = filtered.filter(brand => brand.status === statusFilter);
+    if (locationFilter) {
+      filtered = filtered.filter(content => content.location === locationFilter);
+    }
+
+    if (ownerFilter) {
+      filtered = filtered.filter(content => content.owner === ownerFilter);
     }
 
     return filtered;
-  }, [userType, search, industryFilter, statusFilter]);
+    }, [userType, search, typeFilter, locationFilter, ownerFilter]);
 
   const rows = useReactMemo<Row[]>(() => {
-    return filteredBrands.map((brand: Brand) => ({
-      id: String(brand.id),
-      name: brand.name,
-      industry: brand.industry,
-      status: brand.status,
-      publisherShare: `${brand.publisher_share_perc}%`,
-      allowAllProducts: brand.allow_all_products ? 'Yes' : 'No',
-      customId: brand.custom_id,
+    return filteredContents.map((content: Content) => ({
+      id: String(content.id),
+      name: content.name,
+      type: content.type,
+      location: content.location,
+      publisherShare: `${content.publisher_share_perc}%`,
+      allowAllProducts: content.allow_all_products ? 'Yes' : 'No',
+      customId: content.custom_id,
+      owner: content.owner,
+      parentCompany: content.parent_company_id.toString(),
     }));
-  }, [filteredBrands]);
+  }, [filteredContents]);
 
   type CellArgs = { row: { original: Row } };
   const columns: Array<{ header: string; accessorKey: keyof Row; cell?: (args: CellArgs) => React.ReactElement }> = [
     {
-      header: 'Brand Name',
+      header: 'Content Name',
       accessorKey: 'name',
       cell: ({ row }) => {
         const name: string = row?.original?.name ?? '';
-        const brandId: string = row?.original?.id ?? '';
+        const contentId: string = row?.original?.id ?? '';
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div 
@@ -218,21 +233,21 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
             >
               {name.charAt(0)}
             </div>
-            <Link href={`/brands/brand/${brandId}`} style={{ textDecoration: 'none', color: carterColors['links-blue'], fontWeight: 500 }}>
+            <Link href={`/contents/content/${contentId}`} style={{ textDecoration: 'none', color: carterColors['links-blue'], fontWeight: 500 }}>
               {name}
             </Link>
           </div>
         );
       },
     },
-    { header: 'Industry', accessorKey: 'industry' },
+    { header: 'Type', accessorKey: 'type' },
     { 
-      header: 'Status', 
-      accessorKey: 'status',
+      header: 'Location', 
+      accessorKey: 'location',
       cell: ({ row }) => {
-        const status = row?.original?.status ?? '';
-        const isActive = status === 'active';
-        const isArchived = status === 'archived';
+        const location = row?.original?.location ?? '';
+        const isActive = location === 'active';
+        const isArchived = location === 'archived';
         
         let backgroundColor, color;
         if (isActive) {
@@ -257,7 +272,7 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
               color
             }}
           >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {location.charAt(0).toUpperCase() + location.slice(1)}
           </span>
         );
       }
@@ -265,6 +280,8 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
     { header: 'Publisher Share', accessorKey: 'publisherShare' },
     { header: 'Allow All Products', accessorKey: 'allowAllProducts' },
     { header: 'Custom ID', accessorKey: 'customId' },
+    { header: 'Owner', accessorKey: 'owner' },
+    { header: 'Parent Company', accessorKey: 'parentCompany' },
   ];
 
   const visibleColumns = useReactMemo(() => {
@@ -274,9 +291,9 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
 
   type Option = { label: string; value: string };
   
-  const industryOptions: Option[] = useMemo(
+  const typeOptions: Option[] = useMemo(
     () => [
-      { label: 'All Industries', value: '' },
+      { label: 'All Types', value: '' },
       { label: 'Technology', value: 'Technology' },
       { label: 'E-commerce', value: 'E-commerce' },
       { label: 'Social Media', value: 'Social Media' },
@@ -284,18 +301,31 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
     []
   );
 
-  const statusOptions: Option[] = useMemo(
+  const locationOptions: Option[] = useMemo(
     () => [
-      { label: 'All Status', value: '' },
+      { label: 'All Location', value: '' },
       { label: 'Active', value: 'active' },
       { label: 'Archived', value: 'archived' },
+      { label: 'Inactive', value: 'inactive' },
+      { label: 'Pending', value: 'pending' },
+      { label: 'Suspended', value: 'suspended' }
     ],
     []
   );
 
-  const industryInitialOption = useMemo(() => industryOptions.find(o => o.value === industryFilter) ?? industryOptions[0], [industryOptions, industryFilter]);
-  const statusInitialOption = useMemo(() => statusOptions.find(o => o.value === statusFilter) ?? statusOptions[0], [statusOptions, statusFilter]);
+  const ownerOptions: Option[] = useMemo(
+    () => [
+      { label: 'All Owners', value: '' },
+      { label: 'Owner 1', value: 'owner1' },
+      { label: 'Owner 2', value: 'owner2' },
+      { label: 'Owner 3', value: 'owner3' },
+    ],
+    []
+  );
 
+  const typeInitialOption = useMemo(() => typeOptions.find(o => o.value === typeFilter) ?? typeOptions[0], [typeOptions, typeFilter]);
+  const locationInitialOption = useMemo(() => locationOptions.find(o => o.value === locationFilter) ?? locationOptions[0], [locationOptions, locationFilter]);
+  const ownerInitialOption = useMemo(() => ownerOptions.find(o => o.value === ownerFilter) ?? ownerOptions[0], [ownerOptions, ownerFilter]);
   const handleColumnVisibilityChange = (
     updaterOrValue: ((prev: Record<string, boolean>) => Record<string, boolean>) | Record<string, boolean>
   ) => {
@@ -316,31 +346,43 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
             setSearch(val);
             setPageNo(1);
           }}
-          placeholder="Search for Brand"
-          data-testid="brand-search-input"
+          placeholder="Search for Content"
+          data-testid="content-search-input"
         />
         <PriorityFilters
-          placeholder="Industry"
-          initialValue={industryInitialOption as unknown as Option}
+          placeholder="Type"
+          initialValue={typeInitialOption as unknown as Option}
           onChange={(selected: { value?: string } | null) => {
             const value = selected?.value ?? '';
-            setIndustryFilter(value ?? '');
+            setTypeFilter(value ?? '');
             setPageNo(1);
           }}
           mode="single"
-          options={industryOptions}
+          options={typeOptions}
           {...({ closeMenuOnSelect: false } as { closeMenuOnSelect: boolean })}
         />
         <PriorityFilters
-          placeholder="Status"
+          placeholder="Location"
           mode="single"
-          initialValue={statusInitialOption as unknown as { label: string; value: string }}
+          initialValue={locationInitialOption as unknown as { label: string; value: string }}
           onChange={(selected: { value?: string } | null) => {
             const value = selected?.value ?? '';
-            setStatusFilter(value ?? '');
+            setLocationFilter(value ?? '');
             setPageNo(1);
           }}
-          options={statusOptions}
+          options={locationOptions}
+          {...({ closeMenuOnSelect: false } as { closeMenuOnSelect: boolean })}
+        />
+        <PriorityFilters
+          placeholder="Owner"
+          mode="single"
+          initialValue={ownerInitialOption as unknown as { label: string; value: string }}
+          onChange={(selected: { value?: string } | null) => {
+            const value = selected?.value ?? '';
+            setOwnerFilter(value ?? '');
+            setPageNo(1);
+          }}
+          options={ownerOptions}
           {...({ closeMenuOnSelect: false } as { closeMenuOnSelect: boolean })}
         />
         <div className={styles.end_controls}>
@@ -356,11 +398,11 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
         loading={false}
         columns={visibleColumns}
         data={rows}
-        fallback={{ title: 'No Brands Yet', description: 'Click "+ New Brand" to create' }}
+        fallback={{ title: 'No Contents Yet', description: 'Click "+ New Content" to create' }}
         pagination={{
           pageNo: pageNo,
           pageSize: pageSize,
-          totalCount: filteredBrands.length,
+          totalCount: filteredContents.length,
           sort: sorting,
         }}
         onPaginationChange={(nextPageNo, nextPageSize) => {
@@ -372,4 +414,4 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType }) => {
   );
 };
 
-export default BrandListing;
+export default ContentListing;

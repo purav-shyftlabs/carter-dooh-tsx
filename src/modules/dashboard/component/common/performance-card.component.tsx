@@ -15,21 +15,21 @@ interface IPerformanceCard {
 
 const PerformanceCard: React.FC<IPerformanceCard> = props => {
   const { active, activeClass, loading, title, value, growthPercentage = 0, onClick } = props;
-
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.info_container}>
-          <Skeleton width={'50%'} />
-          <Skeleton width={'80%'} height={30} />
-        </div>
-        <div className={styles.fluctuation_container}>
-          <Skeleton width={20} variant="circular" />
-          <Skeleton width={'30%'} style={{ marginLeft: '4px' }} />
-        </div>
-      </div>
-    );
-  }
+  console.log(active, 'active');
+  // if (loading) {
+  //   return (
+  //     <div className={styles.container}>
+  //       <div className={styles.info_container}>
+  //         <Skeleton width={'50%'} />
+  //         <Skeleton width={'80%'} height={30} />
+  //       </div>
+  //       <div className={styles.fluctuation_container}>
+  //         <Skeleton width={20} variant="circular" />
+  //         <Skeleton width={'30%'} style={{ marginLeft: '4px' }} />
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const mode = growthPercentage > 0 ? 'growth' : growthPercentage < 0 ? 'shrink' : 'none';
   const textColor =

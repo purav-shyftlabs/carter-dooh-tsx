@@ -63,6 +63,7 @@ export {
   EyeOff as EyeOffIcon,
   FileWarning as FileWarningIcon,
   ShoppingCart as ShoppingCartIcon,
+  Pencil as PencilIcon,
   // ChartArea,
   Film as FilmIcon,
   RefreshCw as Sync,
