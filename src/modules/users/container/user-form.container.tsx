@@ -4,7 +4,7 @@ import * as yup from 'yup';
 import { useRouter } from 'next/router';
 import InternalLayout from '@/layouts/internal-layout/internal-layout';
 import PageHeader from '@/components/page-header/page-header.component';
-import { Button as CarterButton, CarterInput, CarterRadioGroup, CarterSelect } from 'shyftlabs-dsl';
+import { Button as CarterButton, CarterInput, CarterRadioGroup, CarterSelect, TabularAutocomplete } from 'shyftlabs-dsl';
 import useUser from '@/contexts/user-data/user-data.hook';
 import ROUTES from '@/common/routes';
 import useAlert from '@/contexts/alert/alert.hook';
@@ -16,6 +16,7 @@ import { useAppSelector } from '@/redux/hooks';
 import RolesPermissionsComponent from '@/components/roles-permissions-component/roles-permissions.component';
 import { USER_ROLE, USER_TYPE as CONST_USER_TYPE } from '@/common/constants';
 import UsersService, { CreateUserPayload, UpdateUserPayload } from '@/services/users/users.service';
+import BrandsService, { BrandItem } from '@/services/brands/brands.service';
 
 const validationSchema = yup.object().shape({
   firstName: yup.string().trim().required('Please enter first name'),
@@ -28,12 +29,15 @@ const validationSchema = yup.object().shape({
   timeZoneName: yup.string().trim().required('Please select timezone'),
   userType: yup.mixed<UserType>().oneOf([UserType.Advertiser, UserType.Publisher]).required('Please select type'),
   allowAllAdvertisers: yup.boolean().optional(),
-  brands: yup.string().when(['userType', 'allowAllAdvertisers'], {
-    is: (userType: UserType, allowAllAdvertisers: boolean) =>
-      userType === UserType.Advertiser || (userType === UserType.Publisher && allowAllAdvertisers === false),
-    then: schema => schema.trim().required('Please select at least one brand'),
-    otherwise: schema => schema.optional(),
-  }),
+  brands: yup
+    .array()
+    .of(yup.string().trim())
+    .when(['userType', 'allowAllAdvertisers'], {
+      is: (userType: UserType, allowAllAdvertisers: boolean) =>
+        userType === UserType.Advertiser || (userType === UserType.Publisher && allowAllAdvertisers === false),
+      then: schema => schema.min(1, 'Please select at least one brand'),
+      otherwise: schema => schema.optional(),
+    }),
 });
 
 const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactNode } = () => {
@@ -41,6 +45,14 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
   const { isAdvertiser, permission } = useUser();
   const { showAlert } = useAlert();
   const usersService = new UsersService();
+  const brandsService = new BrandsService();
+  const [allBrandsList, setAllBrandsList] = React.useState<BrandItem[]>([]);
+  const [isLoadingBrands, setIsLoadingBrands] = React.useState<boolean>(false);
+  const [brandFilters, setBrandFilters] = React.useState<{
+    page: number;
+    search: string;
+  }>({ page: 1, search: '' });
+  const [brandsData, setBrandsData] = React.useState<{ totalCount?: number } | null>(null);
 
   const hasFullAccessFromRedux = useAppSelector(state =>
     checkAclFromState(state, PermissionType.UserManagement, AccessLevel.FULL_ACCESS)
@@ -61,7 +73,7 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
       timeZoneName: 'UTC',
       userType: isAdvertiser ? UserType.Advertiser : UserType.Publisher,
       allowAllAdvertisers: true,
-      brands: '',
+      brands: [] as string[],
       roleType: isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.OPERATOR_USER,
       permissions: {} as Record<string, string>,
     },
@@ -112,6 +124,7 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
             name: `${values.firstName} ${values.lastName}`,
             roleType: values.roleType,
             permissions: permissionsArray,
+            allowedBrands: Array.isArray(values.brands) ? values.brands : [],
           };
           await usersService.updateUser(id, updatePayload);
           showAlert('User updated successfully', AlertVariant.SUCCESS);
@@ -127,7 +140,7 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
             userType: values.userType,
             roleType: values.roleType,
             allowAllBrands: values.userType === UserType.Advertiser ? false : values.allowAllAdvertisers,
-            allowAllBrandsList: values.brands ? values.brands.split(',').map(brand => brand.trim()) : [],
+            allowAllBrandsList: Array.isArray(values.brands) ? values.brands : [],
             permissions: permissionsArray,
           };
           await usersService.createUser(payload);
@@ -193,6 +206,10 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
             ? USER_ROLE.CUSTOM_USER
             : (isAdvertiser ? USER_ROLE.SUPER_USER : USER_ROLE.OPERATOR_USER);
 
+        // Handle allowedBrands format: array of objects with id and name
+        const allowedBrandsFromApi = Array.isArray(u?.allowedBrands) 
+          ? (u.allowedBrands as unknown as Array<{id: number | string; name: string}>).map(brand => String(brand.id))
+          : undefined;
         const mapped = {
           firstName: firstName || '',
           lastName: lastName || '',
@@ -200,7 +217,12 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
           timeZoneName: String(u?.timezoneName ?? u?.timeZoneName ?? 'America/Los_Angeles'),
           userType: String(u?.userType ?? '').toUpperCase() === 'ADVERTISER' ? UserType.Advertiser : UserType.Publisher,
           allowAllAdvertisers: Boolean(u?.allowAllAdvertisers ?? u?.allowAllBrands ?? true),
-          brands: Array.isArray(u?.allowAllBrandsList) ? String(u.allowAllBrandsList.join(', ')) : '',
+          brands:
+            !(u?.allowAllAdvertisers ?? u?.allowAllBrands ?? true)
+              ? (allowedBrandsFromApi ?? (
+                  Array.isArray(u?.allowAllBrandsList) ? (u.allowAllBrandsList as Array<string | number>).map(v => String(v)) : []
+                ))
+              : [],
           roleType: mappedRole,
           permissions: permissionsObj,
         } as typeof formik.values;
@@ -215,6 +237,74 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
     loadUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query.id]);
+
+  // Fetch brands when needed
+  React.useEffect(() => {
+    const shouldLoad = formik.values.userType === UserType.Advertiser || 
+                      (formik.values.userType === UserType.Publisher && !formik.values.allowAllAdvertisers);
+    if (!shouldLoad) {
+      setAllBrandsList([]);
+      setBrandsData(null);
+      return;
+    }
+    let mounted = true;
+    const load = async () => {
+      try {
+        setIsLoadingBrands(true);
+        const result = await brandsService.getBrands({ 
+          page: brandFilters.page, 
+          limit: 20, 
+          search: brandFilters.search 
+        });
+        if (!mounted) return;
+        const items = result.items || [];
+        if (brandFilters.page === 1) {
+          setAllBrandsList(items);
+        } else {
+          setAllBrandsList(prev => [...prev, ...items]);
+        }
+        setBrandsData({ totalCount: result.totalCount });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load brands', e);
+        if (brandFilters.page === 1) {
+          setAllBrandsList([]);
+        }
+      } finally {
+        setIsLoadingBrands(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandFilters]);
+
+  // Load initial brands when the input becomes visible
+  React.useEffect(() => {
+    const shouldLoad = formik.values.userType === UserType.Advertiser || 
+                      (formik.values.userType === UserType.Publisher && !formik.values.allowAllAdvertisers);
+    if (shouldLoad && allBrandsList.length === 0 && !isLoadingBrands) {
+      setBrandFilters(prev => ({ ...prev, page: 1, search: '' }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.allowAllAdvertisers, formik.values.userType]);
+
+  // Handle brand selection change
+  const handleBrandOptionChange = (selectedOptions: BrandItem[]) => {
+    const brandIds = selectedOptions.map(brand => String(brand.id));
+    formik.setFieldValue('brands', brandIds);
+  };
+
+  // Define columns for TabularAutocomplete
+  const brandColumns = [
+    {
+      accessorKey: 'name',
+      header: 'Brand Name',
+      cell: ({ row }: { row: { original: BrandItem } }) => row.original.name || String(row.original.id),
+    },
+  ];
 
   console.log(formik.values,'formik.values');
   console.log(formik.errors,'formik.errors');
@@ -331,6 +421,7 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
                     userType: value,
                     allowAllAdvertisers: value === UserType.Advertiser ? false : prev.allowAllAdvertisers,
                     roleType: value === UserType.Advertiser ? USER_ROLE.SUPER_USER : USER_ROLE.OPERATOR_USER,
+                    brands: value === UserType.Advertiser ? [] : prev.brands,
                   }))
                 }
                 options={
@@ -356,7 +447,7 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
                     formik.setValues(prev => ({
                       ...prev,
                       allowAllAdvertisers: newValue === 'true',
-                      brands: '',
+                      brands: [],
                     }))
                   }
                   options={[
@@ -369,23 +460,52 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
                 />
               </div>
             )}
-             {!formik.values.allowAllAdvertisers && (
-                <div className={styles.input_container}>
-                  <CarterInput
-                    data-testid="brands"
-                    id="brands"
-                    type="text"
-                    disabled={!hasFullAccess}
-                    error={Boolean(formik.touched.brands && !!formik.errors.brands)}
-                    labelProps={{ label: 'Brands *' }}
-                    placeholder="Enter brand names (comma separated)"
-                    name="brands"
-                    errorMessage={formik.touched.brands ? (formik.errors.brands as string) ?? '' : ''}
-                    value={formik.values.brands}
-                    onChange={formik.handleChange}
-                  />
-                  </div>
-                )}
+             {(formik.values.userType === UserType.Advertiser || !formik.values.allowAllAdvertisers) && (
+               <div className={styles.input_container}>
+                 <span className={styles.input_label}>Brands *</span>
+                 <TabularAutocomplete
+                   inputProps={{
+                     placeholder: 'Search Brands',
+                     disabled: !hasFullAccess,
+                     onFocus: () => {
+                       // Load brands when input is focused if not already loaded
+                       if (allBrandsList.length === 0 && !isLoadingBrands) {
+                         setBrandFilters(prev => ({ ...prev, page: 1, search: '' }));
+                       }
+                     },
+                   }}
+                   showHeader={false}
+                   handleSearch={name => {
+                     setAllBrandsList([]);
+                     setBrandFilters(prev => ({
+                       ...prev,
+                       page: 1,
+                       search: name,
+                     }));
+                   }}
+                   onScroll={() => {
+                     setBrandFilters(prev => ({
+                       ...prev,
+                       page: (prev.page ?? 1) + 1,
+                     }));
+                   }}
+                   labelKey="name"
+                   selectedOptions={allBrandsList.filter(brand => 
+                     formik.values.brands.includes(String(brand.id))
+                   )}
+                   enableRowSelection
+                   loading={isLoadingBrands}
+                   onSelectionChange={handleBrandOptionChange}
+                   hasNextPage={Number(brandsData?.totalCount) > allBrandsList.length}
+                   options={allBrandsList}
+                   columns={brandColumns}
+                   testId="user-search-brands-input"
+                 />
+                 {formik.touched.brands && formik.errors.brands ? (
+                   <div className={styles.error}>{String(formik.errors.brands)}</div>
+                 ) : null}
+               </div>
+             )}
               </div>
           </div>
           

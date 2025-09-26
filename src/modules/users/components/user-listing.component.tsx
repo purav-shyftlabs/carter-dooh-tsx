@@ -94,11 +94,11 @@ const UserListing: React.FC<IUserListingProps> = ({ userType }) => {
 
   const rows = useReactMemo<Row[]>(() => {
     const items: UserListItem[] = data?.data?.items ?? [];
-    return items.map((u: UserListItem & { allowAllAdvertisers?: boolean; allowAllBrandsList?: string[]; roleType?: string }) => ({
+    return items.map((u: UserListItem & { allowAllAdvertisers?: boolean; allowedBrands?: string[]; roleType?: string }) => ({
       id: String(u.id),
       name: u.name,
       email: u.email,
-      advertisers: u.allowAllAdvertisers ? 'All Advertisers' : (u.allowAllBrandsList || []).join(', '),
+      advertisers: u.allowAllAdvertisers ? 'All Advertisers' : (u.allowedBrands || []).join(', '),
       role: (u.roleType || '')
         .replace(/_/g, ' ')
         .replace(/\b\w/g, (c: string) => c.toUpperCase()),

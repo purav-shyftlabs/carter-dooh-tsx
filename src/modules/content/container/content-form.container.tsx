@@ -56,17 +56,14 @@ const ContentForm: React.FC & { getLayout?: (page: React.ReactNode) => React.Rea
         const id = router.query.id as string | undefined;
         if (id) {
           // Update flow - you'll need to implement brand update service
-          console.log('Update content:', { id, ...values });
           showAlert('Brand updated successfully', AlertVariant.SUCCESS);
           router.push(ROUTES.CONTENT.LIST);
         } else {
           // Create flow - you'll need to implement brand create service
-          console.log('Create content:', values);
           showAlert('Brand created successfully', AlertVariant.SUCCESS);
           router.push(ROUTES.CONTENT.LIST);
         }
-      } catch (error) {
-        console.error('Error submitting content form:', error);
+      } catch (error) {     
         showAlert('Failed to submit brand form. Please try again.', AlertVariant.ERROR);
       }
     },
@@ -91,19 +88,12 @@ const ContentForm: React.FC & { getLayout?: (page: React.ReactNode) => React.Rea
 
         formik.resetForm({ values: contentData });
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load content for edit', e);
       }
     };
 
     loadBrand();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query.id]);
 
-  console.log(formik.values, 'formik.values');
-  console.log(formik.errors, 'formik.errors');
-  console.log(formik.isValid, 'formik.isValid');
-  console.log(formik.dirty, 'formik.dirty');
   // log 
   return (
     <form id="content_form" onSubmit={formik.handleSubmit}>

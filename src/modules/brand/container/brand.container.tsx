@@ -1,7 +1,8 @@
+import React, { useState } from "react";
 import InternalLayout from "@/layouts/internal-layout";
 import PageHeader from "@/components/page-header/page-header.component";
 import { Button } from "shyftlabs-dsl";
-import { PlusIcon } from "@/lib/icons";
+import { PlusIcon, AppWindow, PanelLeft as PanelLeftIcon } from "@/lib/icons";
 import { useRouter } from "next/router";
 import ROUTES from "@/common/routes";
 import styles from "@/modules/users/styles/users.module.scss";
@@ -9,7 +10,7 @@ import { CarterTabs } from "shyftlabs-dsl";
 import useTabChangeHelper from "@/common/hooks/tab-change.hook";
 import { useAppSelector } from "@/redux/hooks";
 import useUser from "@/contexts/user-data/user-data.hook";
-import { AccessLevel, PermissionType, UserType } from "@/types";
+import { AccessLevel, PermissionType } from "@/types";
 import BrandListing from "@/modules/brand/components/brand-listing.component";
 import { CarterTabType } from "shyftlabs-dsl";
 import { checkAclFromState } from "@/common/acl";
@@ -35,11 +36,12 @@ const Brand = () => {
     const router = useRouter();
     const { permission, isLoading } = useUser();
     const { currentTab, handleTabChange } = useTabChangeHelper();
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     
     const tabs: CarterTabWithTestId[] = [
         {
           title: BrandPageInfo.all.label,
-          component: BrandListing,
+          component: (props: any) => <BrandListing {...props} userType="all" viewMode={viewMode} />,
           additionalData: {
             userType: 'all',
           },
@@ -47,7 +49,7 @@ const Brand = () => {
         },
         {
           title: BrandPageInfo.archived.label,
-          component: BrandListing,
+          component: (props: any) => <BrandListing {...props} userType="archived" viewMode={viewMode} />,
           additionalData: {
             userType: 'archived',
           },
@@ -68,28 +70,54 @@ const Brand = () => {
   return <>
       <PageHeader
         title={BrandPageInfo.title}
-        ActionComponent={() =>
-          hasFullAccess ? (
-            <Button
-              label={BrandPageInfo.actionButton}
-              iconPosition="left"
-              size="small"
-              icon={<PlusIcon />}
-              onClick={() => {
-                router.push({
-                  pathname: ROUTES.BRAND.ADD,
-                  query: {
-                    pageType: BrandPageInfo.all.tab,
-                  },
-                });
-              }}
-            />
-          ) : null
-        }
+        ActionComponent={() => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className={styles.button_group_container}>
+              <Button
+                size="small"
+                variant={viewMode === 'table' ? 'primary' : 'tertiary'}
+                icon={<PanelLeftIcon />}
+                onClick={() => setViewMode('table')}
+                label="Table"
+                iconPosition="left"
+              />
+              <Button
+                size="small"
+                variant={viewMode === 'grid' ? 'primary' : 'tertiary'}
+                icon={<AppWindow />}
+                onClick={() => setViewMode('grid')}
+                label="Grid"
+                iconPosition="left"
+              />
+            </div>
+            {hasFullAccess ? (
+              <Button
+                label={BrandPageInfo.actionButton}
+                iconPosition="left"
+                size="small"
+                icon={<PlusIcon />}
+                onClick={() => {
+                  router.push({
+                    pathname: ROUTES.BRAND.ADD,
+                    query: {
+                      pageType: BrandPageInfo.all.tab,
+                    },
+                  });
+                }}
+              />
+            ) : null}
+          </div>
+        )}
       />
       {!isLoading && (
         <div className={styles.container}>
-          <CarterTabs tabs={tabs} noPadding variant="off-white" activeTab={currentTab} onChange={handleTabChange} />
+          <CarterTabs 
+            tabs={tabs} 
+            noPadding 
+            variant="off-white" 
+            activeTab={currentTab} 
+            onChange={handleTabChange}
+          />
         </div>
       )}
   </>;

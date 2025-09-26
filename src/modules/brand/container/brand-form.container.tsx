@@ -15,14 +15,43 @@ import { checkAclFromState } from '@/common/acl';
 import { useAppSelector } from '@/redux/hooks';
 import MediaUploadDialog from '../components/media-upload-dialog.component';
 import { UploadIcon } from '@/lib/icons';
+import BrandsService from '@/services/brands/brands.service';
 
 
 const validationSchema = yup.object().shape({
-  brandName: yup.string().trim().required('Please enter brand name'),
-  description: yup.string().trim().required('Please enter description'),
-  industry: yup.string().trim().required('Please select industry'),
+  name: yup.string().trim().required('Please enter brand name'),
+  type: yup.string().oneOf(['advertiser', 'publisher']).required('Please select type'),
   brandLogo: yup.mixed().optional(),
+  publisherSharePerc: yup
+    .number()
+    .typeError('Publisher share must be a number')
+    .min(0, 'Minimum is 0')
+    .max(100, 'Maximum is 100')
+    .required('Please enter publisher share %'),
+  metadataCategory: yup.string().trim().required('Please enter category'),
+  allowAllProducts: yup.boolean().required(),
+  parentCompanyId: yup
+    .number()
+    .typeError('Parent Company ID must be a number')
+    .nullable()
+    .transform(val => (val === '' || Number.isNaN(val) ? null : val)),
+  customId: yup.string().trim().optional(),
 });
+
+// Helper function to convert file to base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove the data:image/...;base64, prefix
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+  });
+};
 
 const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactNode } = () => {
   const router = useRouter();
@@ -43,23 +72,47 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
   
   const formik = useFormik({
     initialValues: {
-      brandName: '',
-      description: '',
-      industry: '',
-      brandLogo: null as File | null,
+      name: '',
+      type: 'advertiser',
+      brandLogo: null as string | null,
+      publisherSharePerc: 0,
+      metadataCategory: '',
+      allowAllProducts: true,
+      parentCompanyId: '' as unknown as number | null,
+      customId: '',
     },
     validationSchema,
     onSubmit: async values => {
       try {
         const id = router.query.id as string | undefined;
+        
+        // Use brandLogo as assetUrl directly (it's already a string - base64 or URL)
+        const assetUrl = values.brandLogo || undefined;
+
+        const payload = {
+          name: values.name,
+          type: values.type,
+          assetUrl,
+          publisherSharePerc: Number(values.publisherSharePerc),
+          metadata: { category: values.metadataCategory },
+          allowAllProducts: Boolean(values.allowAllProducts),
+          parentCompanyId: values.parentCompanyId ? Number(values.parentCompanyId) : undefined,
+          customId: values.customId || undefined,
+        };
+
         if (id) {
-          // Update flow - you'll need to implement brand update service
-          console.log('Update brand:', { id, ...values });
+          // Update flow - call the API
+          console.log('Updating brand with payload:', { id, ...payload });
+          const brandsService = new BrandsService();
+          const response = await brandsService.updateBrand(id, payload);
           showAlert('Brand updated successfully', AlertVariant.SUCCESS);
           router.push(ROUTES.BRAND.LIST);
         } else {
-          // Create flow - you'll need to implement brand create service
-          console.log('Create brand:', values);
+          // Create flow - call the API
+          console.log('Creating brand with payload:', payload);
+          const brandsService = new BrandsService();
+          const response = await brandsService.createBrand(payload);
+          console.log('Brand created successfully:', response);
           showAlert('Brand created successfully', AlertVariant.SUCCESS);
           router.push(ROUTES.BRAND.LIST);
         }
@@ -77,31 +130,30 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
 
     const loadBrand = async () => {
       try {
-        // You'll need to implement brand service to load brand data
-        // For now, we'll use placeholder data
+        const brandsService = new BrandsService();
+        const brand = await brandsService.getBrandById(id);
+        
         const brandData = {
-          brandName: 'Sample Brand',
-          description: 'Sample brand description',
-          industry: 'Technology',
-          brandLogo: null,
-        };
+          name: brand.name || '',
+          type: brand.type || 'advertiser',
+          brandLogo: brand.assetUrl || null, // Keep as string (base64 or URL)
+          publisherSharePerc: brand.publisherSharePerc || 0,
+          metadataCategory: brand.metadata?.category || '',
+          allowAllProducts: brand.allowAllProducts ?? true,
+          parentCompanyId: brand.parentCompanyId || null,
+          customId: brand.customId || '',
+        } as typeof formik.values;
 
         formik.resetForm({ values: brandData });
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load brand for edit', e);
+        showAlert('Failed to load brand data. Please try again.', AlertVariant.ERROR);
       }
     };
 
     loadBrand();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query.id]);
 
-  console.log(formik.values,'formik.values');
-  console.log(formik.errors,'formik.errors');
-  console.log(formik.isValid,'formik.isValid');
-  console.log(formik.dirty,'formik.dirty');
-  // log 
+  
   return (
     <form id="brand_form" onSubmit={formik.handleSubmit}>
       <PageHeader
@@ -123,7 +175,7 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
                 type="submit"
                 size="small"
                 label={router.query.id ? 'Update Brand' : 'Create New Brand'}
-                disabled={!formik.isValid || !formik.dirty}
+                disabled={!formik.isValid || (!formik.dirty && !router.query.id)}
               />
             )}
           </div>
@@ -133,119 +185,180 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
         <section className={styles.section}>
           <div className={styles.input_wrapper}>
             <p className={styles.title}>Brand Details</p>
-              <div className={styles.input_container + ' ' + styles.brand_logo_container}>
-                <div>
-                  <label className={styles.input_label} style={{ marginBottom: '8px', display: 'block' }}>
-                    Brand Logo
-                  </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px'}}>
-                    {formik.values.brandLogo ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img
-                          src={URL.createObjectURL(formik.values.brandLogo)}
-                          alt="Brand logo preview"
-                          style={{
-                            width: '60px',
-                            height: '60px',
-                            objectFit: 'cover',
-                            borderRadius: '8px',
-                            border: '1px solid #e0e0e0'
-                          }}
-                        />
-                        <div>
-                          <div style={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}>
-                            {formik.values.brandLogo.name}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#666' }}>
-                            {(formik.values.brandLogo.size / 1024 / 1024).toFixed(2)} MB
-                          </div>
+            <div className={styles.input_container + ' ' + styles.brand_logo_container}>
+              <div>
+                <label className={styles.input_label} style={{ marginBottom: '8px', display: 'block' }}>
+                  Brand Logo
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px'}}>
+                  {formik.values.brandLogo ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <img
+                        src={typeof formik.values.brandLogo === 'string' 
+                          ? formik.values.brandLogo 
+                          : URL.createObjectURL(formik.values.brandLogo)
+                        }
+                        alt="Brand logo preview"
+                        style={{
+                          width: '60px',
+                          height: '60px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0'
+                        }}
+                      />
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}>
+                          {typeof formik.values.brandLogo === 'string' 
+                            ? 'Brand Logo' 
+                            : (formik.values.brandLogo as File).name
+                          }
                         </div>
-                        <CarterButton
-                          variant="text-only"
-                          size="medium"
-                          label="Remove"
-                          onClick={() => {
-                            formik.setFieldValue('brandLogo', null);
-                            formik.setFieldTouched('brandLogo', true);
-                          }}
-                          disabled={!hasFullAccess}
-                        />
+                        {typeof formik.values.brandLogo === 'object' && (
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            {((formik.values.brandLogo as File).size / 1024 / 1024).toFixed(2)} MB
+                          </div>
+                        )}
                       </div>
-                    ) : (
                       <CarterButton
-                        variant="secondary"
+                        variant="text-only"
                         size="medium"
-                        label="Upload Content"
-                        icon={<UploadIcon />}
-                        iconPosition="left"
-                        onClick={() => setIsMediaUploadOpen(true)}
+                        label="Remove"
+                        onClick={() => {
+                          formik.setFieldValue('brandLogo', null);
+                          formik.setFieldTouched('brandLogo', true);
+                        }}
                         disabled={!hasFullAccess}
                       />
-                    )}
-                  </div>
-                  {formik.touched.brandLogo && formik.errors.brandLogo && (
-                    <div style={{ color: '#C62828', fontSize: '12px', marginTop: '4px' }}>
-                      {formik.errors.brandLogo as string}
                     </div>
+                  ) : (
+                    <CarterButton
+                      variant="secondary"
+                      size="medium"
+                      label="Upload Content"
+                      icon={<UploadIcon />}
+                      iconPosition="left"
+                      onClick={() => setIsMediaUploadOpen(true)}
+                      disabled={!hasFullAccess}
+                    />
                   )}
                 </div>
+                {formik.touched.brandLogo && formik.errors.brandLogo && (
+                  <div style={{ color: '#C62828', fontSize: '12px', marginTop: '4px' }}>
+                    {formik.errors.brandLogo as string}
+                  </div>
+                )}
               </div>
-              <div className={styles.grid}>
-
+            </div>
+            <div className={styles.grid}>
               <div className={styles.input_container}>
                 <CarterInput
-                  data-testid="brandName"
-                  id="brandName"
+                  data-testid="name"
+                  id="name"
                   type="text"
-                  error={Boolean(formik.touched.brandName && !!formik.errors.brandName)}
+                  error={Boolean(formik.touched.name && !!formik.errors.name)}
                   labelProps={{ label: 'Brand Name *' }}
                   disabled={!hasFullAccess}
                   placeholder="Enter brand name"
-                  name="brandName"
-                  errorMessage={formik.touched.brandName ? (formik.errors.brandName as string) ?? '' : ''}
-                  value={formik.values.brandName}
+                  name="name"
+                  errorMessage={formik.touched.name ? (formik.errors.name as string) ?? '' : ''}
+                  value={formik.values.name}
                   onChange={formik.handleChange}
                 />
               </div>
-              
               <div className={styles.input_container}>
                 <CarterSelect
                   options={[
-                    { label: 'Technology', value: 'Technology' },
-                    { label: 'E-commerce', value: 'E-commerce' },
-                    { label: 'Social Media', value: 'Social Media' },
-                    { label: 'Healthcare', value: 'Healthcare' },
-                    { label: 'Finance', value: 'Finance' },
-                    { label: 'Education', value: 'Education' },
-                    { label: 'Entertainment', value: 'Entertainment' },
-                    { label: 'Retail', value: 'Retail' },
-                    { label: 'Manufacturing', value: 'Manufacturing' },
-                    { label: 'Other', value: 'Other' }
+                    { label: 'Advertiser', value: 'advertiser' },
+                    { label: 'Publisher', value: 'publisher' },
                   ]}
                   disabled={!hasFullAccess}
-                  errorMessage={formik.touched.industry ? (formik.errors.industry as string) ?? '' : ''}
-                  label="Industry / Category *"
-                  placeholder="Select Industry"
-                  value={formik.values.industry}
-                  id="industry"
+                  errorMessage={formik.touched.type ? (formik.errors.type as string) ?? '' : ''}
+                  label="Type *"
+                  placeholder="Select Type"
+                  value={formik.values.type}
+                  id="type"
                   width="100%"
                   onChange={({ target }: { target: { value: string } }) => {
-                    formik.setFieldValue('industry', target.value);
+                    formik.setFieldValue('type', target.value);
                   }}
                 />
               </div>
               <div className={styles.input_container}>
                 <CarterInput
-                  data-testid="description"
-                  id="description"
-                  type="text"
+                  data-testid="publisherSharePerc"
+                  id="publisherSharePerc"
+                  type="number"
+                  error={Boolean(formik.touched.publisherSharePerc && !!formik.errors.publisherSharePerc)}
+                  labelProps={{ label: 'Publisher Share % *' }}
                   disabled={!hasFullAccess}
-                  error={Boolean(formik.touched.description && !!formik.errors.description)}
-                  labelProps={{ label: 'Description *' }}
-                  placeholder="Enter brand description"
-                  name="description"
-                  errorMessage={formik.touched.description ? (formik.errors.description as string) ?? '' : ''}
-                  value={formik.values.description}
+                  placeholder="0 - 100"
+                  name="publisherSharePerc"
+                  errorMessage={formik.touched.publisherSharePerc ? (formik.errors.publisherSharePerc as string) ?? '' : ''}
+                  value={formik.values.publisherSharePerc as unknown as string}
+                  onChange={e => formik.setFieldValue('publisherSharePerc', e.target.value)}
+                />
+              </div>
+              <div className={styles.input_container}>
+                <CarterInput
+                  data-testid="metadataCategory"
+                  id="metadataCategory"
+                  type="text"
+                  error={Boolean(formik.touched.metadataCategory && !!formik.errors.metadataCategory)}
+                  labelProps={{ label: 'Category *' }}
+                  disabled={!hasFullAccess}
+                  placeholder="retail"
+                  name="metadataCategory"
+                  errorMessage={formik.touched.metadataCategory ? (formik.errors.metadataCategory as string) ?? '' : ''}
+                  value={formik.values.metadataCategory}
+                  onChange={formik.handleChange}
+                />
+              </div>
+              <div className={styles.input_container}>
+                <CarterSelect
+                  options={[
+                    { label: 'Yes', value: 'true' },
+                    { label: 'No', value: 'false' },
+                  ]}
+                  disabled={!hasFullAccess}
+                  errorMessage={''}
+                  label="Allow All Products *"
+                  placeholder="Select"
+                  value={formik.values.allowAllProducts ? 'true' : 'false'}
+                  id="allowAllProducts"
+                  width="100%"
+                  onChange={({ target }: { target: { value: string } }) => {
+                    formik.setFieldValue('allowAllProducts', target.value === 'true');
+                  }}
+                />
+              </div>
+              <div className={styles.input_container}>
+                <CarterInput
+                  data-testid="parentCompanyId"
+                  id="parentCompanyId"
+                  type="number"
+                  error={Boolean(formik.touched.parentCompanyId && !!formik.errors.parentCompanyId)}
+                  labelProps={{ label: 'Parent Company ID' }}
+                  disabled={!hasFullAccess}
+                  placeholder="e.g. 123"
+                  name="parentCompanyId"
+                  errorMessage={formik.touched.parentCompanyId ? (formik.errors.parentCompanyId as string) ?? '' : ''}
+                  value={(formik.values.parentCompanyId ?? '') as unknown as string}
+                  onChange={e => formik.setFieldValue('parentCompanyId', e.target.value)}
+                />
+              </div>
+              <div className={styles.input_container}>
+                <CarterInput
+                  data-testid="customId"
+                  id="customId"
+                  type="text"
+                  error={false}
+                  labelProps={{ label: 'Custom ID' }}
+                  disabled={!hasFullAccess}
+                  placeholder="ACME-BR-02"
+                  name="customId"
+                  errorMessage={''}
+                  value={formik.values.customId}
                   onChange={formik.handleChange}
                 />
               </div>
@@ -257,10 +370,18 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
       <MediaUploadDialog
         open={isMediaUploadOpen}
         onClose={() => setIsMediaUploadOpen(false)}
-        onUpload={(file: File) => {
-          formik.setFieldValue('brandLogo', file);
-          formik.setFieldTouched('brandLogo', true);
-          setIsMediaUploadOpen(false);
+        onUpload={async (file: File) => {
+          try {
+            // Convert uploaded file to base64 string
+            const base64String = await fileToBase64(file);
+            const base64DataUrl = `data:image/${file.type.split('/')[1]};base64,${base64String}`;
+            formik.setFieldValue('brandLogo', base64DataUrl);
+            formik.setFieldTouched('brandLogo', true);
+            setIsMediaUploadOpen(false);
+          } catch (error) {
+            console.error('Error converting file to base64:', error);
+            showAlert('Failed to process image. Please try again.', AlertVariant.ERROR);
+          }
         }}
         aspectRatio="1:1 (Square)"
       />

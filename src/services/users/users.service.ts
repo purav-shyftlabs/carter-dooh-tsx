@@ -68,6 +68,7 @@ export type UpdateUserPayload = {
     permissionType: string;
     accessLevel: string;
   }>;
+  allowedBrands?: string[];
 };
 
 export type UserPermissionDTO = {
@@ -86,6 +87,7 @@ export type UserDetailsDTO = {
   allowAllAdvertisers?: boolean;
   allowAllBrands?: boolean;
   allowAllBrandsList?: string[];
+  allowedBrands?: Array<{id: number | string; name: string}>;
   permissions?: UserPermissionDTO[];
 };
 
