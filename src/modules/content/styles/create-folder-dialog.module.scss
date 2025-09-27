@@ -1,0 +1,72 @@
+@import '@/styles/colors';
+
+.formContent {
+  padding: 8px 0;
+}
+
+.brandSelection {
+  margin-top: 16px;
+
+  .brandLabel {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: $carter-text-700;
+  }
+
+  .brandChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .MuiChip-root {
+      margin: 0;
+    }
+  }
+
+  .errorText {
+    color: $carter-red-500;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+.parentInfo {
+  margin-top: 16px;
+  padding: 8px 12px;
+  background: $carter-grey-100;
+  border-radius: 4px;
+  border-left: 3px solid $carter-brand-500;
+
+  small {
+    color: $carter-text-600;
+    font-size: 12px;
+  }
+}
+
+.dialogActions {
+  padding: 16px 24px;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .brandChips {
+    .MuiChip-root {
+      font-size: 12px;
+      height: 28px;
+    }
+  }
+
+  .dialogActions {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}

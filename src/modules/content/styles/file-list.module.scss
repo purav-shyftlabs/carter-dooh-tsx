@@ -1,0 +1,309 @@
+@import '@/styles/colors';
+
+.fileList {
+  background: $white-100;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid $carter-grey-200;
+  background: $carter-grey-100;
+
+  .headerLeft {
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+
+      .breadcrumbItem {
+        background: none;
+        border: none;
+        color: $carter-brand-600;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 2px 4px;
+        border-radius: 3px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: $carter-brand-100;
+          color: $carter-brand-700;
+        }
+      }
+
+      .breadcrumbSeparator {
+        color: $carter-text-400;
+        font-size: 12px;
+        margin: 0 2px;
+      }
+
+      .breadcrumbCurrent {
+        color: $carter-text-600;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: $carter-text-900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .folderPath {
+      font-size: 14px;
+      font-weight: 400;
+      color: $carter-text-600;
+    }
+
+    .summary {
+      font-size: 12px;
+      color: $carter-text-500;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+  }
+
+  .headerRight {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.viewControls {
+  display: flex;
+  border: 1px solid $carter-grey-300;
+  border-radius: 4px;
+  overflow: hidden;
+
+  .viewButton {
+    background: $white-100;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: $carter-text-600;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $carter-grey-100;
+      color: $carter-text-700;
+    }
+
+    &.active {
+      background: $carter-brand-500;
+      color: white;
+    }
+
+    &:not(:last-child) {
+      border-right: 1px solid $carter-grey-300;
+    }
+  }
+}
+
+.filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: $white-100;
+  border-bottom: 1px solid $carter-grey-200;
+
+  .filterControls {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+.tableContainer {
+  flex: 1;
+  overflow: hidden;
+}
+
+.fileNameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .fileIcon {
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+  }
+
+  .fileInfo {
+    flex: 1;
+    min-width: 0;
+
+    .fileName {
+      font-weight: 500;
+      color: $carter-brand-600;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1.4;
+
+      &:hover {
+        color: $carter-brand-700;
+        text-decoration: underline;
+      }
+    }
+
+    .originalFilename {
+      font-size: 12px;
+      color: $carter-text-500;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .typeCell {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: $carter-grey-100;
+    color: $carter-grey-700;
+    display: inline-block;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+
+  .actionButton {
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: $carter-text-500;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $carter-grey-100;
+      color: $carter-text-700;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+// Grid view styles (when implemented)
+.gridView {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  overflow-y: auto;
+
+  .fileCard {
+    background: $white-100;
+    border: 1px solid $carter-grey-200;
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: $carter-brand-300;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .fileIcon {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .fileName {
+      font-weight: 500;
+      color: $carter-text-900;
+      font-size: 14px;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fileSize {
+      font-size: 12px;
+      color: $carter-text-500;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+
+    .headerRight {
+      justify-content: space-between;
+    }
+  }
+
+  .filters {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+
+    .filterControls {
+      justify-content: center;
+    }
+  }
+
+  .fileNameCell {
+    .fileInfo {
+      .fileName {
+        font-size: 13px;
+      }
+
+      .originalFilename {
+        font-size: 11px;
+      }
+    }
+  }
+
+  .actions {
+    .actionButton {
+      padding: 4px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 12px 16px;
+  }
+
+  .filters {
+    padding: 12px 16px;
+  }
+
+  .viewControls {
+    .viewButton {
+      padding: 6px 8px;
+    }
+  }
+}

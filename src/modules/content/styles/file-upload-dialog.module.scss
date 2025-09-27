@@ -1,0 +1,249 @@
+@import '@/styles/colors';
+
+.uploadContent {
+  padding: 8px 0;
+}
+
+.dropZone {
+  border: 2px dashed $carter-grey-300;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: $carter-grey-100;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: $carter-brand-400;
+    background: $carter-brand-100;
+  }
+
+  &.dragActive {
+    border-color: $carter-brand-500;
+    background: $carter-brand-100;
+  }
+
+  .uploadIcon {
+    color: $carter-brand-500;
+    margin-bottom: 16px;
+  }
+
+  .dropText {
+    font-size: 16px;
+    font-weight: 500;
+    color: $carter-text-700;
+    margin: 0 0 8px 0;
+  }
+
+  .dropSubtext {
+    font-size: 14px;
+    color: $carter-text-500;
+    margin: 0;
+  }
+}
+
+.fileList {
+  margin-bottom: 24px;
+
+  h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: $carter-text-900;
+  }
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid $carter-grey-200;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: $white-100;
+
+  .fileInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+
+    .fileDetails {
+      flex: 1;
+      min-width: 0;
+
+      .fileName {
+        font-weight: 500;
+        color: $carter-text-900;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .fileSize {
+        font-size: 12px;
+        color: $carter-text-500;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  .fileStatus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 8px;
+
+    .successIcon {
+      color: $carter-green-500;
+    }
+
+    .errorIcon {
+      color: $carter-red-500;
+    }
+
+    .progressBar {
+      width: 100px;
+      height: 4px;
+    }
+
+    .errorText {
+      font-size: 12px;
+      color: $carter-red-500;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .removeButton {
+    background: none;
+    border: none;
+    color: $carter-text-400;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $carter-red-200;
+      color: $carter-red-500;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.errors {
+  margin-bottom: 24px;
+
+  h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $carter-red-700;
+  }
+}
+
+.errorItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: $carter-red-200;
+  border: 1px solid $carter-red-200;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: $carter-red-700;
+}
+
+.uploadInfo {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.dialogActions {
+  padding: 16px 24px;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .dropZone {
+    padding: 24px 16px;
+
+    .uploadIcon {
+      width: 32px;
+      height: 32px;
+    }
+
+    .dropText {
+      font-size: 14px;
+    }
+
+    .dropSubtext {
+      font-size: 12px;
+    }
+  }
+
+  .fileItem {
+    padding: 8px;
+
+    .fileInfo {
+      gap: 8px;
+
+      .fileDetails {
+        .fileName {
+          font-size: 13px;
+        }
+
+        .fileSize {
+          font-size: 11px;
+        }
+      }
+    }
+
+    .fileStatus {
+      .errorText {
+        max-width: 120px;
+      }
+    }
+  }
+
+  .dialogActions {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .fileItem {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .fileStatus {
+      justify-content: flex-start;
+      margin-right: 0;
+    }
+
+    .removeButton {
+      align-self: flex-end;
+    }
+  }
+}

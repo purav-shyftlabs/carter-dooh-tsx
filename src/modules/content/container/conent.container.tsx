@@ -9,22 +9,18 @@ import { CarterTabs } from "shyftlabs-dsl";
 import useTabChangeHelper from "@/common/hooks/tab-change.hook";
 import { useAppSelector } from "@/redux/hooks";
 import useUser from "@/contexts/user-data/user-data.hook";
-import { AccessLevel, PermissionType, UserType } from "@/types";
+import { AccessLevel, PermissionType } from "@/types";
 import { CarterTabType } from "shyftlabs-dsl";
 import { checkAclFromState } from "@/common/acl";
-import ContentListing from "../components/content-listing.component";
+import ContentLibrary from "../components/content-library.component";
 
-// Brand page info
+// Content page info
 const ContentPageInfo = {
   title: 'Content',
   actionButton: 'New Content',
-  all: {
-    label: 'All',
-    tab: 'all'
-  },
-  archived: {
-    label: 'Archived',
-    tab: 'archived'
+  library: {
+    label: 'Library',
+    tab: 'library'
   }
 };
 
@@ -38,20 +34,10 @@ const Content = () => {
     
     const tabs: CarterTabWithTestId[] = [
         {
-          title: ContentPageInfo.all.label,
-          component: ContentListing,
-          additionalData: {
-            userType: 'all',
-          },
-          'data-testid': 'content-all-tab',
-        },
-        {
-          title: ContentPageInfo.archived.label,
-          component: ContentListing,
-          additionalData: {
-            userType: 'archived',
-          },
-          'data-testid': 'content-archived-tab',
+          title: ContentPageInfo.library.label,
+          component: ContentLibrary,
+          additionalData: {},
+          'data-testid': 'content-library-tab',
         },
       ];
       
@@ -79,7 +65,7 @@ const Content = () => {
                 router.push({
                   pathname: ROUTES.CONTENT.ADD,
                   query: {
-                    pageType: ContentPageInfo.all.tab,
+                    pageType: ContentPageInfo.library.tab,
                   },
                 });
               }}

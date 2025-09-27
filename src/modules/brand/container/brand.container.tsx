@@ -41,7 +41,7 @@ const Brand = () => {
     const tabs: CarterTabWithTestId[] = [
         {
           title: BrandPageInfo.all.label,
-          component: (props: any) => <BrandListing {...props} userType="all" viewMode={viewMode} />,
+          component: (props: Record<string, unknown>) => <BrandListing {...props} userType="all" viewMode={viewMode} />,
           additionalData: {
             userType: 'all',
           },
@@ -49,7 +49,7 @@ const Brand = () => {
         },
         {
           title: BrandPageInfo.archived.label,
-          component: (props: any) => <BrandListing {...props} userType="archived" viewMode={viewMode} />,
+          component: (props: Record<string, unknown>) => <BrandListing {...props} userType="archived" viewMode={viewMode} />,
           additionalData: {
             userType: 'archived',
           },

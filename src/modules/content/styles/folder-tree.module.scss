@@ -1,0 +1,221 @@
+@import '@/styles/colors';
+
+.folderTree {
+  background: $white-100;
+  border: 1px solid $carter-grey-200;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid $carter-grey-200;
+  background: $carter-grey-100;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: $carter-text-900;
+  }
+
+  .addButton {
+    background: $carter-brand-500;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+
+    &:hover {
+      background: $carter-brand-600;
+    }
+  }
+}
+
+.treeContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.rootItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: $carter-text-700;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: $carter-grey-100;
+  }
+
+  &.selected {
+    background: $carter-brand-100;
+    color: $carter-brand-700;
+    border-left-color: $carter-brand-500;
+  }
+}
+
+.folderNode {
+  .folderItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    cursor: pointer;
+    color: $carter-text-700;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $carter-grey-100;
+    }
+
+    &.selected {
+      background: $carter-brand-100;
+      color: $carter-brand-700;
+      border-left-color: $carter-brand-500;
+    }
+  }
+
+  .folderIcon {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: $carter-brand-500;
+
+    .expandButton {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $carter-text-500;
+
+      &:hover {
+        color: $carter-text-700;
+        background: $carter-grey-200;
+        border-radius: 2px;
+      }
+    }
+
+    .expandSpacer {
+      width: 16px;
+    }
+  }
+
+  .folderName {
+    font-size: 14px;
+    font-weight: 400;
+    flex: 1;
+  }
+
+  .addSubFolderButton {
+    background: $carter-brand-500;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: auto;
+    opacity: 0.8;
+
+    &:hover {
+      background: $carter-brand-600;
+      opacity: 1;
+    }
+  }
+
+  .children {
+    .folderNode {
+      .folderItem {
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+.folders {
+  .folderNode:first-child {
+    .folderItem {
+      border-top: none;
+    }
+  }
+}
+
+.loading {
+  padding: 16px;
+  text-align: center;
+  color: $carter-text-500;
+  font-size: 14px;
+}
+
+.error {
+  padding: 16px;
+  text-align: center;
+  color: $carter-red-500;
+
+  p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+  }
+
+  .retryButton {
+    background: $carter-brand-500;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+
+    &:hover {
+      background: $carter-brand-600;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .folderTree {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .header {
+    padding: 12px;
+  }
+
+  .folderItem {
+    padding: 8px 12px !important;
+  }
+
+  .rootItem {
+    padding: 8px 12px;
+  }
+}

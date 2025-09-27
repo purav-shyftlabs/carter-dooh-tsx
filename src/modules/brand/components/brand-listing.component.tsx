@@ -59,18 +59,21 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType, viewMode = 'tabl
         setIsLoading(true);
         const { items, totalCount: tc } = await brandsService.getBrands({ page: pageNo, limit: pageSize, search });
         if (!mounted) return;
-        const mapped: Brand[] = (items || []).map((b: any) => ({
-          id: Number(b?.id ?? 0),
-          account_id: Number(b?.account_id ?? 0),
-          brand_logo_url: String(b?.asset_url ?? ''),
-          name: String(b?.name ?? ''),
-          status: String(b?.status ?? ''),
-          publisher_share_perc: Number(b?.publisher_share_perc ?? 0),
-          metadata: (b?.metadata ?? {}) as Record<string, unknown>,
-          allow_all_products: Boolean(b?.allow_all_products ?? false),
-          parent_company_id: Number(b?.parent_company_id ?? 0),
-          custom_id: String(b?.custom_id ?? ''),
-        }));
+        const mapped: Brand[] = (items || []).map((b: unknown) => {
+          const brand = b as Record<string, unknown>;
+          return {
+            id: Number(brand?.id ?? 0),
+            account_id: Number(brand?.account_id ?? 0),
+            brand_logo_url: String(brand?.asset_url ?? ''),
+            name: String(brand?.name ?? ''),
+            status: String(brand?.status ?? ''),
+            publisher_share_perc: Number(brand?.publisher_share_perc ?? 0),
+            metadata: (brand?.metadata ?? {}) as Record<string, unknown>,
+            allow_all_products: Boolean(brand?.allow_all_products ?? false),
+            parent_company_id: Number(brand?.parent_company_id ?? 0),
+            custom_id: String(brand?.custom_id ?? ''),
+          };
+        });
         setApiBrands(mapped);
         setTotalCount(Number(tc ?? mapped.length));
       } catch (e) {
