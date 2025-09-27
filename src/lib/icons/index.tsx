@@ -113,5 +113,8 @@ export {
   Twitter,
   Linkedin,
   Youtube,
-  Loader2
+  Loader2,
+  FolderPlus as FolderPlusIcon,
+  Grid3X3 as GridIcon,
+  List as ListIcon
 } from 'lucide-react';

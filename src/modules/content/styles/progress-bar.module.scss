@@ -1,0 +1,46 @@
+.progressBar {
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+// Sizes
+.small {
+  height: 4px;
+}
+
+.medium {
+  height: 8px;
+}
+
+.large {
+  height: 12px;
+}
+
+// Variants
+.primary .progressFill {
+  background: #007bff;
+}
+
+.secondary .progressFill {
+  background: #6c757d;
+}
+
+.success .progressFill {
+  background: #28a745;
+}
+
+.warning .progressFill {
+  background: #ffc107;
+}
+
+.error .progressFill {
+  background: #dc3545;
+}

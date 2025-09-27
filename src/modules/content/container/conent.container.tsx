@@ -2,8 +2,6 @@ import InternalLayout from "@/layouts/internal-layout";
 import PageHeader from "@/components/page-header/page-header.component";
 import { Button } from "shyftlabs-dsl";
 import { PlusIcon } from "@/lib/icons";
-import { useRouter } from "next/router";
-import ROUTES from "@/common/routes";
 import styles from "@/modules/users/styles/users.module.scss";
 import { CarterTabs } from "shyftlabs-dsl";
 import useTabChangeHelper from "@/common/hooks/tab-change.hook";
@@ -12,14 +10,14 @@ import useUser from "@/contexts/user-data/user-data.hook";
 import { AccessLevel, PermissionType, UserType } from "@/types";
 import { CarterTabType } from "shyftlabs-dsl";
 import { checkAclFromState } from "@/common/acl";
-import ContentListing from "../components/content-listing.component";
+import {FileManager} from "../components/file-manager.component";
 
-// Brand page info
+// Content page info
 const ContentPageInfo = {
   title: 'Content',
-  actionButton: 'New Content',
+  actionButton: 'Upload Files',
   all: {
-    label: 'All',
+    label: 'All Files',
     tab: 'all'
   },
   archived: {
@@ -32,14 +30,13 @@ const ContentPageInfo = {
 type CarterTabWithTestId = CarterTabType & { 'data-testid'?: string };
 
 const Content = () => {
-    const router = useRouter();
     const { permission, isLoading } = useUser();
     const { currentTab, handleTabChange } = useTabChangeHelper();
     
     const tabs: CarterTabWithTestId[] = [
         {
           title: ContentPageInfo.all.label,
-          component: ContentListing,
+          component: FileManager,
           additionalData: {
             userType: 'all',
           },
@@ -47,7 +44,7 @@ const Content = () => {
         },
         {
           title: ContentPageInfo.archived.label,
-          component: ContentListing,
+          component: FileManager,
           additionalData: {
             userType: 'archived',
           },
@@ -66,7 +63,8 @@ const Content = () => {
       const hasFullAccessFromFlags = Boolean(flags && (flags as { fullAccess?: boolean }).fullAccess);
       const hasFullAccess = Boolean(hasFullAccessFromRedux || hasFullAccessFromFlags);
   return <>
-      <PageHeader
+  <FileManager />
+      {/* <PageHeader
         title={ContentPageInfo.title}
         ActionComponent={() =>
           hasFullAccess ? (
@@ -76,12 +74,9 @@ const Content = () => {
               size="small"
               icon={<PlusIcon />}
               onClick={() => {
-                router.push({
-                  pathname: ROUTES.CONTENT.ADD,
-                  query: {
-                    pageType: ContentPageInfo.all.tab,
-                  },
-                });
+                // For now, we'll handle upload through the FileManager component
+                // This could be enhanced to open a global upload dialog
+                console.log('Upload files clicked');
               }}
             />
           ) : null
@@ -91,7 +86,7 @@ const Content = () => {
         <div className={styles.container}>
           <CarterTabs tabs={tabs} noPadding variant="off-white" activeTab={currentTab} onChange={handleTabChange} />
         </div>
-      )}
+      )} */}
   </>;
 };
 Content.getLayout = (page: React.ReactNode) => <InternalLayout head={{ title: 'Content', description: 'Content' }}>{page}</InternalLayout>;
