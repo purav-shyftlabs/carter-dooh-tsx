@@ -132,6 +132,127 @@
   color: #dc3545;
 }
 
+.metadataSection {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  background: #f8f9fa;
+  
+  h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #343a40;
+  }
+}
+
+.inputGroup {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.textInput {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #495057;
+  background: white;
+  
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+  
+  &:disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+  }
+}
+
+.brandSection {
+  margin-top: 16px;
+}
+
+.brandOptions {
+  margin-bottom: 16px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  
+  input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+}
+
+.brandSelection {
+  margin-top: 16px;
+}
+
+.loading {
+  color: #6c757d;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.brandList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: white;
+  padding: 8px;
+}
+
+.brandItem {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: #f8f9fa;
+  }
+  
+  input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  span {
+    flex: 1;
+  }
+}
+
+.noBrands {
+  padding: 16px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 14px;
+  font-style: italic;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

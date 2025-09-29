@@ -39,6 +39,7 @@ export const FileManager = ({ userType }: FileManagerProps) => {
   // Dialog state
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  
 
   // Load folder contents - ONLY direct children
   const loadFolderContents = useCallback(async (folderId: number | null = null) => {
@@ -153,9 +154,9 @@ export const FileManager = ({ userType }: FileManagerProps) => {
     }
   }, [folders, breadcrumbHistory, breadcrumbs, loadFolderContents, updateBreadcrumbs]);
 
-  // Handle file click - download file
-  const handleFileClick = useCallback(async (file: FileType) => {
-    // Add file to downloading set
+  // Handle file click - download all files
+  const handleFileClick = useCallback(async (file: FileType, event: React.MouseEvent) => {
+    // Download all files (no preview)
     setDownloadingFiles(prev => new Set(prev).add(file.id));
     
     try {
@@ -400,6 +401,7 @@ export const FileManager = ({ userType }: FileManagerProps) => {
         parentFolder={currentFolder}
         onFolderCreated={handleFolderCreated}
       />
+
     </div>
   );
 };

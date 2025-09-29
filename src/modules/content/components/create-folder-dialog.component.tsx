@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button, CarterInput } from 'shyftlabs-dsl';
-import { Folder } from '@/types/folder';
+import { Folder, Brand } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
+import { useBrands } from '@/hooks/useBrands.hook';
 import { Dialog } from './dialog.component';
 import styles from '../styles/create-folder-dialog.module.scss';
 
@@ -19,9 +20,22 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   onFolderCreated,
 }) => {
   const [folderName, setFolderName] = useState('');
+  const [description, setDescription] = useState('');
+  const [allowAllBrands, setAllowAllBrands] = useState(false);
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
   const [generalError, setGeneralError] = useState<string | null>(null);
+  
+  // Fetch brands
+  const { brands, loading: brandsLoading, error: brandsError } = useBrands();
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('CreateFolderDialog - brands:', brands);
+    console.log('CreateFolderDialog - brandsLoading:', brandsLoading);
+    console.log('CreateFolderDialog - brandsError:', brandsError);
+  }, [brands, brandsLoading, brandsError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +53,10 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
       const response = await contentService.createFolder({
         name: folderName.trim(),
         parentId: parentFolder?.id ? Number(parentFolder.id) : null,
-        allowAllBrands: false,
+        allowAllBrands,
+        selectedBrands: allowAllBrands ? [] : selectedBrands,
+        status: 'active',
+        description: description.trim() || undefined
       });
 
       onFolderCreated(response.data);
@@ -113,6 +130,9 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   const handleClose = () => {
     if (!isCreating) {
       setFolderName('');
+      setDescription('');
+      setAllowAllBrands(false);
+      setSelectedBrands([]);
       setError('');
       setGeneralError(null);
       onClose();
@@ -148,6 +168,67 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
             autoFocus
             required
           />
+          
+          <CarterInput
+            labelProps={{ label: "Description (Optional)" }}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter folder description"
+            disabled={isCreating}
+          />
+          
+          <div className={styles.brandSection}>
+            <label className={styles.label}>Brand Access</label>
+            <div className={styles.brandOptions}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={allowAllBrands}
+                  onChange={(e) => setAllowAllBrands(e.target.checked)}
+                  disabled={isCreating}
+                />
+                Allow all brands to access this folder
+              </label>
+            </div>
+            
+            {!allowAllBrands && (
+              <div className={styles.brandSelection}>
+                <label className={styles.label}>Select Specific Brands</label>
+                {brandsLoading ? (
+                  <div className={styles.loading}>Loading brands...</div>
+                ) : brandsError ? (
+                  <div className={styles.errorMessage}>
+                    Error loading brands: {brandsError}
+                  </div>
+                ) : (
+                  <div className={styles.brandList}>
+                    {Array.isArray(brands) && brands.length > 0 ? (
+                      brands.map(brand => (
+                        <label key={brand.id} className={styles.brandItem}>
+                          <input
+                            type="checkbox"
+                            checked={selectedBrands.includes(brand.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedBrands(prev => [...prev, brand.id]);
+                              } else {
+                                setSelectedBrands(prev => prev.filter(id => id !== brand.id));
+                              }
+                            }}
+                            disabled={isCreating}
+                          />
+                          <span>{brand.name}</span>
+                        </label>
+                      ))
+                    ) : (
+                      <div className={styles.noBrands}>No brands available</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
           {error && (
             <div className={styles.errorMessage}>
               {error}

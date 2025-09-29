@@ -14,10 +14,23 @@ import { getFileIcon } from '@/utils/file-icons';
 class ContentService {
   private baseUrl = '/folders';
   private filesUrl = '/files';
+  private brandsUrl = '/brands';
 
   // Folder Management APIs
   async createFolder(data: CreateFolderRequest): Promise<ApiResponse<Folder>> {
     const response = await api.post(`${this.baseUrl}`, data);
+    return response.data;
+  }
+
+  // Update folder metadata
+  async updateFolderMetadata(folderId: number, metadata: {
+    status?: string;
+    description?: string;
+  }): Promise<ApiResponse<Folder>> {
+    const response = await api.post(`${this.baseUrl}/metadata`, {
+      folderId,
+      ...metadata
+    });
     return response.data;
   }
 
@@ -33,8 +46,20 @@ class ContentService {
   }
 
   // File Management APIs
-  async uploadFile(data: UploadFileRequest): Promise<ApiResponse<File>> {
+  async uploadFile(data: UploadFileRequest): Promise<ApiResponse<{ fileId: number; fileUrl: string; originalFilename: string; fileSize: number; contentType: string; folderId: number | null }>> {
     const response = await api.post(`${this.filesUrl}/upload`, data);
+    return response.data;
+  }
+
+  // Set file metadata and ACL
+  async setFileMetadata(fileId: number, metadata: {
+    status?: string;
+    description?: string;
+  }): Promise<ApiResponse<File>> {
+    const response = await api.post(`${this.filesUrl}/metadata`, {
+      fileId,
+      ...metadata
+    });
     return response.data;
   }
 
@@ -52,6 +77,12 @@ class ContentService {
 
   async getAllItems(): Promise<ApiResponse<AllItemsResponse>> {
     const response = await api.get(`${this.filesUrl}/all`);
+    return response.data;
+  }
+
+  // Brands API
+  async getBrands(): Promise<ApiResponse<{ id: number; name: string; description?: string }[]>> {
+    const response = await api.get(this.brandsUrl);
     return response.data;
   }
 
@@ -82,6 +113,29 @@ class ContentService {
       return `/uploads/files/folder/${file.folder_id}/${file.name}`;
     }
     return `/uploads/files/${file.name}`;
+  }
+
+  // Get authenticated file URL for images (uses Authorization header)
+  getAuthenticatedFileUrl(file: File): string {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
+    const relativePath = file.fileUrl || `/uploads/files/${file.storage_key}`;
+    return `${baseUrl}${relativePath}`;
+  }
+
+  // Get authenticated image blob URL (for use in img tags)
+  async getAuthenticatedImageBlob(file: File): Promise<string> {
+    try {
+      const response = await api.get(`/files/${file.id}/download`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data]);
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error loading authenticated image:', error);
+      // Fallback to regular URL
+      return this.getAuthenticatedFileUrl(file);
+    }
   }
 
   // Download file by ID

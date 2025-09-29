@@ -13,7 +13,7 @@ interface FolderItemProps {
 
 interface FileItemProps {
   file: FileType;
-  onClick: (file: FileType) => void;
+  onClick: (file: FileType, event: React.MouseEvent) => void;
   onContextMenu?: (file: FileType, event: React.MouseEvent) => void;
   isDownloading?: boolean;
 }
@@ -58,9 +58,9 @@ export const FolderItem: React.FC<FolderItemProps> = ({ folder, onClick, onConte
 };
 
 export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu, isDownloading = false }) => {
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
     if (!isDownloading) {
-      onClick(file);
+      onClick(file, event);
     }
   };
 
@@ -73,6 +73,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
 
   const fileIcon = getFileIcon(file.content_type, file.original_filename);
   const fileSize = contentService.formatFileSize(file.file_size);
+  const isImage = file.content_type?.startsWith('image/');
 
 
   return (
@@ -85,7 +86,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleClick();
+          handleClick(e as any);
         }
       }}
     >
@@ -99,6 +100,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
         </div>
         <div className={styles.meta}>
           {fileSize} • {file.metadata?.uploadedAt ? new Date(file.metadata.uploadedAt).toLocaleDateString() : 'Unknown date'}
+          {isImage && <span className={styles.imageLabel}> • Image</span>}
         </div>
       </div>
     </div>

@@ -42,6 +42,90 @@
   font-size: 12px;
 }
 
+.brandSection {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.brandOptions {
+  margin-bottom: 16px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  
+  input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+}
+
+.brandSelection {
+  margin-top: 16px;
+}
+
+.loading {
+  color: #6c757d;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.brandList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: white;
+  padding: 8px;
+}
+
+.brandItem {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: #f8f9fa;
+  }
+  
+  input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  span {
+    flex: 1;
+  }
+}
+
+.noBrands {
+  padding: 16px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 14px;
+  font-style: italic;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

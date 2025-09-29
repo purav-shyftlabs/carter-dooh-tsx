@@ -7,6 +7,9 @@ export interface Folder {
   account_id: number | string;
   owner_id: number | string;
   allow_all_brands: boolean;
+  status?: string;
+  description?: string;
+  brandAccess?: number[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -22,6 +25,9 @@ export interface File {
   file_size: number | string;
   content_type: string;
   allow_all_brands: boolean;
+  status?: string;
+  description?: string;
+  brandAccess?: number[];
   metadata: {
     originalName: string;
     uploadedAt: string;
@@ -40,7 +46,10 @@ export interface FolderWithContents extends Folder {
 export interface CreateFolderRequest {
   name: string;
   parentId?: number | null;
-  allowAllBrands?: boolean;
+  allowAllBrands: boolean;
+  selectedBrands?: number[];
+  status?: string;
+  description?: string;
 }
 
 export interface UploadFileRequest {
@@ -48,7 +57,8 @@ export interface UploadFileRequest {
   filename: string;
   mimeType?: string;
   folderId?: number | null;
-  allowAllBrands?: boolean;
+  allowAllBrands: boolean;
+  selectedBrands?: number[];
 }
 
 export interface ApiResponse<T> {
@@ -101,4 +111,10 @@ export interface FileUploadProgress {
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   error?: string;
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+  description?: string;
 }
