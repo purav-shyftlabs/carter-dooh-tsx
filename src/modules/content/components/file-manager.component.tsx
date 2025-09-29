@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, SearchInput, PriorityFilters } from 'shyftlabs-dsl';
+import { Button, SearchInput, PriorityFilters, DataTable } from 'shyftlabs-dsl';
+import { getFileIcon } from '@/utils/file-icons';
 import { Folder, File as FileType, BreadcrumbItem } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { FolderItem, FileItem } from './folder-item.component';
@@ -7,6 +8,8 @@ import { Breadcrumb } from './breadcrumb.component';
 import { FileUploadDialog } from './file-upload-dialog.component';
 import { CreateFolderDialog } from './create-folder-dialog.component';
 import { PlusIcon, UploadIcon, FolderPlusIcon, GridIcon, ListIcon } from '@/lib/icons';
+import { useRouter } from 'next/router';
+import { FileDetailsDialog } from './file-details-dialog.component';
 import styles from '../styles/file-manager.module.scss';
 import { Folder as FolderIcon } from 'lucide-react';
 
@@ -18,6 +21,7 @@ type ViewMode = 'grid' | 'list';
 type SortOption = 'name' | 'date' | 'size' | 'type';
 
 export const FileManager = ({ userType }: FileManagerProps) => {
+  const router = useRouter();
   // State management
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -154,26 +158,10 @@ export const FileManager = ({ userType }: FileManagerProps) => {
     }
   }, [folders, breadcrumbHistory, breadcrumbs, loadFolderContents, updateBreadcrumbs]);
 
-  // Handle file click - download all files
+  // Navigate to file details page on click
   const handleFileClick = useCallback(async (file: FileType, event: React.MouseEvent) => {
-    // Download all files (no preview)
-    setDownloadingFiles(prev => new Set(prev).add(file.id));
-    
-    try {
-      // Download file using the download API with original filename
-      await contentService.downloadFile(file.id, file.original_filename);
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      setError('Failed to download file');
-    } finally {
-      // Remove file from downloading set
-      setDownloadingFiles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(file.id);
-        return newSet;
-      });
-    }
-  }, []);
+    router.push(`/files/file/${file.id}`);
+  }, [router]);
 
   // Handle folder creation
   const handleFolderCreated = useCallback((newFolder: Folder) => {
@@ -367,23 +355,82 @@ export const FileManager = ({ userType }: FileManagerProps) => {
             )}
           </div>
         ) : (
-          <div className={`${styles.items} ${styles[viewMode]}`}>
-            {filteredAndSortedItems.folders.map((folder) => (
-              <FolderItem
-                key={folder.id}
-                folder={folder}
-                onClick={navigateToFolder}
+          viewMode === 'grid' ? (
+            <div className={`${styles.items} ${styles[viewMode]}`}>
+              {filteredAndSortedItems.folders.map((folder) => (
+                <FolderItem
+                  key={folder.id}
+                  folder={folder}
+                  onClick={navigateToFolder}
+                />
+              ))}
+              {filteredAndSortedItems.files.map((file) => (
+                <FileItem
+                  key={file.id}
+                  file={file}
+                  onClick={handleFileClick}
+                  isDownloading={downloadingFiles.has(file.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <DataTable
+                loading={loading}
+                columns={[
+                  {
+                    header: 'Name',
+                    accessorKey: 'name',
+                    cell: ({ row }: { row: { original: any } }) => {
+                      const r = row.original;
+                      const isFolder = Boolean(r.isFolder);
+                      const icon = isFolder ? <FolderIcon size={18} color="#12287c"  /> : getFileIcon(r.content_type, r.original_filename);
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          <div style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center' }}>{icon}</div>
+                          {isFolder ? (
+                            <a onClick={() => navigateToFolder(r.__folder)} style={{ all: 'unset', cursor: 'pointer', color: '#2563eb', maxWidth: '100%', alignItems: 'center' ,display: 'flex'}}>
+                              <span style={{ display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '15px' }}>{r.name}</span>
+                            </a>
+                          ) : (
+                            <a onClick={() => handleFileClick(r.__file, { preventDefault: () => undefined } as any)} style={{ all: 'unset', cursor: 'pointer', color: '#2563eb', maxWidth: '100%', alignItems: 'center' ,display: 'flex'}}>
+                              <span style={{ display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '15px' }}>{r.original_filename}</span>
+                            </a>
+                          )}
+                        </div>
+                      );
+                    }
+                  },
+                  { header: 'Type', accessorKey: 'type' },
+                  { header: 'Size/Items', accessorKey: 'size' },
+                  { header: 'Updated', accessorKey: 'uploadedAt' },
+                ]}
+                data={[
+                  ...filteredAndSortedItems.folders.map(fd => ({
+                    id: fd.id,
+                    isFolder: true,
+                    __folder: fd,
+                    name: fd.name,
+                    type: 'folder',
+                    size: '—',
+                    uploadedAt: fd.updatedAt ? new Date(fd.updatedAt).toLocaleString() : '—',
+                  })),
+                  ...filteredAndSortedItems.files.map(f => ({
+                    id: f.id,
+                    isFolder: false,
+                    __file: f,
+                    name: f.original_filename,
+                    original_filename: f.original_filename,
+                    content_type: f.content_type,
+                    type: f.content_type,
+                    size: contentService.formatFileSize(f.file_size),
+                    uploadedAt: f.metadata?.uploadedAt ? new Date(f.metadata.uploadedAt).toLocaleString() : '—',
+                  })),
+                ]}
+                fallback={{ title: 'No Files', description: 'Upload files to get started.' }}
               />
-            ))}
-            {filteredAndSortedItems.files.map((file) => (
-              <FileItem
-                key={file.id}
-                file={file}
-                onClick={handleFileClick}
-                isDownloading={downloadingFiles.has(file.id)}
-              />
-            ))}
-          </div>
+            </div>
+          )
         )}
       </div>
 
@@ -401,6 +448,8 @@ export const FileManager = ({ userType }: FileManagerProps) => {
         parentFolder={currentFolder}
         onFolderCreated={handleFolderCreated}
       />
+
+      
 
     </div>
   );

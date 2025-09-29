@@ -6,6 +6,7 @@ export interface Folder {
   parent_id: number | null;
   account_id: number | string;
   owner_id: number | string;
+  ownerName?: string; // optional: populated by API for display only
   allow_all_brands: boolean;
   status?: string;
   description?: string;
@@ -19,6 +20,7 @@ export interface File {
   name: string;
   original_filename: string;
   folder_id: number | null;
+  folderName?: string; // optional, for UI convenience
   account_id: number | string;
   owner_id: number | string;
   storage_key: string;

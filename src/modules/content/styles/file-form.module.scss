@@ -1,0 +1,142 @@
+@import '@/styles/_variables.scss';
+@import '@/styles/_mixins.scss';
+
+.container {
+  padding: 0px 24px;
+  .input_wrapper {
+    padding: 24px;
+    background-color: $white-100;
+    margin: 24px 0px;
+    border-radius: 6px;
+    gap: 24px;
+    .title {
+      @include typography(sm, medium);
+      color: $text-color-primary;
+      line-height: 20px;
+      margin-bottom: 32px;
+    }
+  }
+}
+
+.section {
+  margin: 40px 0px 0px 0px;
+  gap: 24px;
+}
+
+.title {
+  @include typography(sm, medium);
+  color: $text-color-primary;
+  line-height: 20px;
+  margin-bottom: 32px;
+}
+
+.input_label {
+  @include typography(xs, medium);
+  color: $text-color-dark;
+  line-height: 16px;
+}
+
+.input_container {
+  margin-top: 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.gridTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.flexTwoCol {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.col {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.card {
+  background-color: $white-100;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 16px;
+  width: 100%;
+}
+
+.previewImage {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.previewDetails {
+  margin-top: 16px;
+}
+
+.detailsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gridDetails {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+}
+
+.detailsRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f3f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.detailLabel {
+  @include typography(xs, medium);
+  color: $text-color-secondary;
+}
+
+.detailValue {
+  @include typography(xs);
+  color: $text-color-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.actionsRow {
+  display: flex;
+  gap: 8px;
+}
+
+.error {
+  color: $red-400;
+  margin-bottom: 12px;
+}
+
+.textarea {
+  width: 100%;
+  font-family: monospace;
+}
+

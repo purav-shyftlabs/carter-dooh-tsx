@@ -63,8 +63,7 @@ const Content = () => {
       const hasFullAccessFromFlags = Boolean(flags && (flags as { fullAccess?: boolean }).fullAccess);
       const hasFullAccess = Boolean(hasFullAccessFromRedux || hasFullAccessFromFlags);
   return <>
-  <FileManager />
-      {/* <PageHeader
+      <PageHeader
         title={ContentPageInfo.title}
         ActionComponent={() =>
           hasFullAccess ? (
@@ -82,7 +81,9 @@ const Content = () => {
           ) : null
         }
       />
-      {!isLoading && (
+        <FileManager />
+
+      {/* {!isLoading && (
         <div className={styles.container}>
           <CarterTabs tabs={tabs} noPadding variant="off-white" activeTab={currentTab} onChange={handleTabChange} />
         </div>

@@ -69,6 +69,37 @@ class ContentService {
     return response.data;
   }
 
+  // Get single file by id
+  async getFileById(fileId: number): Promise<ApiResponse<File>> {
+    const response = await api.get(`${this.filesUrl}/${fileId}`);
+    return response.data;
+  }
+
+  // Update single file (partial update per API spec uses PUT here)
+  async updateFile(fileId: number, payload: Partial<{ 
+    allowAllBrands: boolean;
+    selectedBrands: number[];
+    status: string;
+    description: string;
+    metadata: Record<string, unknown>;
+  }>): Promise<ApiResponse<File>> {
+    const response = await api.put(`${this.filesUrl}/${fileId}`, payload);
+    return response.data;
+  }
+
+  // Replace file binary for an existing file record
+  async replaceFile(fileId: number, newFile: globalThis.File): Promise<ApiResponse<{ fileId: number; fileUrl: string; originalFilename: string; fileSize: number; contentType: string }>> {
+    const base64 = await this.fileToBase64(newFile);
+    const payload = {
+      fileId,
+      fileData: base64,
+      filename: newFile.name,
+      mimeType: newFile.type,
+    };
+    const response = await api.post(`${this.filesUrl}/${fileId}/replace`, payload);
+    return response.data;
+  }
+
   async getHierarchy(parentId?: number | null): Promise<ApiResponse<HierarchyResponse>> {
     const params = parentId !== undefined ? { parentId } : {};
     const response = await api.get(`${this.filesUrl}/hierarchy`, { params });
@@ -195,6 +226,34 @@ class ContentService {
   // Get file icon based on content type and filename
   getFileIcon(contentType: string, filename?: string) {
     return getFileIcon(contentType, filename);
+  }
+
+  // Get file brand access information
+  async getFileBrandAccess(fileId: number): Promise<ApiResponse<{
+    id: number;
+    name: string;
+    allowAllBrands: boolean;
+    brandAccess: Array<{
+      brandId: number;
+      brandName: string;
+    }>;
+  }>> {
+    const response = await api.get(`${this.filesUrl}/${fileId}/brand-access`);
+    return response.data;
+  }
+
+  // Get folder brand access information
+  async getFolderBrandAccess(folderId: number): Promise<ApiResponse<{
+    id: number;
+    name: string;
+    allowAllBrands: boolean;
+    brandAccess: Array<{
+      brandId: number;
+      brandName: string;
+    }>;
+  }>> {
+    const response = await api.get(`${this.baseUrl}/${folderId}/brand-access`);
+    return response.data;
   }
 }
 

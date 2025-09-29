@@ -116,5 +116,7 @@ export {
   Loader2,
   FolderPlus as FolderPlusIcon,
   Grid3X3 as GridIcon,
-  List as ListIcon
+  List as ListIcon,
+  Folder as FolderIcon
+
 } from 'lucide-react';

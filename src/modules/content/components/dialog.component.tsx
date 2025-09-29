@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X as CloseIcon } from 'lucide-react';
 import styles from '../styles/dialog.module.scss';
 
@@ -37,9 +38,9 @@ export const Dialog: React.FC<DialogProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
-      <div 
+      <div
         className={`${styles.dialog} ${styles[size]}`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -53,6 +54,7 @@ export const Dialog: React.FC<DialogProps> = ({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
