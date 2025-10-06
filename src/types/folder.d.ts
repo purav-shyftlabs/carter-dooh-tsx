@@ -119,4 +119,17 @@ export interface Brand {
   id: number;
   name: string;
   description?: string;
+  // Optional fields used across app
+  type?: string;
+  assetUrl?: string;
+  brand_logo_url?: string;
+  publisherSharePerc?: number;
+  publisher_share_perc?: number;
+  metadata?: Record<string, unknown>;
+  allowAllProducts?: boolean;
+  allow_all_products?: boolean;
+  parentCompanyId?: number;
+  parent_company_id?: number;
+  customId?: string;
+  custom_id?: string;
 }

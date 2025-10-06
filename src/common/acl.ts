@@ -254,15 +254,8 @@ export function checkAclFromState(
   const flags = getPermissionFlagsFromState(state, permissionType);
   const userLevel = deriveAccessLevelFromFlags(permissionType, flags);
 
-  console.log('[ACL] PermissionType:', permissionType);
-  console.log('[ACL] Required level:', requiredAccessLevel);
-  console.log('[ACL] Flags from state:', flags);
-  console.log('[ACL] Derived user level:', userLevel);
-  console.log('[ACL] Allowed ordering:', permissionAccessMapping[permissionType]);
-
   if (!userLevel) return false;
   const result = isValidPermissionAccess(permissionType, requiredAccessLevel, userLevel);
-  console.log('[ACL] Access granted:', result);
   return result;
 }
 
@@ -274,6 +267,20 @@ export const aclCheck = {
   checkAclFromState,
   deriveAccessLevelFromFlags,
   getPermissionFlagsFromState,
+};
+
+// Memoized selector helpers (optional usage with reselect)
+// Consumers can import these to avoid recomputation on unrelated state changes
+export const selectPermissionFlags = (permissionType: PermissionType) => (state: IRootState) =>
+  getPermissionFlagsFromState(state, permissionType);
+
+export const selectHasAccess = (
+  permissionType: PermissionType,
+  requiredAccessLevel: AccessLevel
+) => (state: IRootState) => {
+  const flags = getPermissionFlagsFromState(state, permissionType);
+  const userLevel = deriveAccessLevelFromFlags(permissionType, flags);
+  return userLevel ? isValidPermissionAccess(permissionType, requiredAccessLevel, userLevel) : false;
 };
 
 export default aclCheck;

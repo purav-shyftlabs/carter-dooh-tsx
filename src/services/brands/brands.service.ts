@@ -1,6 +1,12 @@
 import api from '../api/api-client';
 import { Brand } from '@/types/folder';
 
+// Lightweight brand item shape used in selects/autocomplete
+export type BrandItem = {
+  id: number | string;
+  name: string;
+};
+
 class BrandsService {
   private baseUrl = '/brands';
 
@@ -74,12 +80,45 @@ class BrandsService {
   }
 
   // Get brand by ID
-  async getBrandById(id: number): Promise<Brand> {
+  async getBrandById(id: number | string): Promise<Brand & { type?: string; assetUrl?: string; publisherSharePerc?: number; metadata?: Record<string, unknown> }> {
     try {
       const response = await api.get(`${this.baseUrl}/${id}`);
-      return response.data.data;
+      const raw = (response.data?.data ?? response.data) as Record<string, unknown>;
+      const normalized = {
+        ...(raw as unknown as Brand),
+        type: (raw as Record<string, unknown>)?.type as string | undefined,
+        assetUrl: ((raw as Record<string, unknown>)?.assetUrl
+          ?? (raw as Record<string, unknown>)?.asset_url
+          ?? (raw as Record<string, unknown>)?.brand_logo_url) as string | undefined,
+        publisherSharePerc: ((raw as Record<string, unknown>)?.publisherSharePerc
+          ?? (raw as Record<string, unknown>)?.publisher_share_perc) as number | undefined,
+        metadata: ((raw as Record<string, unknown>)?.metadata as Record<string, unknown> | undefined) ?? {},
+      } as Brand & { type?: string; assetUrl?: string; publisherSharePerc?: number; metadata?: Record<string, unknown> };
+      return normalized;
     } catch (error) {
       console.error('Error fetching brand:', error);
+      throw error;
+    }
+  }
+
+  // Update brand
+  async updateBrand(id: number | string, payload: Partial<Brand> & Record<string, unknown>): Promise<Brand> {
+    try {
+      const response = await api.put(`${this.baseUrl}/${id}`, payload);
+      return (response.data?.data ?? response.data) as Brand;
+    } catch (error) {
+      console.error('Error updating brand:', error);
+      throw error;
+    }
+  }
+
+  // Create brand (in case it's needed by form)
+  async createBrand(payload: Partial<Brand> & Record<string, unknown>): Promise<Brand> {
+    try {
+      const response = await api.post(`${this.baseUrl}`, payload);
+      return (response.data?.data ?? response.data) as Brand;
+    } catch (error) {
+      console.error('Error creating brand:', error);
       throw error;
     }
   }

@@ -43,7 +43,40 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
     setError(null);
     try {
       const res = await contentService.getFileById(Number(fileId));
-      const f: any = res.data;
+      type ApiFile = Partial<{
+        id: number | string;
+        name: string;
+        originalFilename: string;
+        original_filename: string;
+        folderId: number | string | null;
+        folder_id: number | string | null;
+        folderName: string;
+        folder_name: string;
+        accountId: number | string;
+        account_id: number | string;
+        ownerId: number | string;
+        owner_id: number | string;
+        storage_key: string;
+        storageKey: string;
+        fileSize: number | string;
+        file_size: number | string;
+        contentType: string;
+        content_type: string;
+        allowAllBrands: boolean;
+        allow_all_brands: boolean;
+        status: string;
+        description: string;
+        brandAccess: number[];
+        metadata: Record<string, unknown>;
+        uploadedAt: string;
+        fileUrl: string;
+        file_url: string;
+        createdAt: string;
+        created_at: string;
+        updatedAt: string;
+        updated_at: string;
+      }>;
+      const f = res.data as ApiFile;
       const normalized: File = {
         id: f.id,
         name: f.name ?? f.originalFilename ?? f.original_filename ?? '',
@@ -59,7 +92,7 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
         status: f.status,
         description: f.description,
         brandAccess: Array.isArray(f.brandAccess) ? f.brandAccess : [],
-        metadata: f.metadata ?? { originalName: f.originalFilename ?? '', uploadedAt: f.uploadedAt ?? '', storageProvider: (f.metadata?.storageProvider ?? 'local') },
+        metadata: (f.metadata as Record<string, unknown>) ?? { originalName: f.originalFilename ?? '', uploadedAt: f.uploadedAt ?? '', storageProvider: ((f.metadata as Record<string, unknown> | undefined)?.storageProvider ?? 'local') },
         fileUrl: f.fileUrl ?? f.file_url,
         createdAt: f.createdAt ?? f.created_at,
         updatedAt: f.updatedAt ?? f.updated_at,
@@ -71,8 +104,11 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
       setStatus(normalized.status || 'active');
       setDescription(normalized.description || '');
       // no metadata UI
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to load file');
+    } catch (e) {
+      const message = (e as { response?: { data?: { message?: string } } ; message?: string })?.response?.data?.message
+        || (e as { message?: string }).message
+        || 'Failed to load file';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -116,7 +152,7 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
     setSaving(true);
     setError(null);
     try {
-      const payload: any = {
+      const payload: Partial<{ status: string; description?: string; allowAllBrands: boolean; selectedBrands: number[] }> = {
         status,
         description: description || undefined,
       };
@@ -129,8 +165,11 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
       }
       await contentService.updateFile(Number(file.id), payload);
       await load();
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to update file');
+    } catch (e) {
+      const message = (e as { response?: { data?: { message?: string } } ; message?: string })?.response?.data?.message
+        || (e as { message?: string }).message
+        || 'Failed to update file';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -266,7 +305,7 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
                       type="text"
                       labelProps={{ label: ' ' }}
                       value={description}
-                      onChange={(e: any) => setDescription(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
                     />
                   </div>
                 </div>

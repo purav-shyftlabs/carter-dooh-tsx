@@ -40,8 +40,11 @@ export const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({ isOpen, fi
       setStatus(f.status || 'active');
       setDescription(f.description || '');
       setMetadataText(JSON.stringify(f.metadata || {}, null, 2));
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to load file');
+    } catch (e) {
+      const message = (e as { response?: { data?: { message?: string } } ; message?: string })?.response?.data?.message
+        || (e as { message?: string }).message
+        || 'Failed to load file';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -63,14 +66,14 @@ export const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({ isOpen, fi
       if (metadataText.trim()) {
         try {
           metadataObj = JSON.parse(metadataText);
-        } catch (e) {
+        } catch {
           setError('Metadata must be valid JSON');
           setSaving(false);
           return;
         }
       }
 
-      const payload: any = {
+      const payload: Partial<{ status: string; description?: string; metadata?: Record<string, unknown>; allowAllBrands: boolean; selectedBrands: number[] }> = {
         status,
         description: description || undefined,
         metadata: metadataObj,
@@ -87,8 +90,11 @@ export const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({ isOpen, fi
       const res = await contentService.updateFile(Number(file.id), payload);
       setFile(res.data);
       if (onUpdated) onUpdated(res.data);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to update file');
+    } catch (e) {
+      const message = (e as { response?: { data?: { message?: string } } ; message?: string })?.response?.data?.message
+        || (e as { message?: string }).message
+        || 'Failed to update file';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -98,7 +104,7 @@ export const FileDetailsDialog: React.FC<FileDetailsDialogProps> = ({ isOpen, fi
     if (!file) return;
     try {
       await contentService.downloadFile(file.id, file.original_filename);
-    } catch (e) {
+    } catch {
       // ignore
     }
   };

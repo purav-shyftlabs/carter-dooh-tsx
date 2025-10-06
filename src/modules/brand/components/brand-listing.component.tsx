@@ -57,9 +57,23 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType, viewMode = 'tabl
     const load = async () => {
       try {
         setIsLoading(true);
-        const { items, totalCount: tc } = await brandsService.getBrands({ page: pageNo, limit: pageSize, search });
+        const result = await brandsService.getBrands({ page: pageNo, limit: pageSize, search });
         if (!mounted) return;
-        const mapped: Brand[] = (items || []).map((b: any) => ({
+        type ApiBrand = Partial<{
+          id: number | string;
+          account_id: number | string;
+          asset_url: string;
+          name: string;
+          status: string;
+          publisher_share_perc: number | string;
+          metadata: unknown;
+          allow_all_products: boolean;
+          parent_company_id: number | string;
+          custom_id: string;
+        }>;
+        const itemsArr: ApiBrand[] = Array.isArray(result) ? (result as unknown as ApiBrand[]) : ((result?.items as unknown as ApiBrand[]) || []);
+        const total = Array.isArray(result) ? itemsArr.length : Number((result as { totalCount?: number })?.totalCount ?? itemsArr.length);
+        const mapped: Brand[] = (itemsArr || []).map((b: ApiBrand) => ({
           id: Number(b?.id ?? 0),
           account_id: Number(b?.account_id ?? 0),
           brand_logo_url: String(b?.asset_url ?? ''),
@@ -72,10 +86,9 @@ const BrandListing: React.FC<IBrandListingProps> = ({ userType, viewMode = 'tabl
           custom_id: String(b?.custom_id ?? ''),
         }));
         setApiBrands(mapped);
-        setTotalCount(Number(tc ?? mapped.length));
+        setTotalCount(total);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load brands', e);
+        // Optional: hook into global alert/toast here
         setApiBrands([]);
         setTotalCount(0);
       } finally {

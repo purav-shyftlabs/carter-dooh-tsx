@@ -16,7 +16,10 @@ const BRAND_ROUTES = {
 };
 
 const CONTENT_ROUTES = {
-  LIST: '/content',
+  LIST: '/content/all',
+  IMAGES: '/content/images',
+  VIDEOS: '/content/videos',
+  DOCS: '/content/docs',
   ADD: '/content/add',
 };
 

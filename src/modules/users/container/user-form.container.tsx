@@ -257,13 +257,13 @@ const UserForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
           search: brandFilters.search 
         });
         if (!mounted) return;
-        const items = result.items || [];
+        const items = Array.isArray(result) ? result : (result.items || []);
         if (brandFilters.page === 1) {
           setAllBrandsList(items);
         } else {
           setAllBrandsList(prev => [...prev, ...items]);
         }
-        setBrandsData({ totalCount: result.totalCount });
+        setBrandsData({ totalCount: Array.isArray(result) ? result.length : result.totalCount });
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error('Failed to load brands', e);

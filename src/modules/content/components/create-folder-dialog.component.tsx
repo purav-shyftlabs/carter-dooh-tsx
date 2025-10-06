@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, CarterInput } from 'shyftlabs-dsl';
-import { Folder, Brand } from '@/types/folder';
+import { Folder } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { useBrands } from '@/hooks/useBrands.hook';
 import { Dialog } from './dialog.component';
@@ -62,18 +62,19 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
       onFolderCreated(response.data);
       setFolderName('');
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
       // Debug: Log the error structure to understand what we're dealing with
-      console.log('Create folder error:', err);
-      console.log('Error response:', err?.response);
-      console.log('Error message:', err?.message);
+      console.log('Create folder error:', e);
+      console.log('Error response:', e?.response);
+      console.log('Error message:', e?.message);
       
       // Parse error message to show user-friendly text
       let errorMessage = 'Failed to create folder';
       
       // Check if it's an axios error with response data
-      if (err?.response?.data?.message) {
-        const apiMessage = err.response.data.message;
+      if (e?.response?.data?.message) {
+        const apiMessage = e.response.data.message;
         if (apiMessage.includes('More than one matching record found')) {
           errorMessage = 'A folder with this name already exists in this location';
         } else if (apiMessage.includes('Folder.findOne()')) {
@@ -85,8 +86,8 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
         }
       }
       // Check for HTTP status errors
-      else if (err?.response?.status) {
-        const status = err.response.status;
+      else if (e?.response?.status) {
+        const status = e.response.status;
         if (status === 500) {
           errorMessage = 'Server error occurred. Please try again.';
         } else if (status === 400) {
@@ -100,23 +101,24 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
         }
       }
       // Check error message for common patterns
-      else if (err instanceof Error) {
-        if (err.message.includes('Request failed with status code 500')) {
+      else if ((e as Error)?.message) {
+        const msg = String((e as Error).message || '');
+        if (msg.includes('Request failed with status code 500')) {
           errorMessage = 'Server error occurred. Please try again.';
-        } else if (err.message.includes('Request failed with status code 400')) {
+        } else if (msg.includes('Request failed with status code 400')) {
           errorMessage = 'Invalid folder name. Please check your input.';
-        } else if (err.message.includes('Request failed with status code 409')) {
+        } else if (msg.includes('Request failed with status code 409')) {
           errorMessage = 'A folder with this name already exists in this location';
-        } else if (err.message.includes('Request failed with status code')) {
+        } else if (msg.includes('Request failed with status code')) {
           errorMessage = 'Failed to create folder. Please try again.';
-        } else if (err.message.includes('More than one matching record found')) {
+        } else if (msg.includes('More than one matching record found')) {
           errorMessage = 'A folder with this name already exists in this location';
-        } else if (err.message.includes('Folder.findOne()')) {
+        } else if (msg.includes('Folder.findOne()')) {
           errorMessage = 'A folder with this name already exists';
-        } else if (err.message.includes('duplicate') || err.message.includes('already exists')) {
+        } else if (msg.includes('duplicate') || msg.includes('already exists')) {
           errorMessage = 'A folder with this name already exists in this location';
         } else {
-          errorMessage = err.message;
+          errorMessage = msg;
         }
       }
       

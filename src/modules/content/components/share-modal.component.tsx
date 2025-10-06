@@ -53,7 +53,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     },
   ];
 
-  const loadBrandAccess = async () => {
+  const loadBrandAccess = React.useCallback(async (): Promise<void> => {
     if (!fileId) return;
 
     const currentToken = requestToken + 1;
@@ -71,24 +71,22 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       // Initialize controls from loaded data
       setAllowAll(!!response.data.allowAllBrands);
       setSelectedBrands(Array.isArray(response.data.brandAccess) ? response.data.brandAccess.map(b => b.brandId) : []);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const e = (err ?? {}) as { response?: { data?: { message?: string } }; message?: string };
       if (currentToken !== requestToken + 1) return;
-      setError(err?.response?.data?.message || err?.message || 'Failed to load brand access information');
-      try { showAlert(err?.response?.data?.message || err?.message || 'Failed to load brand access information', AlertVariant.ERROR); } catch {}
+      const msg = e?.response?.data?.message || e?.message || 'Failed to load brand access information';
+      setError(msg);
+      try { showAlert(msg, AlertVariant.ERROR); } catch {}
     } finally {
       if (currentToken === requestToken + 1) setLoading(false);
     }
-  };
+  }, [fileId, isFolder, requestToken, showAlert]);
 
   useEffect(() => {
-    let isActive = true;
     if (isOpen && fileId) {
-      loadBrandAccess();
+      void loadBrandAccess();
     }
-    return () => {
-      isActive = false;
-    };
-  }, [isOpen, fileId]);
+  }, [isOpen, fileId, loadBrandAccess]);
 
   const handleClose = () => {
     setBrandAccess(null);
@@ -110,16 +108,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     setSaving(true);
     setError(null);
     try {
-      const payload: any = {
+      const payload: { allowAllBrands: boolean; selectedBrands: number[] } = {
         allowAllBrands: !!allowAll,
         selectedBrands: allowAll ? [] : selectedBrands,
       };
       await contentService.updateFile(Number(fileId), payload);
       try { showAlert('Brand access updated successfully', AlertVariant.SUCCESS); } catch {}
       handleClose();
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to update brand access');
-      try { showAlert(e?.response?.data?.message || e?.message || 'Failed to update brand access', AlertVariant.ERROR); } catch {}
+    } catch (e: unknown) {
+      const err = (e ?? {}) as { response?: { data?: { message?: string } } ; message?: string };
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update brand access';
+      setError(msg);
+      try { showAlert(msg, AlertVariant.ERROR); } catch {}
     } finally {
       setSaving(false);
     }
@@ -210,7 +210,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                         enableRowSelection
                         loading={brandsLoading}
                         options={(brands || []) as Array<{ id: number; name: string }>}
-                        columns={brandColumns as any}
+                        columns={brandColumns as Array<{ accessorKey: string; header: string; cell: (args: { row: { original: { id: number; name: string } } }) => string }>}
                         selectedOptions={(brands || []).filter(b => selectedBrands.includes(b.id)) as Array<{ id: number; name: string }>}
                         onSelectionChange={(selected: Array<{ id: number; name: string }>) => {
                           setSelectedBrands(selected.map(s => s.id));

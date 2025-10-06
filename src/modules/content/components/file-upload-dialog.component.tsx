@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from 'shyftlabs-dsl';
-import { Folder, File, FileUploadProgress, Brand } from '@/types/folder';
+import { Folder, File, FileUploadProgress } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { useBrands } from '@/hooks/useBrands.hook';
 import { Dialog } from './dialog.component';
@@ -86,18 +86,19 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
               index === i ? { ...item, progress: 100, status: 'completed' } : item
             )
           );
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = (error ?? {}) as { response?: { status?: number; data?: { message?: string } }; message?: string };
           // Debug: Log the error structure to understand what we're dealing with
-          console.log('Upload error:', error);
-          console.log('Error response:', error?.response);
-          console.log('Error message:', error?.message);
+          console.log('Upload error:', err);
+          console.log('Error response:', err?.response);
+          console.log('Error message:', err?.message);
           
           // Parse error message to show user-friendly text
           let errorMessage = 'Upload failed';
           
           // Check if it's an axios error with response data
-          if (error?.response?.data?.message) {
-            const apiMessage = error.response.data.message;
+          if (err?.response?.data?.message) {
+            const apiMessage = err.response.data.message;
             if (apiMessage.includes('More than one matching record found')) {
               errorMessage = 'File with this name already exists in this folder';
             } else if (apiMessage.includes('Upload failed:')) {
@@ -115,8 +116,8 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
             }
           }
           // Check for HTTP status errors
-          else if (error?.response?.status) {
-            const status = error.response.status;
+          else if (err?.response?.status) {
+            const status = err.response.status;
             if (status === 500) {
               errorMessage = 'Server error occurred. Please try again.';
             } else if (status === 400) {
@@ -132,23 +133,24 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
             }
           }
           // Check error message for common patterns
-          else if (error instanceof Error) {
-            if (error.message.includes('Request failed with status code 500')) {
+          else if (typeof (err as { message?: string }).message === 'string') {
+            const msg = String((err as { message?: string }).message || '');
+            if (msg.includes('Request failed with status code 500')) {
               errorMessage = 'Server error occurred. Please try again.';
-            } else if (error.message.includes('Request failed with status code 400')) {
+            } else if (msg.includes('Request failed with status code 400')) {
               errorMessage = 'Invalid file or request. Please check your file.';
-            } else if (error.message.includes('Request failed with status code 413')) {
+            } else if (msg.includes('Request failed with status code 413')) {
               errorMessage = 'File is too large. Please choose a smaller file.';
-            } else if (error.message.includes('Request failed with status code 409')) {
+            } else if (msg.includes('Request failed with status code 409')) {
               errorMessage = 'File with this name already exists in this folder';
-            } else if (error.message.includes('Request failed with status code')) {
+            } else if (msg.includes('Request failed with status code')) {
               errorMessage = 'Upload failed. Please try again.';
-            } else if (error.message.includes('More than one matching record found')) {
+            } else if (msg.includes('More than one matching record found')) {
               errorMessage = 'File with this name already exists in this folder';
-            } else if (error.message.includes('File.findOne()')) {
+            } else if (msg.includes('File.findOne()')) {
               errorMessage = 'File already exists in this location';
-            } else if (error.message.includes('Upload failed:')) {
-              const parts = error.message.split('Upload failed:');
+            } else if (msg.includes('Upload failed:')) {
+              const parts = msg.split('Upload failed:');
               if (parts.length > 1) {
                 const mainError = parts[1].trim();
                 if (mainError.includes('More than one matching record')) {
@@ -158,7 +160,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
                 }
               }
             } else {
-              errorMessage = error.message;
+              errorMessage = msg;
             }
           }
           
@@ -175,9 +177,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
           );
           
           // Set general error message for the first error
-          if (!generalError) {
-            setGeneralError(errorMessage);
-          }
+          setGeneralError(prev => prev ?? errorMessage);
         }
       }
     } finally {

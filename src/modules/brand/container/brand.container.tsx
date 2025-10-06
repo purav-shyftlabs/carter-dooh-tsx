@@ -38,10 +38,10 @@ const Brand = () => {
     const { currentTab, handleTabChange } = useTabChangeHelper();
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     
-    const tabs: CarterTabWithTestId[] = [
+  const tabs: CarterTabWithTestId[] = [
         {
           title: BrandPageInfo.all.label,
-          component: (props: any) => <BrandListing {...props} userType="all" viewMode={viewMode} />,
+      component: (_props: unknown) => <BrandListing userType="all" viewMode={viewMode} />,
           additionalData: {
             userType: 'all',
           },
@@ -49,7 +49,7 @@ const Brand = () => {
         },
         {
           title: BrandPageInfo.archived.label,
-          component: (props: any) => <BrandListing {...props} userType="archived" viewMode={viewMode} />,
+      component: (_props: unknown) => <BrandListing userType="archived" viewMode={viewMode} />,
           additionalData: {
             userType: 'archived',
           },

@@ -1,7 +1,8 @@
+import React from "react";
 import InternalLayout from "@/layouts/internal-layout";
 import PageHeader from "@/components/page-header/page-header.component";
 import { Button } from "shyftlabs-dsl";
-import { PlusIcon } from "@/lib/icons";
+import { FolderPlusIcon, UploadIcon } from "@/lib/icons";
 import styles from "@/modules/users/styles/users.module.scss";
 import { CarterTabs } from "shyftlabs-dsl";
 import useTabChangeHelper from "@/common/hooks/tab-change.hook";
@@ -62,26 +63,12 @@ const Content = () => {
         | undefined;
       const hasFullAccessFromFlags = Boolean(flags && (flags as { fullAccess?: boolean }).fullAccess);
       const hasFullAccess = Boolean(hasFullAccessFromRedux || hasFullAccessFromFlags);
+  const [uploadSignal, setUploadSignal] = React.useState<number>(0);
+  const [createFolderSignal, setCreateFolderSignal] = React.useState<number>(0);
+
   return <>
-      <PageHeader
-        title={ContentPageInfo.title}
-        ActionComponent={() =>
-          hasFullAccess ? (
-            <Button
-              label={ContentPageInfo.actionButton}
-              iconPosition="left"
-              size="small"
-              icon={<PlusIcon />}
-              onClick={() => {
-                // For now, we'll handle upload through the FileManager component
-                // This could be enhanced to open a global upload dialog
-                console.log('Upload files clicked');
-              }}
-            />
-          ) : null
-        }
-      />
-        <FileManager />
+    
+        <FileManager openUploadSignal={uploadSignal} openCreateFolderSignal={createFolderSignal} />
 
       {/* {!isLoading && (
         <div className={styles.container}>

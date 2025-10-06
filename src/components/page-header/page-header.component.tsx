@@ -12,13 +12,14 @@ interface PageHeaderProps {
   backUrl?: string;
   isLoading?: boolean;
   showBackButton?: boolean;
-  breadcrumbs?: { url?: string; label: Maybe<string> }[];
+  breadcrumbs?: { url?: string; label: Maybe<string>; func?: () => void }[];
   ActionComponent?: React.ComponentType;
   onPressBackButton?: () => void;
   testId?: string;
+  content?: boolean;
 }
 
-const PageHeaderLink = ({ label, url }: { label: string; url?: string }) => {
+const PageHeaderLink = ({ label, url, func }: { label: string; url?: string; func?: () => void }) => {
   return (
     <Tooltip title={label.length > 30 ? label : undefined}>
       {url ? (
@@ -29,7 +30,9 @@ const PageHeaderLink = ({ label, url }: { label: string; url?: string }) => {
         </Link>
       ) : (
         <Typography fontFamily="Roboto" color={carterColors['text-800']} variant="caption-regular">
+          <span onClick={func}>
           {truncateString(label)}
+          </span>
         </Typography>
       )}
     </Tooltip>
@@ -37,7 +40,7 @@ const PageHeaderLink = ({ label, url }: { label: string; url?: string }) => {
 };
 
 const PageHeader: React.FC<PageHeaderProps> = props => {
-  const { isLoading, title, onPressBackButton, backUrl, showBackButton, breadcrumbs, ActionComponent, testId } = props;
+  const { isLoading, title, onPressBackButton, backUrl, showBackButton, breadcrumbs, ActionComponent, testId, content = false } = props;
 
   const router = useRouter();
 
@@ -80,7 +83,13 @@ const PageHeader: React.FC<PageHeaderProps> = props => {
                 isLoading ? (
                   <Skeleton key={`breadcrumb-skel-${index}`} width={50} />
                 ) : (
-                  <PageHeaderLink key={`breadcrumb-${index}-${item.label}`} label={item.label as string} url={item.url} />
+                  content ? (
+                    <h1 key={`breadcrumb-${index}-${item.label}`} onClick={item.func} data-testid={`breadcrumb-${index}-${item.label}`} className={styles.breadcrumb_link}>
+                      {truncateString(item.label as string)}
+                    </h1>
+                  ) : (
+                    <PageHeaderLink key={`breadcrumb-${index}-${item.label}`} label={item.label as string} url={item.url} func={item.func} />
+                  )
                 ),
               )}
             </Breadcrumbs>

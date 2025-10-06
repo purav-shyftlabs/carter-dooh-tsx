@@ -3,8 +3,7 @@ import { Folder, File as FileType } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { getFileIcon } from '@/utils/file-icons';
 import styles from '../styles/folder-item.module.scss';
-import { Folder as FolderIcon, Share2 as ShareIcon, UserPlus } from 'lucide-react';
-import Avatar from 'react-avatar';
+import { Folder as FolderIcon, UserPlus } from 'lucide-react';
 import { ShareModal } from './share-modal.component';
 
 interface FolderItemProps {
@@ -53,14 +52,32 @@ export const FolderItem: React.FC<FolderItemProps> = ({ folder, onClick, onConte
       }}
     >
       <div className={styles.itemContent + ' ' + styles.folderCard}>
-        {/* Top row: left folder icon, right share icon */}
-          <FolderIcon size={92} color="#12287c"  />
-         
+        {/* Folder icon */}
+        <FolderIcon size={72} color="#12287c" />
+
+        {/* Share button (visible on hover via CSS) */}
+        <button
+          aria-label="Share folder"
+          onClick={handleShareClick}
+          className={styles.shareButton}
+        >
+          <UserPlus size={18} color="#12287c" />
+        </button>
 
         {/* Folder name */}
+        <div className={styles.name}>
           {folder.name}
-
+        </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        fileId={Number(folder.id)}
+        fileName={folder.name}
+        isFolder={true}
+      />
       
     </div>
   );
@@ -68,6 +85,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({ folder, onClick, onConte
 
 export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu, isDownloading = false }) => {
   const [showShareModal, setShowShareModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   const handleClick = (event: React.MouseEvent) => {
     if (!isDownloading) {
@@ -87,7 +105,34 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
     setShowShareModal(true);
   };
 
-  const fileIconSmall = getFileIcon(file.content_type, file.original_filename, 'small');
+  const fileIcon = getFileIcon(file.content_type, file.original_filename);
+
+  // Load image preview for image files
+  React.useEffect(() => {
+    let revoked = false;
+    const loadPreview = async () => {
+      const isImage = String(file.content_type || '').startsWith('image/');
+      if (!isImage) {
+        setPreviewUrl('');
+        return;
+      }
+      try {
+        const url = await contentService.getAuthenticatedImageBlob(file);
+        if (!revoked) setPreviewUrl(url);
+      } catch {
+        const url = contentService.getAuthenticatedFileUrl(file);
+        if (!revoked) setPreviewUrl(url);
+      }
+    };
+    loadPreview();
+    return () => {
+      revoked = true;
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file.id, file.content_type]);
 
   return (
     <div
@@ -99,35 +144,33 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleClick(e as any);
+          onClick(file, {
+            // minimal MouseEvent-like shape for handler compatibility
+            preventDefault: () => undefined,
+          } as unknown as React.MouseEvent);
         }
       }}
     >
-      <div className={styles.itemContent}>
-        {/* Top row: left file icon, right share icon */}
-        <div className={styles.topRow}>
-          <span className={styles.fileIcon}>{fileIconSmall}</span>
-          <button
-            aria-label="Share file"
-            onClick={handleShareClick}
-            className={styles.shareButton}
-          >
-            <UserPlus size={18} color="#12287c" />
-          </button>
-        </div>
+      <div className={styles.itemContent + ' ' + styles.folderCard}>
+        {/* File preview or icon */}
+        {previewUrl ? (
+          <img className={styles.fileThumb} src={previewUrl} alt={String(file.original_filename || file.name)} />
+        ) : (
+          <span className={styles.fileIcon}>{fileIcon}</span>
+        )}
+
+        {/* Share button (visible on hover via CSS) */}
+        <button
+          aria-label="Share file"
+          onClick={handleShareClick}
+          className={styles.shareButton}
+        >
+          <UserPlus size={18} color="#12287c" />
+        </button>
 
         {/* File name */}
         <div className={styles.name}>
           {file.original_filename}
-        </div>
-
-        {/* Avatar + owner name (if available) */}
-        <div className={styles.ownerRow}>
-          <Avatar name={(file as any).ownerName || ''} size="24" round={true} textSizeRatio={2.4} />
-          <span className={styles.ownerName}>
-            {(file as any).ownerName || '—'}
-          </span>
-          {isDownloading && <span className={styles.downloadingText}>(Downloading...)</span>}
         </div>
       </div>
 

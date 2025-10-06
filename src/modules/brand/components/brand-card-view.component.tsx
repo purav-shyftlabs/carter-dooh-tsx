@@ -151,7 +151,7 @@ const BrandCardView: React.FC<IBrandCardViewProps> = ({
     return (
       <div style={{ textAlign: 'center', padding: '40px' }}>
         <h3>No Brands Yet</h3>
-        <p>Click "+ New Brand" to create</p>
+        <p>Click + New Brand to create</p>
       </div>
     );
   }

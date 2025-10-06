@@ -68,22 +68,28 @@ const SidebarComponent: React.FC = () => {
   };
 
   useEffect(() => {
+    const nextExpanded = new Set<number>();
     (MenuItems as menuItem[]).forEach((item: menuItem) => {
-      if (item.subCategories?.some((subItem: SubCategory) => (subItem.link ? isActiveRoute(router, subItem.link) : false))) {
-        setExpandedItems(prev => new Set(prev).add(item.id));
+      const hasActiveSub = item.subCategories?.some((subItem: SubCategory) => (subItem.link ? isActiveRoute(router, subItem.link) : false));
+      if (hasActiveSub) {
+        nextExpanded.add(item.id);
         return;
       }
-
       if ((item.subCategories?.length ?? 0) > 0) {
-        const isOnRelatedPage = item.subCategories!.some((subItem: SubCategory) =>
-          subItem.link ? isActiveRoute(router, subItem.link) : false,
-        );
-        if (isOnRelatedPage) {
-          setExpandedItems(prev => new Set(prev).add(item.id));
-        }
+        const isOnRelatedPage = item.subCategories!.some((subItem: SubCategory) => (subItem.link ? isActiveRoute(router, subItem.link) : false));
+        if (isOnRelatedPage) nextExpanded.add(item.id);
       }
     });
-  }, [router.asPath, MenuItems, router]);
+
+    setExpandedItems(prev => {
+      if (prev.size === nextExpanded.size) {
+        let same = true;
+        for (const id of Array.from(prev)) { if (!nextExpanded.has(id)) { same = false; break; } }
+        if (same) return prev; // no change → avoid rerender loop
+      }
+      return nextExpanded;
+    });
+  }, [router.asPath, MenuItems]);
 
   const handleInsightSubItemClick = (id: number) => {
     const basePath = '/insights';

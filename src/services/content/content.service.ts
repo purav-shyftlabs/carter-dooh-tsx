@@ -63,9 +63,12 @@ class ContentService {
     return response.data;
   }
 
-  async getFiles(folderId?: number | null): Promise<ApiResponse<File[]>> {
-    const params = folderId !== undefined ? { folderId } : {};
+  async getFiles(folderId?: number | null, type?: string): Promise<ApiResponse<File[]>> {
+    const params: Record<string, unknown> = {};
+    if (folderId !== undefined) params.folderId = folderId;
+    if (typeof type === 'string' && type.length > 0) params.type = type;
     const response = await api.get(this.filesUrl, { params });
+    console.log('response CONTENTSSSSS', response.data);
     return response.data;
   }
 

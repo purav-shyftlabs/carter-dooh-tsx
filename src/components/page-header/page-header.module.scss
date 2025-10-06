@@ -50,3 +50,19 @@
     height: auto;
   }
 }
+
+
+.breadcrumb_link{
+  font-family: 'Roboto';
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0px;
+  margin: 0px;
+  text-decoration: none;
+  &:hover{
+    color: $carter-links-blue;
+    transition: color 100ms linear;
+  }
+
+}

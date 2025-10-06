@@ -1,26 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, SearchInput, PriorityFilters, DataTable } from 'shyftlabs-dsl';
+import PageHeader from '@/components/page-header/page-header.component';
 import { getFileIcon } from '@/utils/file-icons';
 import { Folder, File as FileType, BreadcrumbItem } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { FolderItem, FileItem } from './folder-item.component';
-import { Breadcrumb } from './breadcrumb.component';
+// import { Breadcrumb } from './breadcrumb.component';
 import { FileUploadDialog } from './file-upload-dialog.component';
 import { CreateFolderDialog } from './create-folder-dialog.component';
-import { PlusIcon, UploadIcon, FolderPlusIcon, GridIcon, ListIcon } from '@/lib/icons';
+import { UploadIcon, FolderPlusIcon, GridIcon, ListIcon } from '@/lib/icons';
 import { useRouter } from 'next/router';
-import { FileDetailsDialog } from './file-details-dialog.component';
+// import { FileDetailsDialog } from './file-details-dialog.component';
 import styles from '../styles/file-manager.module.scss';
 import { Folder as FolderIcon } from 'lucide-react';
 
 interface FileManagerProps {
   userType?: string;
+  openUploadSignal?: number;
+  openCreateFolderSignal?: number;
 }
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'name' | 'date' | 'size' | 'type';
 
-export const FileManager = ({ userType }: FileManagerProps) => {
+export const FileManager = ({ openUploadSignal, openCreateFolderSignal }: FileManagerProps) => {
   const router = useRouter();
   // State management
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -33,17 +36,17 @@ export const FileManager = ({ userType }: FileManagerProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string | number>>(new Set());
-  
+
   // UI state
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const [sortDesc, setSortDesc] = useState(false);
-  
+
   // Dialog state
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
-  
+
 
   // Load folder contents - ONLY direct children
   const loadFolderContents = useCallback(async (folderId: number | null = null) => {
@@ -56,14 +59,18 @@ export const FileManager = ({ userType }: FileManagerProps) => {
       setFolders(foldersResponse.data);
 
       // Get ONLY direct child files (no grandchildren)
-      const filesResponse = await contentService.getFiles(folderId);
+      // Derive type from pathname: /content/all | /content/images | /content/videos | /content/docs
+      const path = String(router.asPath || '');
+      const typeMatch = path.match(/\/content\/(\w+)/);
+      const typeFromPath = (typeMatch && typeMatch[1]) ? typeMatch[1] : undefined;
+      const filesResponse = await contentService.getFiles(folderId, typeFromPath);
       setFiles(filesResponse.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load folder contents');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router.asPath]);
 
   // Update breadcrumbs when navigating
   const updateBreadcrumbs = useCallback((folder: Folder | null, history: Folder[] = []) => {
@@ -101,13 +108,13 @@ export const FileManager = ({ userType }: FileManagerProps) => {
   // Navigate to folder
   const navigateToFolder = useCallback((folder: Folder) => {
     setCurrentFolder(folder);
-    
+
     // Add current folder to history if it's not already there
     const newHistory = [...breadcrumbHistory];
     if (currentFolder && !newHistory.some(f => f.id === currentFolder.id)) {
       newHistory.push(currentFolder);
     }
-    
+
     updateBreadcrumbs(folder, newHistory);
     loadFolderContents(Number(folder.id));
   }, [loadFolderContents, updateBreadcrumbs, breadcrumbHistory, currentFolder]);
@@ -123,17 +130,17 @@ export const FileManager = ({ userType }: FileManagerProps) => {
     } else {
       // Find the index of this folder in the breadcrumb path
       const targetIndex = breadcrumbs.findIndex(b => b.id === item.id);
-      
+
       if (targetIndex !== -1) {
         // Truncate history to this point (exclude the target folder itself)
         const truncatedHistory = breadcrumbHistory.slice(0, targetIndex - 1);
-        
+
         // Try to find the folder in current folders or history
         let targetFolder = folders.find(f => f.id === item.id);
         if (!targetFolder) {
           targetFolder = breadcrumbHistory.find(f => f.id === item.id);
         }
-        
+
         if (targetFolder) {
           // Set the target folder as current and load its contents
           setCurrentFolder(targetFolder);
@@ -149,7 +156,7 @@ export const FileManager = ({ userType }: FileManagerProps) => {
             owner_id: '1',
             allow_all_brands: false
           };
-          
+
           setCurrentFolder(tempFolder);
           updateBreadcrumbs(tempFolder, truncatedHistory);
           loadFolderContents(Number(item.id));
@@ -159,7 +166,7 @@ export const FileManager = ({ userType }: FileManagerProps) => {
   }, [folders, breadcrumbHistory, breadcrumbs, loadFolderContents, updateBreadcrumbs]);
 
   // Navigate to file details page on click
-  const handleFileClick = useCallback(async (file: FileType, event: React.MouseEvent) => {
+  const handleFileClick = useCallback(async (file: FileType, _event: React.MouseEvent) => {
     router.push(`/files/file/${file.id}`);
   }, [router]);
 
@@ -169,7 +176,7 @@ export const FileManager = ({ userType }: FileManagerProps) => {
   }, []);
 
   // Handle file upload completion
-  const handleUploadComplete = useCallback((uploadedFiles: FileType []) => {
+  const handleUploadComplete = useCallback((uploadedFiles: FileType[]) => {
     setFiles(prev => [...prev, ...uploadedFiles]);
   }, []);
 
@@ -182,10 +189,10 @@ export const FileManager = ({ userType }: FileManagerProps) => {
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filteredFolders = folders.filter(folder => 
+      filteredFolders = folders.filter(folder =>
         folder.name.toLowerCase().includes(query)
       );
-      filteredFiles = files.filter(file => 
+      filteredFiles = files.filter(file =>
         file.original_filename.toLowerCase().includes(query)
       );
     }
@@ -233,10 +240,24 @@ export const FileManager = ({ userType }: FileManagerProps) => {
     return { folders: filteredFolders, files: filteredFiles };
   }, [folders, files, searchQuery, sortBy, sortDesc]);
 
-  // Load initial data
+  // Load initial data and refetch when URL params change (e.g., ?type=images)
   useEffect(() => {
-    loadFolderContents(null);
-  }, [loadFolderContents]);
+    const folderId = currentFolder?.id ? Number(currentFolder.id) : null;
+    loadFolderContents(folderId);
+  }, [router.asPath, loadFolderContents, currentFolder?.id]);
+
+  // Open dialogs when signals change (ignore initial undefined/0)
+  useEffect(() => {
+    if (openUploadSignal && openUploadSignal > 0) {
+      setShowUploadDialog(true);
+    }
+  }, [openUploadSignal]);
+
+  useEffect(() => {
+    if (openCreateFolderSignal && openCreateFolderSignal > 0) {
+      setShowCreateFolderDialog(true);
+    }
+  }, [openCreateFolderSignal]);
 
   const sortOptions = [
     { label: 'Name', value: 'name' },
@@ -250,27 +271,34 @@ export const FileManager = ({ userType }: FileManagerProps) => {
   return (
     <div className={styles.container}>
       {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <Breadcrumb items={breadcrumbs} onNavigate={navigateToBreadcrumb} />
-        </div>
-        <div className={styles.headerRight}>
-          <Button
-            label="New Folder"
-            icon={<FolderPlusIcon />}
-            size="small"
-            variant="secondary"
-            onClick={() => setShowCreateFolderDialog(true)}
-          />
-          <Button
-            label="Upload"
-            icon={<UploadIcon />}
-            size="small"
-            variant="primary"
-            onClick={() => setShowUploadDialog(true)}
-          />
-        </div>
-      </div>
+      <PageHeader
+        title={currentFolder ? currentFolder.name : 'Content'}
+        breadcrumbs={breadcrumbs.map(b => ({
+          label: b.name,
+          func:() => navigateToBreadcrumb(b),
+        }))}
+        content
+        ActionComponent={() => (
+         
+            <div className={styles.headerRight}>
+              <Button
+                label="New Folder"
+                icon={<FolderPlusIcon />}
+                size="small"
+                variant="secondary"
+                onClick={() => setShowCreateFolderDialog(true)}
+              />
+              <Button
+                label="Upload"
+                icon={<UploadIcon />}
+                size="small"
+                variant="primary"
+                onClick={() => setShowUploadDialog(true)}
+              />
+            </div>
+        )}
+      />
+
 
       {/* Controls */}
       <div className={styles.controls}>
@@ -332,7 +360,7 @@ export const FileManager = ({ userType }: FileManagerProps) => {
             <div className={styles.emptyIcon}><FolderIcon /></div>
             <h3>No files or folders</h3>
             <p>
-              {searchQuery 
+              {searchQuery
                 ? 'No items match your search criteria'
                 : 'This folder is empty. Upload files or create a new folder to get started.'
               }
@@ -381,20 +409,28 @@ export const FileManager = ({ userType }: FileManagerProps) => {
                   {
                     header: 'Name',
                     accessorKey: 'name',
-                    cell: ({ row }: { row: { original: any } }) => {
+                    cell: ({ row }: { row: { original: {
+                      id: number | string;
+                      isFolder: boolean;
+                      __folder?: Folder;
+                      __file?: FileType;
+                      name: string;
+                      original_filename?: string;
+                      content_type?: string;
+                    } } }) => {
                       const r = row.original;
                       const isFolder = Boolean(r.isFolder);
-                      const icon = isFolder ? <FolderIcon size={18} color="#12287c"  /> : getFileIcon(r.content_type, r.original_filename);
+                      const icon = isFolder ? <FolderIcon size={18} color="#12287c" /> : getFileIcon(r.content_type || '', r.original_filename);
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                           <div style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center' }}>{icon}</div>
                           {isFolder ? (
-                            <a onClick={() => navigateToFolder(r.__folder)} style={{ all: 'unset', cursor: 'pointer', color: '#2563eb', maxWidth: '100%', alignItems: 'center' ,display: 'flex'}}>
+                            <a onClick={() => r.__folder && navigateToFolder(r.__folder)} style={{ all: 'unset', cursor: 'pointer', color: '#2563eb', maxWidth: '100%', alignItems: 'center', display: 'flex' }}>
                               <span style={{ display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '15px' }}>{r.name}</span>
                             </a>
                           ) : (
-                            <a onClick={() => handleFileClick(r.__file, { preventDefault: () => undefined } as any)} style={{ all: 'unset', cursor: 'pointer', color: '#2563eb', maxWidth: '100%', alignItems: 'center' ,display: 'flex'}}>
-                              <span style={{ display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '15px' }}>{r.original_filename}</span>
+                            <a onClick={() => r.__file && handleFileClick(r.__file, { preventDefault: () => undefined } as unknown as React.MouseEvent)} style={{ all: 'unset', cursor: 'pointer', color: '#2563eb', maxWidth: '100%', alignItems: 'center', display: 'flex' }}>
+                              <span style={{ display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '15px' }}>{(r.original_filename ?? r.name) || ''}</span>
                             </a>
                           )}
                         </div>
@@ -449,7 +485,7 @@ export const FileManager = ({ userType }: FileManagerProps) => {
         onFolderCreated={handleFolderCreated}
       />
 
-      
+
 
     </div>
   );
