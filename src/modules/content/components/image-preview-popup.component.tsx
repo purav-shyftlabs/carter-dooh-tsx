@@ -30,30 +30,13 @@ export const ImagePreviewPopup: React.FC<ImagePreviewPopupProps> = ({
       setScale(1);
       setImageLoaded(false);
       
-      // Load authenticated image blob
-      const loadImage = async () => {
-        try {
-          const blobUrl = await contentService.getAuthenticatedImageBlob(file);
-          setImageUrl(blobUrl);
-        } catch (error) {
-          console.error('Failed to load image:', error);
-          // Fallback to regular URL
-          setImageUrl(contentService.getAuthenticatedFileUrl(file));
-        }
-      };
-      
-      loadImage();
+      // Use direct GCP URL
+      const url = contentService.getFileUrl(file);
+      setImageUrl(url);
     }
   }, [file]);
 
-  // Cleanup blob URL on unmount
-  useEffect(() => {
-    return () => {
-      if (imageUrl && imageUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(imageUrl);
-      }
-    };
-  }, [imageUrl]);
+  // No cleanup needed for GCP URLs
 
   // Handle click outside to close
   useEffect(() => {

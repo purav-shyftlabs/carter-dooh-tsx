@@ -3,6 +3,7 @@ import { Button } from 'shyftlabs-dsl';
 import { Folder, File, FileUploadProgress } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { useBrands } from '@/hooks/useBrands.hook';
+import { gcpUploadService } from '@/services/gcp/gcp-upload.service';
 import { Dialog } from './dialog.component';
 import { ProgressBar } from './progress-bar.component';
 import styles from '../styles/file-upload-dialog.module.scss';
@@ -50,8 +51,14 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
         const file = files[i];
         
         try {
-          // Convert file to base64
-          const base64Data = await contentService.fileToBase64(file);
+          // Step 1: Upload file to GCP first
+          setUploadProgress(prev => 
+            prev.map((item, index) => 
+              index === i ? { ...item, progress: 30 } : item
+            )
+          );
+          
+          const gcpUrl = await gcpUploadService.uploadFile(file);
           
           // Update progress
           setUploadProgress(prev => 
@@ -60,9 +67,9 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
             )
           );
 
-          // Step 1: Upload file
+          // Step 2: Create file record with GCP URL
           const uploadResponse = await contentService.uploadFile({
-            fileData: base64Data,
+            fileData: gcpUrl, // Use GCP URL instead of base64
             filename: file.name,
             mimeType: file.type,
             folderId: currentFolder?.id ? Number(currentFolder.id) : null,
@@ -70,7 +77,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
             selectedBrands: allowAllBrands ? [] : selectedBrands,
           });
 
-          // Step 2: Set file metadata and ACL
+          // Step 3: Set file metadata and ACL
           console.log('File upload - allowAllBrands state:', allowAllBrands); // Debug log
           console.log('File upload - selectedBrands state:', selectedBrands); // Debug log
           const metadataResponse = await contentService.setFileMetadata(uploadResponse.data.fileId, {

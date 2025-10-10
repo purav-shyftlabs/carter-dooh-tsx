@@ -141,35 +141,9 @@ class ContentService {
     return response.data;
   }
 
-  // Get file URL for serving
+  // Get file URL (now directly from GCP)
   getFileUrl(file: File): string {
-    if (file.folder_id) {
-      return `/uploads/files/folder/${file.folder_id}/${file.name}`;
-    }
-    return `/uploads/files/${file.name}`;
-  }
-
-  // Get authenticated file URL for images (uses Authorization header)
-  getAuthenticatedFileUrl(file: File): string {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
-    const relativePath = file.fileUrl || `/uploads/files/${file.storage_key}`;
-    return `${baseUrl}${relativePath}`;
-  }
-
-  // Get authenticated image blob URL (for use in img tags)
-  async getAuthenticatedImageBlob(file: File): Promise<string> {
-    try {
-      const response = await api.get(`/files/${file.id}/download`, {
-        responseType: 'blob'
-      });
-      
-      const blob = new Blob([response.data]);
-      return URL.createObjectURL(blob);
-    } catch (error) {
-      console.error('Error loading authenticated image:', error);
-      // Fallback to regular URL
-      return this.getAuthenticatedFileUrl(file);
-    }
+    return file.fileUrl || '';
   }
 
   // Download file by ID

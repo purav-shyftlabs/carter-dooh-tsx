@@ -16,6 +16,7 @@ import { useAppSelector } from '@/redux/hooks';
 import MediaUploadDialog from '../components/media-upload-dialog.component';
 import { UploadIcon } from '@/lib/icons';
 import BrandsService from '@/services/brands/brands.service';
+import { gcpUploadService } from '@/services/gcp/gcp-upload.service';
 
 
 const validationSchema = yup.object().shape({
@@ -38,20 +39,6 @@ const validationSchema = yup.object().shape({
   customId: yup.string().trim().optional(),
 });
 
-// Helper function to convert file to base64
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const result = reader.result as string;
-      // Remove the data:image/...;base64, prefix
-      const base64 = result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = error => reject(error);
-  });
-};
 
 const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactNode } = () => {
   const router = useRouter();
@@ -372,15 +359,14 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
         onClose={() => setIsMediaUploadOpen(false)}
         onUpload={async (file: File) => {
           try {
-            // Convert uploaded file to base64 string
-            const base64String = await fileToBase64(file);
-            const base64DataUrl = `data:image/${file.type.split('/')[1]};base64,${base64String}`;
-            formik.setFieldValue('brandLogo', base64DataUrl);
+            // Upload file to GCP and get URL
+            const gcpUrl = await gcpUploadService.uploadFile(file);
+            formik.setFieldValue('brandLogo', gcpUrl);
             formik.setFieldTouched('brandLogo', true);
             setIsMediaUploadOpen(false);
           } catch (error) {
-            console.error('Error converting file to base64:', error);
-            showAlert('Failed to process image. Please try again.', AlertVariant.ERROR);
+            console.error('Error uploading file to GCP:', error);
+            showAlert('Failed to upload image. Please try again.', AlertVariant.ERROR);
           }
         }}
         aspectRatio="1:1 (Square)"

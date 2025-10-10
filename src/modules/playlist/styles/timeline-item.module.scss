@@ -1,0 +1,104 @@
+.item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 8px;
+  margin: 8px;
+}
+.thumb {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  background: #f9fafb;
+}
+.thumb img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+.type {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 14px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+.indexBadge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: #111827;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.editHover {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: 1px solid #dbeafe;
+  background: rgba(255,255,255,0.95);
+  color: #2563eb;
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+.deleteHover {
+  position: absolute;
+  top: 6px;
+  right: 40px;
+  border: 1px solid #fecaca;
+  background: rgba(255,255,255,0.95);
+  color: #b91c1c;
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+.item:hover .editHover,
+.item:hover .deleteHover { 
+  display: inline-flex; 
+}
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+.name { font-size: 14px; font-weight: 600; color: #111827; }
+.controls { display: flex; align-items: center; gap: 8px; }
+.durationWrap { display: none; }
+.durationWrap input { display: none; }
+.deleteBtn { margin-left: auto; color: #b91c1c; border: 1px solid #fecaca; background: #fff; border-radius: 6px; padding: 6px 8px; }
+
+.durationBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.stepBtn {
+  width: 32px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 16px;
+}
+.stepBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.durationValue { min-width: 56px; text-align: center; border: 1px solid #e5e7eb; background: #f9fafb; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #111827; }
+
+

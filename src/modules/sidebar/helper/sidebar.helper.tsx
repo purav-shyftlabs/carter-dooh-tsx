@@ -1,4 +1,4 @@
-import { FileCheck, FolderOpenDot, FolderOpen } from 'lucide-react';
+import { FileCheck, FolderOpenDot, FolderOpen, Video } from 'lucide-react';
 import { HomeIcon, SettingsIcon, UsersIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
 import { NextRouter } from 'next/router';
@@ -86,13 +86,19 @@ export const useSidebarMenuList = () => {
     },
     {
       id: 4,
+      label: 'Playlist',
+      icon: <Video width={16} height={16} />,
+      link: ROUTES.PLAYLIST.BUILDER,
+    },
+    {
+      id: 5,
       label: 'Users',
       icon: <UsersIcon width={16} height={16} />,
       link: ROUTES.USERS.LIST,
       show: hasUsersView,
     },
     {
-      id: 5,
+      id: 6,
       label: 'Brand',
       icon: <FileCheck width={16} height={16} />,
       link: ROUTES.BRAND.LIST,
@@ -100,7 +106,7 @@ export const useSidebarMenuList = () => {
     },
 
     {
-      id: 6,
+      id: 7,
       label: 'Account Settings',
       icon: <SettingsIcon width={16} height={16} />,
       link: ROUTES.ACCOUNT.BASE,

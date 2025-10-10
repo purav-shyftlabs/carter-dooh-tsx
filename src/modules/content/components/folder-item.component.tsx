@@ -109,29 +109,14 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
 
   // Load image preview for image files
   React.useEffect(() => {
-    let revoked = false;
-    const loadPreview = async () => {
-      const isImage = String(file.content_type || '').startsWith('image/');
-      if (!isImage) {
-        setPreviewUrl('');
-        return;
-      }
-      try {
-        const url = await contentService.getAuthenticatedImageBlob(file);
-        if (!revoked) setPreviewUrl(url);
-      } catch {
-        const url = contentService.getAuthenticatedFileUrl(file);
-        if (!revoked) setPreviewUrl(url);
-      }
-    };
-    loadPreview();
-    return () => {
-      revoked = true;
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const isImage = String(file.content_type || '').startsWith('image/');
+    if (!isImage) {
+      setPreviewUrl('');
+      return;
+    }
+    // Use direct GCP URL
+    const url = contentService.getFileUrl(file);
+    setPreviewUrl(url);
   }, [file.id, file.content_type]);
 
   return (

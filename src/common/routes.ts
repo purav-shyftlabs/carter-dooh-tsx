@@ -23,6 +23,10 @@ const CONTENT_ROUTES = {
   ADD: '/content/add',
 };
 
+const PLAYLIST_ROUTES = {
+  BUILDER: '/playlist',
+};
+
 const ROUTES = {
   DASHBOARD: '/dashboard',
   BILLBOARD: '/billboard',
@@ -31,6 +35,7 @@ const ROUTES = {
   USERS:USERS_ROUTES,
   BRAND: BRAND_ROUTES,
   CONTENT: CONTENT_ROUTES,
+  PLAYLIST: PLAYLIST_ROUTES,
   ACCOUNT: {
     BASE: '/account',
   },

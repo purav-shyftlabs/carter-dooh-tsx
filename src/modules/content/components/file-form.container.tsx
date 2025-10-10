@@ -118,33 +118,17 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
     load();
   }, [load]);
 
-  // Load authenticated image preview if file is image
+  // Load image preview if file is image
   React.useEffect(() => {
-    let revoked = false;
-    const loadPreview = async () => {
-      if (!file) return;
-      const isImage = String(file.content_type || '').startsWith('image/');
-      if (!isImage) {
-        setPreviewUrl('');
-        return;
-      }
-      try {
-        const url = await contentService.getAuthenticatedImageBlob(file);
-        if (!revoked) setPreviewUrl(url);
-      } catch (e) {
-        // fallback to absolute URL (no headers)
-        const url = contentService.getAuthenticatedFileUrl(file);
-        if (!revoked) setPreviewUrl(url);
-      }
-    };
-    loadPreview();
-    return () => {
-      revoked = true;
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!file) return;
+    const isImage = String(file.content_type || '').startsWith('image/');
+    if (!isImage) {
+      setPreviewUrl('');
+      return;
+    }
+    // Use direct GCP URL
+    const url = contentService.getFileUrl(file);
+    setPreviewUrl(url);
   }, [file?.id, file?.content_type]);
 
   const handleSave = async () => {
