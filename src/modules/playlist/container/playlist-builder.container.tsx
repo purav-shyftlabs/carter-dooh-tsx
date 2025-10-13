@@ -20,16 +20,26 @@ import React from 'react';
 import InternalLayout from '@/layouts/internal-layout/internal-layout';
 import { NextPageWithLayout } from '@/types/common';
 import contentItemStyles from '@/modules/content/styles/folder-item.module.scss';
-import { Folder as FolderIcon, EyeIcon, TrashIcon } from 'lucide-react';
+import { Folder as FolderIcon, EyeIcon, TrashIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getFileIcon } from '@/utils/file-icons';
 import PageHeader from '@/components/page-header/page-header.component';
 import { Button } from 'shyftlabs-dsl';
+import { useRouter } from 'next/router';
+import useAlert from '@/contexts/alert/alert.hook';
+import { AlertVariant } from '@/contexts/alert/alert.provider';
+import ROUTES from '@/common/routes';
+import { playlistRenderService } from '@/services/content/playlist.service';
+import { Stepper, StepConfig } from '@/components/common/stepper';
 
 const isVideo = (contentType: string | undefined) => typeof contentType === 'string' && contentType.startsWith('video/');
 const isImage = (contentType: string | undefined) => typeof contentType === 'string' && contentType.startsWith('image/');
 
 const PlaylistBuilder: NextPageWithLayout = () => {
-  const { playlist, reorder, addItem, setName } = usePlaylistStore();
+  const { playlist, reorder, addItem, setName, clear } = usePlaylistStore();
+  const router = useRouter();
+  const { showAlert } = useAlert();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [library, setLibrary] = useState<LibraryFile[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -42,14 +52,224 @@ const PlaylistBuilder: NextPageWithLayout = () => {
   const [thumbnailMap, setThumbnailMap] = useState<Record<string | number, string>>({});
   const [previewOpen, setPreviewOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'image' | 'video'>('image');
+  const [typeFilter, setTypeFilter] = useState<'image' | 'video' | 'website'>('image');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [websiteName, setWebsiteName] = useState('');
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [category, setCategory] = useState('');
+  const [tags, setTags] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [status, setStatus] = useState('active');
+  const [thumbnailUrlError, setThumbnailUrlError] = useState('');
+  
+  // Stepper state
+  const [currentStep, setCurrentStep] = useState('playlist-details');
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  // Form validation function
+  const isFormValid = () => {
+    if (currentStep === 'playlist-details') {
+      return playlist.name.trim() !== '';
+    }
+    return true;
+  };
+
+  // Stepper configuration
+  const steps: StepConfig[] = [
+    {
+      id: 'playlist-creation',
+      title: 'Playlist Creation',
+      subSteps: [
+        { 
+          id: 'playlist-details', 
+          title: 'Playlist Details',
+          validated: completedSteps.includes('playlist-details'),
+          disabled: false
+        },
+        { 
+          id: 'add-content', 
+          title: 'Add Content',
+          validated: completedSteps.includes('add-content'),
+          disabled: currentStep === 'playlist-details' && !isFormValid()
+        }
+      ]
+    }
+  ];
+
+  // Step navigation functions
+  const goToNextStep = () => {
+    if (!isFormValid()) {
+      return;
+    }
+    
+    if (currentStep === 'playlist-details') {
+      setCurrentStep('add-content');
+      setCompletedSteps(prev => [...prev, 'playlist-details']);
+    }
+  };
+
+  const goToPreviousStep = () => {
+    if (currentStep === 'add-content') {
+      setCurrentStep('playlist-details');
+      setCompletedSteps(prev => prev.filter(step => step !== 'playlist-details'));
+    }
+  };
+
+  const handleSubStepClick = (subStepId: string) => {
+    // Allow navigation to completed steps or current step
+    if (subStepId === 'playlist-details') {
+      setCurrentStep('playlist-details');
+      setCompletedSteps(prev => prev.filter(step => step !== 'playlist-details'));
+    } else if (subStepId === 'add-content' && (completedSteps.includes('playlist-details') || isFormValid())) {
+      setCurrentStep('add-content');
+      setCompletedSteps(prev => [...prev, 'playlist-details']);
+    }
+  };
+
+  // URL validation function
+  const isValidUrl = (url: string): boolean => {
+    if (!url.trim()) return true; // Empty URL is valid (optional field)
+    
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleThumbnailUrlChange = (value: string) => {
+    setThumbnailUrl(value);
+    
+    if (value.trim() && !isValidUrl(value)) {
+      setThumbnailUrlError('Please enter a valid URL');
+    } else {
+      setThumbnailUrlError('');
+    }
+  };
+
+  // Function to completely reset the form
+  const resetForm = () => {
+    clear(); // Clear playlist store (items, contents, name)
+    setDescription('');
+    setCategory('');
+    setTags('');
+    setThumbnailUrl('');
+    setThumbnailUrlError('');
+    setStatus('active');
+    setCurrentStep('playlist-details'); // Reset stepper to first step
+    setCompletedSteps([]);
+  };
+
+  // Load playlist data for edit mode
+  useEffect(() => {
+    const id = router.query.id as string | undefined;
+    if (!id) {
+      setIsEditMode(false);
+      // Clear all states when in create mode
+      clear(); // Clear playlist store (items, contents, name)
+      setDescription('');
+      setCategory('');
+      setTags('');
+      setThumbnailUrl('');
+      setThumbnailUrlError('');
+      setStatus('active');
+      return;
+    }
+
+    setIsEditMode(true);
+    const loadPlaylist = async () => {
+      try {
+        setIsLoading(true);
+        const playlistData = await playlistRenderService.getPlaylistById(id);
+        
+        setName(playlistData.name || '');
+        setDescription(playlistData.description || '');
+        setCategory(playlistData.metadata?.category || '');
+        setTags(playlistData.metadata?.tags?.join(', ') || '');
+        setThumbnailUrl(playlistData.thumbnail_url || '');
+        setStatus(playlistData.status || 'active');
+
+        // Load existing contents into playlist store
+        if (playlistData.contents && playlistData.contents.length > 0) {
+          // Transform contents to playlist items format
+          const playlistItems = playlistData.contents
+            .sort((a, b) => a.order_index - b.order_index) // Sort by order_index
+            .map((content, index) => {
+              // Get the correct URL based on content type
+              let url = '';
+              if (content.type === 'image') {
+                url = content.image_url || '';
+              } else if (content.type === 'video') {
+                url = content.video_url || '';
+              } else if (content.type === 'website') {
+                url = content.website_url || '';
+              }
+
+              return {
+                id: `content-${content.id}`,
+                assetId: `content-${content.id}`,
+                type: content.type,
+                url: url,
+                thumbnailUrl: url, // Use the same URL for thumbnail
+                name: content.name,
+                duration: content.duration_seconds,
+                order: index, // Use index for proper ordering
+              };
+            });
+
+          // Load the playlist with existing items
+          const { load } = usePlaylistStore.getState();
+          load({
+            id: 'local',
+            name: playlistData.name,
+            items: playlistItems,
+            contents: [],
+          });
+        } else {
+          // Clear if no contents
+          clear();
+        }
+      } catch (e: any) {
+        console.error('Error loading playlist:', e);
+        let errorMessage = 'Failed to load playlist data. Please try again.';
+        
+        if (e?.response?.data?.message) {
+          errorMessage = e.response.data.message;
+        } else if (e?.message) {
+          errorMessage = e.message;
+        }
+        
+        showAlert(errorMessage, AlertVariant.ERROR);
+        router.push(ROUTES.PLAYLIST.LIST);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPlaylist();
+  }, [router.query.id, showAlert, router, setName, clear, setDescription, setCategory, setTags, setThumbnailUrl, setThumbnailUrlError, setStatus]);
+
+  // Ensure form is cleared when component first mounts in create mode
+  useEffect(() => {
+    const id = router.query.id as string | undefined;
+    if (!id && !isEditMode) {
+      // Clear all states when first visiting create mode
+      clear();
+      setDescription('');
+      setCategory('');
+      setTags('');
+      setThumbnailUrl('');
+      setThumbnailUrlError('');
+      setStatus('active');
+    }
+  }, []); // Run only once on mount
 
   useEffect(() => {
     let active = true;
@@ -199,7 +419,8 @@ const PlaylistBuilder: NextPageWithLayout = () => {
   const filteredLibrary = useMemo(() => {
     const q = search.trim().toLowerCase();
     return libraryMapped.filter(({ file }) => {
-      const matchesType = typeFilter === 'image' ? isImage(file.content_type) : isVideo(file.content_type);
+      const matchesType = typeFilter === 'image' ? isImage(file.content_type) : 
+                         typeFilter === 'video' ? isVideo(file.content_type) : false;
       const name = (file.original_filename || file.name || '').toLowerCase();
       const matchesQuery = q.length === 0 || name.includes(q);
       return matchesType && matchesQuery;
@@ -215,25 +436,121 @@ const PlaylistBuilder: NextPageWithLayout = () => {
 
   const imageCount = useMemo(() => library.filter(f => isImage(f.content_type)).length, [library]);
   const videoCount = useMemo(() => library.filter(f => isVideo(f.content_type)).length, [library]);
+  const websiteCount = useMemo(() => playlist.items.filter(item => item.type === 'website').length, [playlist.items]);
 
   const handleSubmit = async () => {
+    // Validate thumbnail URL before submitting
+    if (thumbnailUrl.trim() && !isValidUrl(thumbnailUrl)) {
+      setThumbnailUrlError('Please enter a valid URL');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const normalizedItems = (playlist.items || []).map((it) => {
-        const { id: _id, url: _url, thumbnailUrl: _thumb, assetId, ...rest } = it;
-        const enabled = Boolean(rest.availability && (rest.availability as { enabled?: boolean }).enabled);
-        return {
-          ...rest,
-          fileId: assetId,
-          availability: enabled ? rest.availability : { enabled: false },
+      const id = router.query.id as string | undefined;
+
+      if (id) {
+        // Update flow - call the API
+        // Transform playlist items to contents format
+        const contents = (playlist.items || []).map((item, index) => {
+          const baseContent = {
+            type: item.type,
+            name: item.name || `Item ${index + 1}`,
+            duration_seconds: item.duration,
+            order_index: index + 1,
+            metadata: {
+              alt_text: item.name || `Item ${index + 1}`,
+            },
+          };
+
+          if (item.type === 'image') {
+            return { ...baseContent, image_url: item.url };
+          } else if (item.type === 'video') {
+            return { ...baseContent, video_url: item.url };
+          } else if (item.type === 'website') {
+            return { ...baseContent, website_url: item.url };
+          }
+          return baseContent;
+        });
+
+        const payload = {
+          name: playlist.name,
+          description: description.trim() || undefined,
+          metadata: {
+            category: category.trim() || undefined,
+            tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
+          },
+          thumbnail_url: thumbnailUrl.trim() || undefined,
+          status,
+          contents,
         };
-      });
-      const normalizedPlaylist = { ...playlist, items: normalizedItems };
-      const payload = { name: playlist.name, description, playlist: normalizedPlaylist };
-      const res = await (await import('@/services/content/playlist.service')).playlistRenderService.createPlaylist(payload as unknown as any);
-      // TODO: toast success
-    } catch (e) {
-      // TODO: toast error
+
+        await playlistRenderService.updatePlaylist(id, payload as any);
+        showAlert('Playlist updated successfully', AlertVariant.SUCCESS);
+        // Mark the add-content step as completed
+        setCompletedSteps(prev => [...prev, 'add-content']);
+        router.push(ROUTES.PLAYLIST.LIST);
+      } else {
+        // Create flow - call the API
+        // Transform playlist items to contents format
+        const contents = (playlist.items || []).map((item, index) => {
+          const baseContent = {
+            type: item.type,
+            name: item.name || `Item ${index + 1}`,
+            duration_seconds: item.duration,
+            order_index: index + 1,
+            metadata: {
+              alt_text: item.name || `Item ${index + 1}`,
+            },
+          };
+
+          if (item.type === 'image') {
+            return { ...baseContent, image_url: item.url };
+          } else if (item.type === 'video') {
+            return { ...baseContent, video_url: item.url };
+          } else if (item.type === 'website') {
+            return { ...baseContent, website_url: item.url };
+          }
+          return baseContent;
+        });
+
+        const payload = {
+          name: playlist.name,
+          description,
+          metadata: {
+            category: category || undefined,
+            tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
+          },
+          thumbnail_url: thumbnailUrl || undefined,
+          status,
+          contents,
+        };
+
+        const res = await playlistRenderService.createPlaylist(payload as any);
+        console.log('Playlist created successfully:', res);
+        
+        // Mark the add-content step as completed before clearing
+        setCompletedSteps(prev => [...prev, 'add-content']);
+        
+        // Clear the entire form after successful creation
+        resetForm();
+        
+        showAlert('Playlist created successfully', AlertVariant.SUCCESS);
+        router.push(ROUTES.PLAYLIST.LIST);
+      }
+    } catch (e: any) {
+      console.error('Error submitting playlist:', e);
+      
+      // Extract error message from API response
+      let errorMessage = isEditMode ? 'Failed to update playlist. Please try again.' : 'Failed to create playlist. Please try again.';
+      
+      if (e?.response?.data?.message) {
+        errorMessage = e.response.data.message;
+      } else if (e?.message) {
+        errorMessage = e.message;
+      }
+      
+      showAlert(errorMessage, AlertVariant.ERROR);
     } finally {
       setSubmitting(false);
     }
@@ -241,9 +558,46 @@ const PlaylistBuilder: NextPageWithLayout = () => {
 
   const Actions: React.FC = () => (
     <div style={{ display: 'flex', gap: 8 }}>
-      <Button disabled={playlist.items.length === 0} onClick={() => window.confirm('Clear all items?') && usePlaylistStore.getState().clear()} label="Clear" icon={<TrashIcon size={10} />} iconPosition="left" variant="danger" />
-      <Button disabled={playlist.items.length <= 1} onClick={() => setPreviewOpen(true)} label="Preview" icon={<EyeIcon size={10} />} iconPosition="left" variant="tertiary" />
-      <Button disabled={submitting || !playlist.name || playlist.items.length <= 1} onClick={handleSubmit} label={submitting ? 'Saving...' : 'Create Playlist'} />
+      {currentStep === 'add-content' && (
+        <Button 
+          label="Previous" 
+          variant="secondary" 
+          size="small" 
+          onClick={goToPreviousStep}
+          icon={<ChevronLeft size={16} />}
+          iconPosition="left"
+        />
+      )}
+      {currentStep === 'playlist-details' && (
+        <Button 
+          label="Next" 
+          variant="primary" 
+          size="small" 
+          onClick={goToNextStep}
+          disabled={!isFormValid()}
+          icon={<ChevronRight size={16} />}
+          iconPosition="right"
+        />
+      )}
+      {currentStep === 'add-content' && (
+        <>
+          {!isEditMode && (
+            <Button disabled={playlist.items.length === 0} onClick={() => window.confirm('Clear all items?') && resetForm()} label="Clear" icon={<TrashIcon size={10} />} iconPosition="left" variant="danger" />
+          )}
+          <Button disabled={playlist.items.length <= 1} onClick={() => setPreviewOpen(true)} label="Preview" icon={<EyeIcon size={10} />} iconPosition="left" variant="tertiary" />
+          <Button 
+            disabled={submitting || !playlist.name || (!isEditMode && playlist.items.length <= 1)} 
+            onClick={handleSubmit} 
+            label={submitting ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Playlist' : 'Create Playlist')} 
+          />
+        </>
+      )}
+      <Button 
+        label="Cancel" 
+        variant="secondary" 
+        size="small" 
+        onClick={() => router.push(ROUTES.PLAYLIST.LIST)} 
+      />
     </div>
   );
 
@@ -270,6 +624,24 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     }
   };
 
+  const handleAddWebsite = () => {
+    if (!websiteUrl.trim() || !isValidUrl(websiteUrl)) {
+      return;
+    }
+
+    const newId = addItem({
+      assetId: `website-${Date.now()}`,
+      type: 'website',
+      url: websiteUrl.trim(),
+      thumbnailUrl: websiteUrl.trim(), // Use URL as thumbnail for iframe preview
+      name: websiteName.trim() || 'Website',
+    });
+
+    // Clear the form
+    setWebsiteUrl('');
+    setWebsiteName('');
+  };
+
   const onDragStart = (e: DragStartEvent) => {
     setDraggingId(String(e.active.id));
   };
@@ -285,101 +657,231 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     }
   };
 
-  return (
-    <div className={styles.wrapper}>
-      <PageHeader title="Add Playlist" ActionComponent={Actions} />
-      <div className={styles.rightPane}>
-        <div className={styles.detailsForm}>
-          <div className={styles.formGrid}>
-            <div className={styles.formCell}>
-              <label className={styles.formLabel}>Name</label>
-              <RMNInput
-                className={styles.formEqual}
-                placeholder="Playlist name"
-                size="small"
-                value={playlist.name}
-                onChange={(e) => setName((e.target as HTMLInputElement).value)}
-              />
-            </div>
-            <div className={styles.formCell}>
-              <label className={styles.formLabel}>Description</label>
-              <RMNInput
-                className={styles.formEqual}
-                placeholder="Describe this playlist"
-                size="small"
-                value={description}
-                onChange={(e) => setDescription((e.target as HTMLInputElement).value)}
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className={styles.timeline} ref={timelineRef}>
-          <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-            <SortableContext items={playlist.items.map(i => i.id)} strategy={horizontalListSortingStrategy}>
-              <div className={styles.timelineList}>
-                {playlist.items.length === 0 && (
-                  <div className={styles.placeholder}>
-                    <div className={styles.placeholderTitle}>Build your playlist</div>
-                    <div className={styles.placeholderDesc}>Select media from the left and click to add here. Drag to reorder, edit durations inline.</div>
-                  </div>
-                )}
-                {playlist.items.map((item: PlaylistItem, idx: number) => (
-                  <TimelineItem key={item.id} item={item} index={idx} draggingId={draggingId} />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        </div>
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px' }}>
+        Loading playlist...
       </div>
-      <div className={styles.leftPane}>
-        <div className={styles.header}>
-          <h3>Media Library</h3>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-            {breadcrumbs.map((crumb, idx) => (
-              <React.Fragment key={`${crumb.id ?? 'root'}-${idx}`}>
-                <button
-                  className={styles.chip}
-                  onClick={() => navigateToCrumb(crumb, idx)}
-                >
-                  {crumb.name}
-                </button>
-                {idx < breadcrumbs.length - 1 && <span style={{ color: '#9ca3af', fontSize: 12 }}>/</span>}
-              </React.Fragment>
-            ))}
-          </div>
-          <div className={styles.filtersRow}>
-            <div className={styles.typeChips}>
-              <button className={`${styles.chip} ${typeFilter === 'image' ? styles.active : ''}`} onClick={() => setTypeFilter('image')}>Images ({imageCount})</button>
-              <button className={`${styles.chip} ${typeFilter === 'video' ? styles.active : ''}`} onClick={() => setTypeFilter('video')}>Videos ({videoCount})</button>
-            </div>
-            <input className={styles.searchInput} placeholder="Search media..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
+    );
+  }
+
+  return (
+    <div>
+      <PageHeader title={isEditMode ? "Edit Playlist" : "Add Playlist"} ActionComponent={Actions} />
+      
+      <div className={styles.wrapper}>
+        {/* Left Sidebar - Stepper */}
+        <div className={styles.stepperSidebar}>
+          <Stepper
+            steps={steps}
+            currentStepId="playlist-creation"
+            currentSubStepId={currentStep}
+            completedStepIds={completedSteps}
+            completedSubStepIds={completedSteps}
+            validatedSubStepIds={steps[0].subSteps?.filter(sub => sub.validated).map(sub => sub.id) || []}
+            disabledSubStepIds={steps[0].subSteps?.filter(sub => sub.disabled).map(sub => sub.id) || []}
+            handleSubStepClick={handleSubStepClick}
+            title="Progress"
+          />
         </div>
-        <div className={`${styles.libraryGrid} ${contentItemStyles.grid}`}>
-          {folders.map((folder) => (
-            <div key={`folder-${folder.id}`} className={contentItemStyles.item} onClick={() => navigateToFolder(folder)} role="button" tabIndex={0}>
-              <div className={contentItemStyles.itemContent + ' ' + contentItemStyles.folderCard}>
-                <FolderIcon size={72} color="#12287c" />
-                <div className={contentItemStyles.name}>{folder.name}</div>
+
+        {/* Right Content Area */}
+        <div className={styles.contentArea}>
+        {currentStep === 'playlist-details' ? (
+          <div className={styles.detailsStep}>
+            <div className={styles.detailsForm}>
+              <div className={styles.formSection}>
+                <h3 className={styles.sectionTitle}>Playlist Details</h3>
+                <div className={styles.formGrid}>
+                  <div className={styles.formCell}>
+                    <label className={styles.formLabel}>Name *</label>
+                    <RMNInput
+                      className={styles.formEqual}
+                      placeholder="Enter playlist name"
+                      size="small"
+                      value={playlist.name}
+                      onChange={(e) => setName((e.target as HTMLInputElement).value)}
+                    />
+                  </div>
+                  <div className={styles.formCell}>
+                    <label className={styles.formLabel}>Description</label>
+                    <RMNInput
+                      className={styles.formEqual}
+                      placeholder="Enter playlist description"
+                      size="small"
+                      value={description}
+                      onChange={(e) => setDescription((e.target as HTMLInputElement).value)}
+                    />
+                  </div>
+                  <div className={styles.formCell}>
+                    <label className={styles.formLabel}>Category</label>
+                    <RMNInput
+                      className={styles.formEqual}
+                      placeholder="e.g., promotional, informational"
+                      size="small"
+                      value={category}
+                      onChange={(e) => setCategory((e.target as HTMLInputElement).value)}
+                    />
+                  </div>
+                  <div className={styles.formCell}>
+                    <label className={styles.formLabel}>Tags</label>
+                    <RMNInput
+                      className={styles.formEqual}
+                      placeholder="e.g., summer, sale, holiday (comma separated)"
+                      size="small"
+                      value={tags}
+                      onChange={(e) => setTags((e.target as HTMLInputElement).value)}
+                    />
+                  </div>
+                  <div className={styles.formCell}>
+                    <label className={styles.formLabel}>Thumbnail URL</label>
+                    <RMNInput
+                      className={styles.formEqual}
+                      placeholder="https://example.com/thumbnail.jpg"
+                      size="small"
+                      value={thumbnailUrl}
+                      onChange={(e) => handleThumbnailUrlChange((e.target as HTMLInputElement).value)}
+                    />
+                    {thumbnailUrlError && (
+                      <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>
+                        {thumbnailUrlError}
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.formCell}>
+                    <label className={styles.formLabel}>Status *</label>
+                    <select
+                      className={styles.formEqual}
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      style={{
+                        padding: '8px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        backgroundColor: 'white',
+                        height: '40px',
+                      }}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="draft">Draft</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
-          {filteredLibrary.map(({ file, thumbnailUrl }) => (
-            <div key={file.id} className={contentItemStyles.item} onClick={() => handleAddFromLibrary(file)} role="button" tabIndex={0}>
-              <div className={contentItemStyles.itemContent + ' ' + contentItemStyles.folderCard}>
-                {isImage(file.content_type) ? (
-                  <img className={contentItemStyles.fileThumb} src={thumbnailUrl} alt={file.original_filename || file.name} />
+          </div>
+        ) : (
+          <div className={styles.contentStep}>
+            {/* Timeline Section */}
+            <div className={styles.timelineSection}>
+              <h3 className={styles.sectionTitle}>Timeline</h3>
+              <div className={styles.timeline} ref={timelineRef}>
+                <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+                  <SortableContext items={playlist.items.map(i => i.id)} strategy={horizontalListSortingStrategy}>
+                    <div className={styles.timelineList}>
+                      {playlist.items.length === 0 && (
+                        <div className={styles.placeholder}>
+                          <div className={styles.placeholderTitle}>Build your playlist</div>
+                          <div className={styles.placeholderDesc}>Select media from below and click to add here. Drag to reorder, edit durations inline.</div>
+                        </div>
+                      )}
+                      {playlist.items.map((item: PlaylistItem, idx: number) => (
+                        <TimelineItem key={item.id} item={item} index={idx} draggingId={draggingId} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </div>
+            </div>
+
+            {/* Media Library Section */}
+            <div className={styles.mediaLibrarySection}>
+              <div className={styles.header}>
+                <h3 className={styles.headerTitle}>Media Library</h3>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
+                  {breadcrumbs.map((crumb, idx) => (
+                    <React.Fragment key={`${crumb.id ?? 'root'}-${idx}`}>
+                      <a
+                        className={styles.breadcrumbLink}
+                        onClick={() => navigateToCrumb(crumb, idx)}
+                      >
+                        {crumb.name}
+                      </a>
+                      {idx < breadcrumbs.length - 1 && <span style={{ color: '#9ca3af', fontSize: 12 }}>/</span>}
+                    </React.Fragment>
+                  ))}
+                </div>
+                <div className={styles.filtersRow}>
+                  <div className={styles.typeChips}>
+                    <button className={`${styles.chip} ${typeFilter === 'image' ? styles.active : ''}`} onClick={() => setTypeFilter('image')}>Images ({imageCount})</button>
+                    <button className={`${styles.chip} ${typeFilter === 'video' ? styles.active : ''}`} onClick={() => setTypeFilter('video')}>Videos ({videoCount})</button>
+                    <button className={`${styles.chip} ${typeFilter === 'website' ? styles.active : ''}`} onClick={() => setTypeFilter('website')}>Websites ({websiteCount})</button>
+                  </div>
+                  <input className={styles.searchInput} placeholder="Search media..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                </div>
+              </div>
+              <div className={`${styles.libraryGrid} ${contentItemStyles.grid}`}>
+                {typeFilter === 'website' ? (
+                  <div className={styles.websiteForm}>
+                    <div className={styles.websiteInputGroup}>
+                      <label className={styles.websiteLabel}>Website Name</label>
+                      <RMNInput
+                        placeholder="Enter website name"
+                        size="small"
+                        value={websiteName}
+                        onChange={(e) => setWebsiteName((e.target as HTMLInputElement).value)}
+                      />
+                    </div>
+                    <div className={styles.websiteInputGroup}>
+                      <label className={styles.websiteLabel}>Website URL *</label>
+                      <RMNInput
+                        placeholder="https://example.com"
+                        size="small"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl((e.target as HTMLInputElement).value)}
+                      />
+                    </div>
+                    <Button
+                      label="Add Website"
+                      onClick={handleAddWebsite}
+                      disabled={!websiteUrl.trim() || !isValidUrl(websiteUrl)}
+                      size="small"
+                      style={{ marginTop: '12px' }}
+                    />
+                  </div>
                 ) : (
-                  <span className={contentItemStyles.fileIcon}>{getFileIcon(file.content_type, file.original_filename)}</span>
+                  <>
+                    {folders.map((folder) => (
+                      <div key={`folder-${folder.id}`} className={contentItemStyles.item} onClick={() => navigateToFolder(folder)} role="button" tabIndex={0}>
+                        <div className={contentItemStyles.itemContent + ' ' + contentItemStyles.folderCard}>
+                          <FolderIcon size={72} color="#12287c" />
+                          <div className={contentItemStyles.name}>{folder.name}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredLibrary.map(({ file, thumbnailUrl }) => (
+                      <div key={file.id} className={contentItemStyles.item} onClick={() => handleAddFromLibrary(file)} role="button" tabIndex={0}>
+                        <div className={contentItemStyles.itemContent + ' ' + contentItemStyles.folderCard}>
+                          {isImage(file.content_type) ? (
+                            <img className={contentItemStyles.fileThumb} src={thumbnailUrl} alt={file.original_filename || file.name} />
+                          ) : (
+                            <span className={contentItemStyles.fileIcon}>{getFileIcon(file.content_type, file.original_filename)}</span>
+                          )}
+                          <div className={contentItemStyles.name}>{file.original_filename || file.name}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredLibrary.length === 0 && folders.length === 0 && (
+                      <div className={styles.emptyLibrary}>No media found. Try adjusting filters or uploading in Content.</div>
+                    )}
+                  </>
                 )}
-                <div className={contentItemStyles.name}>{file.original_filename || file.name}</div>
               </div>
             </div>
-          ))}
-          {filteredLibrary.length === 0 && folders.length === 0 && (
-            <div className={styles.emptyLibrary}>No media found. Try adjusting filters or uploading in Content.</div>
-          )}
+          </div>
+        )}
         </div>
       </div>
 
@@ -389,8 +891,5 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     </div>
   );
 };
-
-
-PlaylistBuilder.getLayout = (page: React.ReactNode) => <InternalLayout head={{ title: 'Playlist Builder', description: 'Playlist Builder' }}>{page}</InternalLayout>;
 
 export default PlaylistBuilder;

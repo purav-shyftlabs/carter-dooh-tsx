@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, CarterInput } from 'shyftlabs-dsl';
-import { Folder } from '@/types/folder';
+import { Button, CarterInput, CarterRadioGroup, TabularAutocomplete } from 'shyftlabs-dsl';
+import { Folder, Brand } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { useBrands } from '@/hooks/useBrands.hook';
 import { Dialog } from './dialog.component';
@@ -29,6 +29,15 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   
   // Fetch brands
   const { brands, loading: brandsLoading, error: brandsError } = useBrands();
+  
+  // Brand columns for TabularAutocomplete
+  const brandColumns = [
+    {
+      accessorKey: 'name',
+      header: 'Brand Name',
+      cell: ({ row }: { row: { original: Brand } }) => row.original.name || String(row.original.id),
+    },
+  ];
   
   // Debug logging
   React.useEffect(() => {
@@ -146,90 +155,75 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       title="Create New Folder"
-      size="small"
+      size="medium"
     >
-      <form onSubmit={handleSubmit} className={styles.container}>
-        {/* {generalError && (
-          <div className={styles.generalError}>
-            <div className={styles.errorIcon}>⚠️</div>
-            <div className={styles.errorMessage}>{generalError}</div>
+      <form onSubmit={handleSubmit} className={styles.content}>
+        <div className={styles.form}>
+          <div className={styles.field}>
+            <label className={styles.label}>Folder Name *</label>
+            <CarterInput
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
+              placeholder="Enter folder name"
+              labelProps={{ label: ' ' }}
+              error={!!error}
+              disabled={isCreating}
+              autoFocus
+              required
+            />
           </div>
-        )} */}
-        <div className={styles.content}>
-          <p className={styles.description}>
-            Create a new folder in {parentFolder ? `"${parentFolder.name}"` : 'root directory'}
-          </p>
           
-          <CarterInput
-            labelProps={{ label: "Folder Name" }}
-            value={folderName}
-            onChange={(e) => setFolderName(e.target.value)}
-            placeholder="Enter folder name"
-            error={!!error}
-            disabled={isCreating}
-            autoFocus
-            required
-          />
+          <div className={styles.field}>
+            <label className={styles.label}>Description (Optional)</label>
+            <CarterInput
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter folder description"
+              labelProps={{ label: ' ' }}
+              disabled={isCreating}
+            />
+          </div>
           
-          <CarterInput
-            labelProps={{ label: "Description (Optional)" }}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter folder description"
-            disabled={isCreating}
-          />
+          <div className={styles.field}>
+            <label className={styles.label}>Brand Access *</label>
+            <CarterRadioGroup
+              value={allowAllBrands ? 'true' : 'false'}
+              onValueChange={(newValue: string) => {
+                const next = newValue === 'true';
+                setAllowAllBrands(next);
+                if (next) setSelectedBrands([]);
+              }}
+              options={[
+                { label: 'Allow all brands', value: 'true' },
+                { label: 'Allow Specific Brands', value: 'false' },
+              ]}
+              radioFirst={true}
+              textProps={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}
+            />
+          </div>
           
-          <div className={styles.brandSection}>
-            <label className={styles.label}>Brand Access</label>
-            <div className={styles.brandOptions}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={allowAllBrands}
-                  onChange={(e) => setAllowAllBrands(e.target.checked)}
-                  disabled={isCreating}
-                />
-                Allow all brands to access this folder
-              </label>
+          {!allowAllBrands && (
+            <div className={styles.field}>
+              <label className={styles.label}>Brands *</label>
+              <TabularAutocomplete
+                inputProps={{ placeholder: 'Search Brands' }}
+                showHeader={false}
+                handleSearch={() => {}}
+                onScroll={() => {}}
+                labelKey="name"
+                selectedOptions={(Array.isArray(brands) ? (brands as Brand[]) : []).filter(b => selectedBrands.includes(b.id))}
+                enableRowSelection
+                loading={brandsLoading}
+                onSelectionChange={(selected: Brand[]) => {
+                  setSelectedBrands(selected.map(b => b.id));
+                }}
+                hasNextPage={false}
+                options={(Array.isArray(brands) ? (brands as Brand[]) : [])}
+                columns={brandColumns}
+                testId="create-folder-search-brands-input"
+              />
             </div>
-            
-            {!allowAllBrands && (
-              <div className={styles.brandSelection}>
-                <label className={styles.label}>Select Specific Brands</label>
-                {brandsLoading ? (
-                  <div className={styles.loading}>Loading brands...</div>
-                ) : brandsError ? (
-                  <div className={styles.errorMessage}>
-                    Error loading brands: {brandsError}
-                  </div>
-                ) : (
-                  <div className={styles.brandList}>
-                    {Array.isArray(brands) && brands.length > 0 ? (
-                      brands.map(brand => (
-                        <label key={brand.id} className={styles.brandItem}>
-                          <input
-                            type="checkbox"
-                            checked={selectedBrands.includes(brand.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedBrands(prev => [...prev, brand.id]);
-                              } else {
-                                setSelectedBrands(prev => prev.filter(id => id !== brand.id));
-                              }
-                            }}
-                            disabled={isCreating}
-                          />
-                          <span>{brand.name}</span>
-                        </label>
-                      ))
-                    ) : (
-                      <div className={styles.noBrands}>No brands available</div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          )}
           
           {error && (
             <div className={styles.errorMessage}>
@@ -238,7 +232,7 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
           )}
         </div>
 
-        <div className={styles.actions}>
+        <div className={styles.footer}>
           <Button
             label="Cancel"
             variant="secondary"

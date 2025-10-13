@@ -1,7 +1,7 @@
 import { CSSProperties, useMemo, useState, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Video, Image, Edit, X } from 'lucide-react';
+import { Video, Image, Globe, Edit, X } from 'lucide-react';
 import { usePlaylistStore } from '@/contexts/playlist/playlist.store';
 import type { PlaylistItem } from '@/types/playlist';
 import TimelineItemEditModal from './timeline-item-edit-modal.component';
@@ -26,7 +26,11 @@ const TimelineItem = ({ item, index, draggingId }: Props) => {
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const TypeIcon = useMemo(() => item.type === 'video' ? Video : Image, [item.type]);
+  const TypeIcon = useMemo(() => {
+    if (item.type === 'video') return Video;
+    if (item.type === 'website') return Globe;
+    return Image;
+  }, [item.type]);
 
   const handleEditClick = () => {
     setShowEditModal(true);
@@ -45,7 +49,61 @@ const TimelineItem = ({ item, index, draggingId }: Props) => {
         {...listeners}
       >
       <div className={styles.thumb}>
-        <img src={item.thumbnailUrl || item.url} alt={item.name || ''} />
+        {item.type === 'website' ? (
+          <div style={{ 
+            width: '100%', 
+            height: '100%', 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '4px',
+            position: 'relative'
+          }}>
+            <div style={{
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+              borderRadius: '4px',
+              position: 'relative'
+            }}>
+              <iframe 
+                src={item.url} 
+                title={item.name || 'Website'}
+                style={{ 
+                  width: '400px', // Optimized size for thumbnail
+                  height: '300px', // Optimized size for thumbnail
+                  border: 'none',
+                  transform: 'scale(0.5)', // Scale down to fit thumbnail
+                  transformOrigin: 'top left',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0
+                }}
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                onError={() => {
+                  // Fallback if iframe fails to load
+                  console.log('Iframe failed to load:', item.url);
+                }}
+              />
+            </div>
+            <div style={{
+              position: 'absolute',
+              bottom: '4px',
+              right: '4px',
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontSize: '10px',
+              pointerEvents: 'none'
+            }}>
+              {item.url.replace(/^https?:\/\//, '').split('/')[0]}
+            </div>
+          </div>
+        ) : (
+          <img src={item.thumbnailUrl || item.url} alt={item.name || ''} />
+        )}
         <div className={styles.type}>
           <TypeIcon size={16} />
         </div>

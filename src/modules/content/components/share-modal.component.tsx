@@ -80,7 +80,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     } finally {
       if (currentToken === requestToken + 1) setLoading(false);
     }
-  }, [fileId, isFolder, requestToken, showAlert]);
+  }, [fileId,isFolder]);
 
   useEffect(() => {
     if (isOpen && fileId) {

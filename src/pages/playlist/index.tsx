@@ -1,3 +1,5 @@
-import PlaylistBuilder from '@/modules/playlist/container/playlist-builder.container';
+import React from 'react';
+import Playlist from '@/modules/playlist/container/playlist.container';
 
-export default PlaylistBuilder;
+
+export default Playlist;

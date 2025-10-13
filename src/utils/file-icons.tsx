@@ -22,20 +22,20 @@ export const getFileIcon = (contentType: string, filename?: string, size: 'norma
 
   // Determine file type and return appropriate icon with color
   if (contentType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'].includes(extension)) {
-    return <Image size={size === 'small' ? 18 : 42} color="#10B981" weight="regular" />; // Green for images
+    return <Image size={size === 'small' ? 18 : 72} color="#10B981" weight="regular" />; // Green for images
   } else if (contentType.includes('spreadsheet') || 
              contentType.includes('excel') || 
              contentType.includes('csv') ||
              ['xlsx', 'xls', 'csv', 'ods'].includes(extension)) {
-    return <MicrosoftExcelLogo size={size === 'small' ? 18 : 42} color="#217346" weight="regular" />; // Microsoft Excel green
+    return <MicrosoftExcelLogo size={size === 'small' ? 18 : 72} color="#217346" weight="regular" />; // Microsoft Excel green
   } else if (contentType.includes('pdf') || extension === 'pdf') {
-    return <FilePdf size={size === 'small' ? 18 : 42} color="#DC2626" weight="regular" />; // Red for PDF
+    return <FilePdf size={size === 'small' ? 18 : 72} color="#DC2626" weight="regular" />; // Red for PDF
   } else if (contentType.startsWith('video/') || 
              ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'].includes(extension)) {
-    return <FileVideo size={size === 'small' ? 18 : 42} color="#7C3AED" weight="regular" />; // Purple for videos
+    return <FileVideo size={size === 'small' ? 18 : 72} color="#7C3AED" weight="regular" />; // Purple for videos
   } else if (contentType.startsWith('audio/') || 
              ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'].includes(extension)) {
-    return <FileAudio size={size === 'small' ? 18 : 42} color="#DB2777" weight="regular" />; // Pink for audio
+    return <FileAudio size={size === 'small' ? 18 : 72} color="#DB2777" weight="regular" />; // Pink for audio
   } else if (contentType.includes('zip') || 
              contentType.includes('rar') || 
              contentType.includes('7z') ||

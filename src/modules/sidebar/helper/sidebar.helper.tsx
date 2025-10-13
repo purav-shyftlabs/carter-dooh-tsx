@@ -1,4 +1,4 @@
-import { FileCheck, FolderOpenDot, FolderOpen, Video } from 'lucide-react';
+import { FileCheck, FolderOpen, Video } from 'lucide-react';
 import { HomeIcon, SettingsIcon, UsersIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
 import { NextRouter } from 'next/router';
@@ -88,7 +88,8 @@ export const useSidebarMenuList = () => {
       id: 4,
       label: 'Playlist',
       icon: <Video width={16} height={16} />,
-      link: ROUTES.PLAYLIST.BUILDER,
+      link: ROUTES.PLAYLIST.LIST,
+      show: true,
     },
     {
       id: 5,

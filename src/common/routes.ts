@@ -24,7 +24,8 @@ const CONTENT_ROUTES = {
 };
 
 const PLAYLIST_ROUTES = {
-  BUILDER: '/playlist',
+  LIST: '/playlist',
+  ADD: '/playlist/add',
 };
 
 const ROUTES = {

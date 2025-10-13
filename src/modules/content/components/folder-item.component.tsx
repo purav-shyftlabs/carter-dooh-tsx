@@ -105,7 +105,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
     setShowShareModal(true);
   };
 
-  const fileIcon = getFileIcon(file.content_type, file.original_filename);
+  const fileIcon = getFileIcon(file.content_type, file.original_filename, 'normal');
 
   // Load image preview for image files
   React.useEffect(() => {

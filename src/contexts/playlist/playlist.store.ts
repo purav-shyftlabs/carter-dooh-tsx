@@ -1,12 +1,11 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { Playlist, PlaylistItem } from '@/types/playlist';
 
 type PlaylistState = {
   playlist: Playlist;
   addItem: (item: Omit<PlaylistItem, 'id' | 'order' | 'duration'> & Partial<Pick<PlaylistItem, 'duration'>>) => string;
   updateDuration: (id: string, duration: number) => void;
-  updateItem: (id: string, updates: Partial<Pick<PlaylistItem, 'name' | 'duration' | 'availability'>>) => void;
+  updateItem: (id: string, updates: Partial<Pick<PlaylistItem, 'name' | 'duration'>>) => void;
   removeItem: (id: string) => void;
   reorder: (sourceIndex: number, destinationIndex: number) => void;
   setName: (name: string) => void;
@@ -19,10 +18,8 @@ const DEFAULT_IMAGE_DURATION = 10;
 const withReindexedOrders = (items: PlaylistItem[]): PlaylistItem[] =>
   items.map((it, idx) => ({ ...it, order: idx }));
 
-export const usePlaylistStore = create<PlaylistState>()(
-  persist(
-    (set, get) => ({
-      playlist: { id: 'local', name: 'Untitled Playlist', items: [] },
+export const usePlaylistStore = create<PlaylistState>()((set, get) => ({
+  playlist: { id: 'local', name: 'Untitled Playlist', items: [], contents: [] },
 
       addItem: (incoming) => {
         const state = get();
@@ -100,15 +97,10 @@ export const usePlaylistStore = create<PlaylistState>()(
         set({ playlist: { ...state.playlist, name } });
       },
 
-      clear: () => set({ playlist: { id: 'local', name: 'Untitled Playlist', items: [] } }),
+      clear: () => set({ playlist: { id: 'local', name: '', items: [], contents: [] } }),
 
       load: (playlist) => set({ playlist: { ...playlist, items: withReindexedOrders(playlist.items ?? []) } }),
-    }),
-    {
-      name: 'playlist-store',
-      partialize: (state) => ({ playlist: state.playlist }),
-    }
-  )
+    })
 );
 
 export default usePlaylistStore;

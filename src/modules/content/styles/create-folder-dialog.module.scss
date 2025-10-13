@@ -1,5 +1,24 @@
-.container {
+.content {
   padding: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
 }
 
 .generalError {
@@ -25,58 +44,10 @@
   line-height: 1.4;
 }
 
-.content {
-  margin-bottom: 24px;
-}
-
-.description {
-  margin: 0 0 20px 0;
-  color: #6c757d;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
 .errorMessage {
   margin-top: 8px;
   color: #dc3545;
   font-size: 12px;
-}
-
-.brandSection {
-  margin-top: 20px;
-  padding: 16px;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  background: #f8f9fa;
-}
-
-.label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #495057;
-  margin-bottom: 8px;
-}
-
-.brandOptions {
-  margin-bottom: 16px;
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  color: #495057;
-  cursor: pointer;
-  
-  input[type="checkbox"] {
-    margin-right: 8px;
-    cursor: pointer;
-  }
-}
-
-.brandSelection {
-  margin-top: 16px;
 }
 
 .loading {
@@ -126,21 +97,22 @@
   font-style: italic;
 }
 
-.actions {
+.footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid #e5e7eb;
 }
 
 // Responsive design
 @media (max-width: 768px) {
-  .container {
+  .content {
     padding: 16px;
   }
 
-  .actions {
+  .footer {
     flex-direction: column-reverse;
     gap: 8px;
   }

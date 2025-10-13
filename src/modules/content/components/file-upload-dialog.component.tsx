@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Button } from 'shyftlabs-dsl';
-import { Folder, File, FileUploadProgress } from '@/types/folder';
+import { Button, CarterInput, CarterRadioGroup, TabularAutocomplete } from 'shyftlabs-dsl';
+import { Folder, File, FileUploadProgress, Brand } from '@/types/folder';
 import { contentService } from '@/services/content/content.service';
 import { useBrands } from '@/hooks/useBrands.hook';
 import { gcpUploadService } from '@/services/gcp/gcp-upload.service';
@@ -32,6 +32,15 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
   
   // Fetch brands
   const { brands, loading: brandsLoading, error: brandsError } = useBrands();
+  
+  // Brand columns for TabularAutocomplete
+  const brandColumns = [
+    {
+      accessorKey: 'name',
+      header: 'Brand Name',
+      cell: ({ row }: { row: { original: Brand } }) => row.original.name || String(row.original.id),
+    },
+  ];
   
   // Debug logging
   React.useEffect(() => {
@@ -250,84 +259,61 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
       title="Upload Files"
       size="medium"
     >
-      <div className={styles.container}>
-        {/* {generalError && (
-          <div className={styles.generalError}>
-            <div className={styles.errorIcon}>⚠️</div>
-            <div className={styles.errorMessage}>{generalError}</div>
-          </div>
-        )} */}
+      <div className={styles.content}>
         {uploadProgress.length === 0 ? (
           <>
-            <div className={styles.metadataSection}>
-              <h4>File Metadata</h4>
-              
-              <div className={styles.inputGroup}>
+            <div className={styles.form}>
+              <div className={styles.field}>
                 <label className={styles.label}>Description (Optional)</label>
-                <input
-                  type="text"
+                <CarterInput
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter file description"
-                  className={styles.textInput}
+                  labelProps={{ label: ' ' }}
                   disabled={isUploading}
                 />
               </div>
-              
-              <div className={styles.brandSection}>
-                <label className={styles.label}>Brand Access</label>
-                <div className={styles.brandOptions}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={allowAllBrands}
-                      onChange={(e) => {
-                        console.log('Checkbox changed to:', e.target.checked); // Debug log
-                        setAllowAllBrands(e.target.checked);
-                      }}
-                      disabled={isUploading}
-                    />
-                    Allow all brands to access these files
-                  </label>
-                </div>
-                
-                {!allowAllBrands && (
-                  <div className={styles.brandSelection}>
-                    <label className={styles.label}>Select Specific Brands</label>
-                    {brandsLoading ? (
-                      <div className={styles.loading}>Loading brands...</div>
-                    ) : brandsError ? (
-                      <div className={styles.errorMessage}>
-                        Error loading brands: {brandsError}
-                      </div>
-                    ) : (
-                      <div className={styles.brandList}>
-                        {Array.isArray(brands) && brands.length > 0 ? (
-                          brands.map(brand => (
-                            <label key={brand.id} className={styles.brandItem}>
-                              <input
-                                type="checkbox"
-                                checked={selectedBrands.includes(brand.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedBrands(prev => [...prev, brand.id]);
-                                  } else {
-                                    setSelectedBrands(prev => prev.filter(id => id !== brand.id));
-                                  }
-                                }}
-                                disabled={isUploading}
-                              />
-                              <span>{brand.name}</span>
-                            </label>
-                          ))
-                        ) : (
-                          <div className={styles.noBrands}>No brands available</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+
+              <div className={styles.field}>
+                <label className={styles.label}>Brand Access *</label>
+                <CarterRadioGroup
+                  value={allowAllBrands ? 'true' : 'false'}
+                  onValueChange={(newValue: string) => {
+                    const next = newValue === 'true';
+                    setAllowAllBrands(next);
+                    if (next) setSelectedBrands([]);
+                  }}
+                  options={[
+                    { label: 'Allow all brands', value: 'true' },
+                    { label: 'Allow Specific Brands', value: 'false' },
+                  ]}
+                  radioFirst={true}
+                  textProps={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}
+                />
               </div>
+
+              {!allowAllBrands && (
+                <div className={styles.field}>
+                  <label className={styles.label}>Brands *</label>
+                  <TabularAutocomplete
+                    inputProps={{ placeholder: 'Search Brands' }}
+                    showHeader={false}
+                    handleSearch={() => {}}
+                    onScroll={() => {}}
+                    labelKey="name"
+                    selectedOptions={(Array.isArray(brands) ? (brands as Brand[]) : []).filter(b => selectedBrands.includes(b.id))}
+                    enableRowSelection
+                    loading={brandsLoading}
+                    onSelectionChange={(selected: Brand[]) => {
+                      setSelectedBrands(selected.map(b => b.id));
+                    }}
+                    hasNextPage={false}
+                    options={(Array.isArray(brands) ? (brands as Brand[]) : [])}
+                    columns={brandColumns}
+                    testId="file-upload-search-brands-input"
+                  />
+                </div>
+              )}
             </div>
             
             <div
@@ -384,7 +370,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
           </div>
         )}
 
-        <div className={styles.actions}>
+        <div className={styles.footer}>
           <Button
             label={allUploadsComplete ? "Close" : "Cancel"}
             variant="secondary"

@@ -118,11 +118,13 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
     load();
   }, [load]);
 
-  // Load image preview if file is image
+  // Load preview URL for images and videos
   React.useEffect(() => {
     if (!file) return;
     const isImage = String(file.content_type || '').startsWith('image/');
-    if (!isImage) {
+    const isVideo = String(file.content_type || '').startsWith('video/');
+    
+    if (!isImage && !isVideo) {
       setPreviewUrl('');
       return;
     }
@@ -188,8 +190,27 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
               <div className={styles.flexTwoCol}>
                 <div className={`${styles.card} ${styles.col}`}>
                   <div>
-                  {file && String(file.content_type || '').startsWith('image/') && previewUrl ? (
-                    <img className={styles.previewImage} src={previewUrl} alt={file.original_filename} />
+                  {file && previewUrl ? (
+                    String(file.content_type || '').startsWith('image/') ? (
+                      <img className={styles.previewImage} src={previewUrl} alt={file.original_filename} />
+                    ) : String(file.content_type || '').startsWith('video/') ? (
+                      <video 
+                        className={styles.previewVideo}
+                        src={previewUrl}
+                        controls
+                        style={{ 
+                          width: '100%', 
+                          maxHeight: '400px', 
+                          objectFit: 'contain',
+                          backgroundColor: '#000',
+                          borderRadius: '8px'
+                        }}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : (
+                      <div style={{ color: '#6c757d' }}>No preview available</div>
+                    )
                   ) : (
                     <div style={{ color: '#6c757d' }}>No preview available</div>
                   )}
