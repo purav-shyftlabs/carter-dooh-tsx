@@ -19,6 +19,7 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
   const [error, setError] = React.useState<string | null>(null);
   const [file, setFile] = React.useState<File | null>(null);
 
+  console.log(file,'file');
   // editable fields
   const [allowAllBrands, setAllowAllBrands] = React.useState(false);
   const [selectedBrands, setSelectedBrands] = React.useState<number[]>([]);
@@ -82,7 +83,7 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
         name: f.name ?? f.originalFilename ?? f.original_filename ?? '',
         original_filename: f.originalFilename ?? f.original_filename ?? f.name ?? '',
         folder_id: (f.folderId ?? f.folder_id ?? null) as number | null,
-        folderName: f.folderName ?? f.folder_name ?? '',
+        folderName: f.folderName ?? f.folder_name ?? 'Root',
         account_id: f.accountId ?? f.account_id ?? '',
         owner_id: f.ownerId ?? f.owner_id ?? '',
         storage_key: f.storage_key ?? f.storageKey ?? '',
@@ -128,9 +129,21 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
       setPreviewUrl('');
       return;
     }
-    // Use direct GCP URL
-    const url = contentService.getFileUrl(file);
-    setPreviewUrl(url);
+    
+    // Load signed URL for secure access
+    const loadPreviewUrl = async () => {
+      try {
+        const url = await contentService.getFileUrl(file);
+        setPreviewUrl(url);
+      } catch (error) {
+        console.error('Failed to load preview URL:', error);
+        // Fallback to direct URL
+        const fallbackUrl = contentService.getFileUrlSync(file);
+        setPreviewUrl(fallbackUrl);
+      }
+    };
+    
+    loadPreviewUrl();
   }, [file?.id, file?.content_type]);
 
   const handleSave = async () => {

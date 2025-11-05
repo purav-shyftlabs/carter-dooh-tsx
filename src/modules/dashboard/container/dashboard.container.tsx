@@ -9,6 +9,7 @@ import DateTimeParser, { DateTimeType } from '@/lib/date-time-parser';
 import { DATE_FORMAT } from '@/common/constants';
 import styles_publisher from '../styles/components/publisher-dashboard.module.scss';
 import UpcomingSchedules from '../component/widgets/upcoming-schedules.component';
+import GoogleMaps from '../component/widgets/google-maps.component';
 
 const Dashboard = () => {
     const isMobile = useMediaQuery(`(min-width: 320px) and (max-width: 767px)`);
@@ -115,6 +116,29 @@ const Dashboard = () => {
       <div className={styles_publisher.container}>
         <NetworkPerformance />
         <UpcomingSchedules />
+        
+        {/* Google Maps Section */}
+        <div className={styles.mapsSection}>
+          <div className={styles.mapsHeader}>
+            <h3>Location Overview</h3>
+            <p>Interactive map showing your digital out-of-home locations</p>
+          </div>
+          <GoogleMaps
+            apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY_HERE'}
+            center={{ lat: 43.64971211769824, lng: -79.37826290255906 }} // Toronto coordinates
+            zoom={15}
+            height="500px"
+            className={styles.mapsWidget}
+            markers={[
+              {
+                position: { lat: 43.64971211769824, lng: -79.37826290255906 },
+                title: 'Digital Billboard Location',
+                description: 'High-traffic location for digital out-of-home advertising',
+                label: 'shyftlabs'
+              }
+            ]}
+          />
+        </div>
       </div>
         </div>
     );

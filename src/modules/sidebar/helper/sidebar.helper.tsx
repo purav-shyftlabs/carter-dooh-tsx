@@ -1,4 +1,4 @@
-import { FileCheck, FolderOpen, Video } from 'lucide-react';
+import { AppWindow, FileCheck, FolderOpen, Video } from 'lucide-react';
 import { HomeIcon, SettingsIcon, UsersIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
 import { NextRouter } from 'next/router';
@@ -108,6 +108,13 @@ export const useSidebarMenuList = () => {
 
     {
       id: 7,
+      label: 'Apps',
+      icon: <AppWindow width={16} height={16} />,
+      link: ROUTES.APPS.LIST,
+      show: true,
+    },
+    {
+      id: 8,
       label: 'Account Settings',
       icon: <SettingsIcon width={16} height={16} />,
       link: ROUTES.ACCOUNT.BASE,

@@ -30,9 +30,20 @@ export const ImagePreviewPopup: React.FC<ImagePreviewPopupProps> = ({
       setScale(1);
       setImageLoaded(false);
       
-      // Use direct GCP URL
-      const url = contentService.getFileUrl(file);
-      setImageUrl(url);
+      // Load signed URL for secure access
+      const loadImageUrl = async () => {
+        try {
+          const url = await contentService.getFileUrl(file);
+          setImageUrl(url);
+        } catch (error) {
+          console.error('Failed to load image URL:', error);
+          // Fallback to direct URL
+          const fallbackUrl = contentService.getFileUrlSync(file);
+          setImageUrl(fallbackUrl);
+        }
+      };
+      
+      loadImageUrl();
     }
   }, [file]);
 

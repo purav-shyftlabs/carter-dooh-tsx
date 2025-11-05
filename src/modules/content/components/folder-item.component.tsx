@@ -114,9 +114,21 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onClick, onContextMenu
       setPreviewUrl('');
       return;
     }
-    // Use direct GCP URL
-    const url = contentService.getFileUrl(file);
-    setPreviewUrl(url);
+    
+    // Load signed URL for secure access
+    const loadPreviewUrl = async () => {
+      try {
+        const url = await contentService.getFileUrl(file);
+        setPreviewUrl(url);
+      } catch (error) {
+        console.error('Failed to load preview URL:', error);
+        // Fallback to direct URL
+        const fallbackUrl = contentService.getFileUrlSync(file);
+        setPreviewUrl(fallbackUrl);
+      }
+    };
+    
+    loadPreviewUrl();
   }, [file.id, file.content_type]);
 
   return (

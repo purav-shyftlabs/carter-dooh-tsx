@@ -36,6 +36,8 @@ const isImage = (contentType: string | undefined) => typeof contentType === 'str
 
 const PlaylistBuilder: NextPageWithLayout = () => {
   const { playlist, reorder, addItem, setName, clear } = usePlaylistStore();
+  const [detectingDuration, setDetectingDuration] = useState<Set<string>>(new Set());
+  const [videoFirstFrames, setVideoFirstFrames] = useState<Record<string, string>>({});
   const router = useRouter();
   const { showAlert } = useAlert();
   const [isEditMode, setIsEditMode] = useState(false);
@@ -296,8 +298,8 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     const run = async () => {
       const entries = await Promise.all(library.map(async (f) => {
         try {
-          // Use direct GCP URL from file.fileUrl
-          const fileUrl = contentService.getFileUrl(f);
+          // Use signed URL for secure access
+          const fileUrl = await contentService.getFileUrl(f);
           // For videos, generate thumbnail from first frame
           if (isVideo(f.content_type)) {
             try {
@@ -308,8 +310,11 @@ const PlaylistBuilder: NextPageWithLayout = () => {
             }
           }
           return [f.id, fileUrl] as const;
-        } catch {
-          return [f.id, ''] as const;
+        } catch (error) {
+          console.error('Failed to load file URL for', f.id, error);
+          // Fallback to direct URL
+          const fallbackUrl = contentService.getFileUrlSync(f);
+          return [f.id, fallbackUrl] as const;
         }
       }));
       if (!cancelled) {
@@ -338,6 +343,44 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     }
     return () => { cancelled = true; };
   }, [library]);
+
+  // Capture first frames for videos in playlist
+  useEffect(() => {
+    const captureFrames = async () => {
+      const videoItems = playlist.items.filter(item => item.type === 'video');
+      
+      for (const item of videoItems) {
+        if (!videoFirstFrames[item.id]) {
+          try {
+            // Try to get signed URL for first frame capture, but fallback to original URL
+            let processingUrl = item.url;
+            try {
+              // Find the asset to get signed URL
+              const asset = library.find(f => String(f.id) === item.assetId);
+              if (asset) {
+                const signedUrl = await contentService.getFileUrl(asset);
+                processingUrl = signedUrl;
+              }
+            } catch (error) {
+              console.warn('Failed to get signed URL for first frame capture, using original URL');
+            }
+            
+            const firstFrame = await captureVideoFirstFrame(processingUrl);
+            setVideoFirstFrames(prev => ({
+              ...prev,
+              [item.id]: firstFrame
+            }));
+          } catch (error) {
+            console.warn(`Failed to capture first frame for video ${item.id}:`, error);
+          }
+        }
+      }
+    };
+
+    if (playlist.items.length > 0) {
+      captureFrames();
+    }
+  }, [playlist.items, videoFirstFrames, library]);
 
   const generateVideoThumbnail = async (videoUrl: string): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -601,27 +644,161 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     </div>
   );
 
-  const handleAddFromLibrary = (asset: LibraryFile) => {
-    const url = previewMap[asset.id] || contentService.getFileUrl(asset);
-    const thumbnailUrl = thumbnailMap[asset.id] || url;
+  const handleAddFromLibrary = async (asset: LibraryFile) => {
+    // Store original URL in playlist store, not signed URL
+    const originalUrl = asset.fileUrl || '';
+    const originalThumbnailUrl = asset.fileUrl || '';
+    
     const newId = addItem({
       assetId: String(asset.id),
       type: isVideo(asset.content_type) ? 'video' : 'image',
-      url,
-      thumbnailUrl,
+      url: originalUrl, // Store original URL
+      thumbnailUrl: originalThumbnailUrl, // Store original thumbnail URL
       name: asset.original_filename || asset.name,
     });
 
-    // For videos: set duration from metadata when available
+    // For videos: extract duration from metadata with better error handling
     if (isVideo(asset.content_type)) {
-      const vid = document.createElement('video');
-      vid.src = url;
-      vid.preload = 'metadata';
-      vid.onloadedmetadata = () => {
-        const secs = Math.max(1, Math.round(vid.duration || 1));
-        usePlaylistStore.getState().updateDuration(newId, secs);
-      };
+      setDetectingDuration(prev => new Set(prev).add(newId));
+      try {
+        let videoDuration = 0;
+        
+        // Try to get signed URL for duration extraction, but fallback to original URL
+        let processingUrl = originalUrl;
+        try {
+          const signedUrl = await contentService.getFileUrl(asset);
+          processingUrl = signedUrl;
+        } catch (error) {
+          console.warn('Failed to get signed URL, using original URL for duration extraction');
+        }
+        
+        try {
+          videoDuration = await extractVideoDuration(processingUrl);
+        } catch (error) {
+          console.warn('Duration extraction failed:', error);
+          throw new Error('Duration extraction failed');
+        }
+        
+        if (videoDuration > 0) {
+          usePlaylistStore.getState().updateDuration(newId, videoDuration);
+        }
+      } catch (error) {
+        // Keep default duration (10 seconds) if extraction fails
+      } finally {
+        setDetectingDuration(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(newId);
+          return newSet;
+        });
+      }
     }
+  };
+
+  // Function to capture first frame of video
+  const captureVideoFirstFrame = (videoUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous';
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        video.currentTime = 0.1; // Seek to first frame
+      };
+      
+      video.onseeked = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+            video.remove();
+            resolve(dataURL);
+          } else {
+            video.remove();
+            reject(new Error('Could not get canvas context'));
+          }
+        } catch (error) {
+          video.remove();
+          reject(error);
+        }
+      };
+      
+      video.onerror = () => {
+        video.remove();
+        reject(new Error('Failed to load video'));
+      };
+      
+      video.src = videoUrl;
+    });
+  };
+
+  // Manual retry function for video duration detection
+  const retryVideoDuration = async (itemId: string, videoUrl: string) => {
+    setDetectingDuration(prev => new Set(prev).add(itemId));
+    try {
+      const videoDuration = await extractVideoDuration(videoUrl);
+      if (videoDuration > 0) {
+        usePlaylistStore.getState().updateDuration(itemId, videoDuration);
+      }
+    } catch (error) {
+      // Silent fail
+    } finally {
+      setDetectingDuration(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
+    }
+  };
+
+  // Helper function to extract video duration with multiple fallback strategies
+  const extractVideoDuration = (videoUrl: string): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      // Try different CORS strategies
+      const corsStrategies = ['anonymous', 'use-credentials', null];
+      let currentStrategyIndex = 0;
+      
+      const tryNextStrategy = () => {
+        if (currentStrategyIndex < corsStrategies.length) {
+          video.crossOrigin = corsStrategies[currentStrategyIndex];
+          currentStrategyIndex++;
+          video.src = videoUrl;
+        } else {
+          // All strategies failed, use fallback duration
+          video.remove();
+          resolve(10); // Default 10 seconds fallback
+        }
+      };
+      
+      const timeout = setTimeout(() => {
+        video.remove();
+        reject(new Error('Video duration extraction timeout'));
+      }, 15000); // 15 second timeout
+      
+      video.onloadedmetadata = () => {
+        clearTimeout(timeout);
+        const rawDuration = video.duration || 1;
+        // Handle decimal seconds more precisely - round to nearest 0.1 second then ceil
+        const preciseDuration = Math.ceil(Math.round(rawDuration * 10) / 10);
+        const duration = Math.max(1, preciseDuration);
+        video.remove();
+        resolve(duration);
+      };
+      
+      video.onerror = (error) => {
+        tryNextStrategy();
+      };
+      
+      // Start with first strategy
+      tryNextStrategy();
+    });
   };
 
   const handleAddWebsite = () => {
@@ -777,6 +954,8 @@ const PlaylistBuilder: NextPageWithLayout = () => {
             {/* Timeline Section */}
             <div className={styles.timelineSection}>
               <h3 className={styles.sectionTitle}>Timeline</h3>
+              
+              
               <div className={styles.timeline} ref={timelineRef}>
                 <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
                   <SortableContext items={playlist.items.map(i => i.id)} strategy={horizontalListSortingStrategy}>
@@ -788,7 +967,14 @@ const PlaylistBuilder: NextPageWithLayout = () => {
                         </div>
                       )}
                       {playlist.items.map((item: PlaylistItem, idx: number) => (
-                        <TimelineItem key={item.id} item={item} index={idx} draggingId={draggingId} />
+                        <TimelineItem 
+                          key={item.id} 
+                          item={item} 
+                          index={idx} 
+                          draggingId={draggingId} 
+                          isDetectingDuration={detectingDuration.has(item.id)}
+                          onRetryDuration={item.type === 'video' ? () => retryVideoDuration(item.id, item.url) : undefined}
+                        />
                       ))}
                     </div>
                   </SortableContext>

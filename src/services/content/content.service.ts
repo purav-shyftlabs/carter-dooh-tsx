@@ -10,6 +10,7 @@ import {
   AllItemsResponse,
 } from '@/types/folder';
 import { getFileIcon } from '@/utils/file-icons';
+import signedUrlService from './signed-url.service';
   
 class ContentService {
   private baseUrl = '/folders';
@@ -141,8 +142,22 @@ class ContentService {
     return response.data;
   }
 
-  // Get file URL (now directly from GCP)
-  getFileUrl(file: File): string {
+  // Get file URL with signed URL support
+  async getFileUrl(file: File, useSignedUrl: boolean = true): Promise<string> {
+    if (!useSignedUrl) {
+      return file.fileUrl || '';
+    }
+    
+    try {
+      return await signedUrlService.getFileSignedUrl(file);
+    } catch (error) {
+      console.warn('Failed to get signed URL, falling back to direct URL:', error);
+      return file.fileUrl || '';
+    }
+  }
+
+  // Get file URL synchronously (for backward compatibility)
+  getFileUrlSync(file: File): string {
     return file.fileUrl || '';
   }
 

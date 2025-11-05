@@ -17,6 +17,7 @@ import MediaUploadDialog from '../components/media-upload-dialog.component';
 import { UploadIcon } from '@/lib/icons';
 import BrandsService from '@/services/brands/brands.service';
 import { gcpUploadService } from '@/services/gcp/gcp-upload.service';
+import { useGCPSignedUrl } from '@/hooks/useGCPSignedUrl.hook';
 
 
 const validationSchema = yup.object().shape({
@@ -45,6 +46,7 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
   const { permission } = useUser();
   const { showAlert } = useAlert();
   const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false);
+  const [brandLogoPath, setBrandLogoPath] = useState<string | null>(null);
 
   const hasFullAccessFromRedux = useAppSelector(state =>
     checkAclFromState(state, PermissionType.UserManagement, AccessLevel.FULL_ACCESS)
@@ -56,6 +58,13 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
     | undefined;
   const hasFullAccessFromFlags = Boolean(flags && (flags as { fullAccess?: boolean }).fullAccess);
   const hasFullAccess = Boolean(hasFullAccessFromRedux || hasFullAccessFromFlags);
+  
+  // Get signed URL for brand logo viewing
+  const { url: brandLogoUrl, loading: logoLoading, error: logoError } = useGCPSignedUrl(
+    brandLogoPath,
+    'read',
+    { expirationMinutes: 10 }
+  );
   
   const formik = useFormik({
     initialValues: {
@@ -180,20 +189,49 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px'}}>
                   {formik.values.brandLogo ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <img
-                        src={typeof formik.values.brandLogo === 'string' 
-                          ? formik.values.brandLogo 
-                          : URL.createObjectURL(formik.values.brandLogo)
-                        }
-                        alt="Brand logo preview"
-                        style={{
+                      {logoLoading ? (
+                        <div style={{
                           width: '60px',
                           height: '60px',
-                          objectFit: 'cover',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#f5f5f5',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0'
-                        }}
-                      />
+                        }}>
+                          Loading...
+                        </div>
+                      ) : logoError ? (
+                        <div style={{
+                          width: '60px',
+                          height: '60px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#ffebee',
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          color: '#c62828',
+                          fontSize: '12px'
+                        }}>
+                          Error
+                        </div>
+                      ) : (
+                        <img
+                          src={brandLogoUrl || (typeof formik.values.brandLogo === 'string' 
+                            ? formik.values.brandLogo 
+                            : URL.createObjectURL(formik.values.brandLogo))}
+                          alt="Brand logo preview"
+                          style={{
+                            width: '60px',
+                            height: '60px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            border: '1px solid #e0e0e0'
+                          }}
+                        />
+                      )}
                       <div>
                         <div style={{ fontSize: '14px', fontWeight: '500', color: '#1F2B33' }}>
                           {typeof formik.values.brandLogo === 'string' 
@@ -359,9 +397,10 @@ const BrandForm: React.FC & { getLayout?: (page: React.ReactNode) => React.React
         onClose={() => setIsMediaUploadOpen(false)}
         onUpload={async (file: File) => {
           try {
-            // Upload file to GCP and get URL
+            // Upload file using existing GCP upload service
             const gcpUrl = await gcpUploadService.uploadFile(file);
             formik.setFieldValue('brandLogo', gcpUrl);
+            setBrandLogoPath(gcpUrl); // Set file path for signed URL generation
             formik.setFieldTouched('brandLogo', true);
             setIsMediaUploadOpen(false);
           } catch (error) {

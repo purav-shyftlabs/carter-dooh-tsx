@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { carterColors } from 'shyftlabs-dsl';
+import { useGCPSignedUrl } from '@/hooks/useGCPSignedUrl.hook';
 
 type CardBrand = {
   id: number;
@@ -27,6 +28,13 @@ const BrandCard: React.FC<{ brand: CardBrand }> = ({ brand }) => {
   const router = useRouter();
   const isActive = brand.status === 'active';
   const isArchived = brand.status === 'archived';
+  
+  // Get signed URL for brand logo viewing
+  const { url: logoUrl, loading: logoLoading, error: logoError } = useGCPSignedUrl(
+    brand.brand_logo_url || null,
+    'read',
+    { expirationMinutes: 10 }
+  );
   
   let statusBgColor, statusColor;
   if (isActive) {
@@ -67,12 +75,37 @@ const BrandCard: React.FC<{ brand: CardBrand }> = ({ brand }) => {
       {/* Asset preview on top */}
       {brand.brand_logo_url ? (
         <div style={{ width: '100%', height: 260, backgroundColor: '#f5f5f5' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={brand.brand_logo_url}
-            alt={brand.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
+          {logoLoading ? (
+            <div style={{ 
+              width: '100%', 
+              height: '100%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: '#666'
+            }}>
+              Loading...
+            </div>
+          ) : logoError ? (
+            <div style={{ 
+              width: '100%', 
+              height: '100%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: '#c62828',
+              backgroundColor: '#ffebee'
+            }}>
+              Error loading image
+            </div>
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={logoUrl || brand.brand_logo_url}
+              alt={brand.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          )}
         </div>
       ) : (
         <div style={{ width: '100%', height: 160, backgroundColor: '#eef2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#90a4ae', fontWeight: 600 }}>
