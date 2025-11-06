@@ -1,282 +1,341 @@
 import api from '../api/api-client';
-
-export type IntegrationCategory = 'weather' | 'news' | 'social' | 'utility' | 'finance' | 'sports' | 'entertainment';
-export type IntegrationAuthType = 'none' | 'oauth2' | 'api_key';
-export type IntegrationStatus = 'connected' | 'disconnected' | 'error';
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
-
-export interface IntegrationAppMetaSchemaField {
-  type: string;
-  required?: boolean;
-  description?: string;
-  default?: string | number | boolean;
-}
-
-export interface IntegrationAppMetadata {
-  rateLimit?: string;
-  apiKeyRequired?: boolean;
-  settingsSchema?: Record<string, IntegrationAppMetaSchemaField>;
-}
-
-export interface IntegrationAppItem {
-  id: number;
-  name: string;
-  slug: string;
-  category: IntegrationCategory;
-  logoUrl?: string;
-  description?: string;
-  authType: IntegrationAuthType;
-  baseUrl?: string;
-  metadata?: IntegrationAppMetadata;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface IntegrationSettingItem {
-  id?: number;
-  key: string;
-  value: string | number | boolean | null;
-}
-
-export interface AccountIntegrationItem {
-  id: number;
-  accountId: number;
-  userId: number;
-  integrationAppId: number;
-  status: IntegrationStatus;
-  isActive: boolean;
-  lastSyncTimestamp?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  integrationApp?: Partial<IntegrationAppItem>;
-  settings?: IntegrationSettingItem[];
-  oauthCredential?: any;
-}
-
-export interface AccountIntegrationsResponse {
-  items: AccountIntegrationItem[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface WeatherData {
-  location: {
-    name: string;
-    region: string;
-    country: string;
-    lat?: number;
-    lon?: number;
-    timezone?: string;
-    localtime?: string;
-  };
-  current?: {
-    lastUpdated: string;
-    temperature: {
-      celsius: number;
-      fahrenheit: number;
-      unit: string;
-    };
-    feelsLike: {
-      celsius: number;
-      fahrenheit: number;
-      unit: string;
-    };
-    condition: {
-      text: string;
-      icon: string;
-      code: number;
-    };
-    humidity: number;
-    cloud: number;
-    windSpeed: {
-      kph: number;
-      mph: number;
-      unit: string;
-    };
-    windDirection: number;
-    windDir: string;
-    pressure: {
-      mb: number;
-      in: number;
-      unit: string;
-    };
-    precipitation: {
-      mm: number;
-      in: number;
-      unit: string;
-    };
-    uv: number;
-    visibility: {
-      km: number;
-      miles: number;
-      unit: string;
-    };
-  };
-  forecast?: Array<{
-    date: string;
-    day: {
-      maxTemp: { celsius: number; fahrenheit: number; unit: string };
-      minTemp: { celsius: number; fahrenheit: number; unit: string };
-      avgTemp: { celsius: number; fahrenheit: number; unit: string };
-      condition: { text: string; icon: string; code: number };
-      maxWindSpeed: { kph: number; mph: number; unit: string };
-      totalPrecipitation: { mm: number; in: number; unit: string };
-      avgHumidity: number;
-      avgVisibility: { km: number; miles: number; unit: string };
-      uv: number;
-    };
-    astro: {
-      sunrise: string;
-      sunset: string;
-      moonrise: string;
-      moonset: string;
-      moonPhase: string;
-      moonIllumination: string;
-    };
-    hours: Array<{
-      time: string;
-      temperature: { celsius: number; fahrenheit: number; unit: string };
-      condition: { text: string; icon: string; code: number };
-      windSpeed: { kph: number; mph: number; unit: string };
-      windDirection: number;
-      pressure: { mb: number; in: number; unit: string };
-      precipitation: { mm: number; in: number; unit: string };
-      humidity: number;
-      cloud: number;
-      feelsLike: { celsius: number; fahrenheit: number; unit: string };
-      visibility: { km: number; miles: number; unit: string };
-      uv: number;
-    }>;
-  }>;
-  alerts?: Array<{
-    headline: string;
-    msgtype: string;
-    severity: string;
-    urgency: string;
-    areas: string;
-    category: string;
-    certainty: string;
-    event: string;
-    note: string;
-    effective: string;
-    expires: string;
-    desc: string;
-    instruction: string;
-  }>;
-  units: string;
-}
-
-export interface TestIntegrationResponse {
-  success: boolean;
-  data?: WeatherData;
-  settings: Record<string, any>;
-  timestamp: string;
-}
+import {
+  App,
+  Integration,
+  AppsListResponse,
+  AppDetailsResponse,
+  ConfigSchemaResponse,
+  IntegrationsListResponse,
+  IntegrationDetailsResponse,
+  CreateIntegrationRequest,
+  UpdateIntegrationRequest,
+  UpdateIntegrationConfigurationsRequest,
+  OAuthInitiateRequest,
+  OAuthInitiateResponse,
+  TestConnectionResponse,
+  SyncResponse,
+  SyncStatusResponse,
+  ApiErrorResponse,
+} from '@/types/integrations';
 
 class IntegrationsService {
-  // Integration Catalog APIs
-  async getCatalog(): Promise<ApiResponse<IntegrationAppItem[]>> {
-    const response = await api.get('/integrations/catalog');
-    // Handle both single item and array responses
-    const data = response.data.data;
-    if (Array.isArray(data)) {
-      return response.data;
-    } else {
-      // Convert single item to array
-      return {
-        ...response.data,
-        data: [data]
-      };
+  private baseUrl = '/api/v1';
+
+  // Helper function to normalize config schema field
+  private normalizeConfigField(rawField: any): any {
+    return {
+      key: rawField.key || '',
+      label: rawField.label || '',
+      type: rawField.type || 'text',
+      required: rawField.required !== undefined ? rawField.required : false,
+      category: rawField.category,
+      placeholder: rawField.placeholder,
+      help_text: rawField.help_text || rawField.helpText,
+      default: rawField.default,
+      options: rawField.options,
+      validation: rawField.validation,
+    };
+  }
+
+  // Helper function to normalize App from API response (handles both camelCase and snake_case)
+  private normalizeApp(rawApp: any): App {
+    const configSchema = rawApp.configSchema || rawApp.config_schema;
+    const normalizedSchema = configSchema
+      ? {
+          fields: Array.isArray(configSchema.fields)
+            ? configSchema.fields.map((field: any) => this.normalizeConfigField(field))
+            : [],
+        }
+      : undefined;
+
+    return {
+      id: typeof rawApp.id === 'string' ? parseInt(rawApp.id, 10) : rawApp.id,
+      name: rawApp.name || '',
+      category: rawApp.category || '',
+      logo_url: rawApp.logoUrl || rawApp.logo_url,
+      base_url: rawApp.baseUrl || rawApp.base_url,
+      description: rawApp.description,
+      auth_type: (rawApp.authType || rawApp.auth_type || 'api_key') as any,
+      oauth_provider: (rawApp.oauthProvider || rawApp.oauth_provider || null) as any,
+      documentation_url: rawApp.documentationUrl || rawApp.documentation_url,
+      config_schema: normalizedSchema,
+      is_active: rawApp.isActive !== undefined ? rawApp.isActive : rawApp.is_active !== undefined ? rawApp.is_active : true,
+      created_at: rawApp.createdAt || rawApp.created_at || new Date().toISOString(),
+      updated_at: rawApp.updatedAt || rawApp.updated_at || new Date().toISOString(),
+    };
+  }
+
+  // Helper function to normalize Integration from API response
+  private normalizeIntegration(rawIntegration: any): Integration {
+    return {
+      id: typeof rawIntegration.id === 'string' ? parseInt(rawIntegration.id, 10) : rawIntegration.id,
+      user_id: rawIntegration.userId || rawIntegration.user_id || 0,
+      account_id: rawIntegration.accountId || rawIntegration.account_id || 0,
+      app_id: rawIntegration.appId || rawIntegration.app_id || 0,
+      app: rawIntegration.app ? this.normalizeApp(rawIntegration.app) : undefined,
+      status: (rawIntegration.status || 'pending') as any,
+      enabled: rawIntegration.enabled !== undefined ? rawIntegration.enabled : true,
+      connected_at: rawIntegration.connectedAt || rawIntegration.connected_at,
+      last_synced_at: rawIntegration.lastSyncedAt || rawIntegration.last_synced_at,
+      sync_frequency: (rawIntegration.syncFrequency || rawIntegration.sync_frequency || 'hourly') as any,
+      error_message: rawIntegration.errorMessage || rawIntegration.error_message,
+      metadata: rawIntegration.metadata,
+      configurations: rawIntegration.configurations,
+      created_at: rawIntegration.createdAt || rawIntegration.created_at || new Date().toISOString(),
+      updated_at: rawIntegration.updatedAt || rawIntegration.updated_at || new Date().toISOString(),
+    };
+  }
+
+  // App Management APIs
+
+  async getApps(params?: {
+    category?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    is_active?: boolean;
+  }): Promise<AppsListResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.category) queryParams.append('category', params.category);
+      if (params?.search) queryParams.append('search', params.search);
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.is_active !== undefined) queryParams.append('is_active', params.is_active.toString());
+
+      const url = queryParams.toString()
+        ? `${this.baseUrl}/apps?${queryParams.toString()}`
+        : `${this.baseUrl}/apps`;
+
+      const response = await api.get(url);
+      const data = response.data;
+      
+      // Normalize apps
+      if (data?.data?.items && Array.isArray(data.data.items)) {
+        data.data.items = data.data.items.map((app: any) => this.normalizeApp(app));
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching apps:', error);
+      throw error;
     }
   }
 
-  // Account Integration Management APIs
-  async createAccountIntegration(
-    integrationAppId: number,
-    settings?: IntegrationSettingItem[]
-  ): Promise<ApiResponse<AccountIntegrationItem>> {
-    const response = await api.post('/account-integrations', {
-      integrationAppId,
-      settings: settings || []
-    });
-    return response.data;
+  async getAppById(id: number): Promise<AppDetailsResponse> {
+    try {
+      const response = await api.get(`${this.baseUrl}/apps/${id}`);
+      const data = response.data;
+      
+      // Normalize app
+      if (data?.data?.app) {
+        data.data.app = this.normalizeApp(data.data.app);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching app:', error);
+      throw error;
+    }
   }
 
-  async getAccountIntegrations(params?: {
+  async getAppConfigSchema(appId: number): Promise<ConfigSchemaResponse> {
+    try {
+      const response = await api.get(`${this.baseUrl}/apps/${appId}/config-schema`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching config schema:', error);
+      throw error;
+    }
+  }
+
+  async createApp(data: Partial<App>): Promise<AppDetailsResponse> {
+    try {
+      const response = await api.post(`${this.baseUrl}/apps`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating app:', error);
+      throw error;
+    }
+  }
+
+  async updateApp(id: number, data: Partial<App>): Promise<AppDetailsResponse> {
+    try {
+      const response = await api.patch(`${this.baseUrl}/apps/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating app:', error);
+      throw error;
+    }
+  }
+
+  async deleteApp(id: number): Promise<void> {
+    try {
+      await api.delete(`${this.baseUrl}/apps/${id}`);
+    } catch (error) {
+      console.error('Error deleting app:', error);
+      throw error;
+    }
+  }
+
+  // Integration Management APIs
+
+  async getIntegrations(params?: {
+    status?: string;
+    app_id?: number;
+    enabled?: boolean;
     page?: number;
     limit?: number;
-    status?: IntegrationStatus;
-  }): Promise<ApiResponse<AccountIntegrationsResponse>> {
-    const response = await api.get('/integrations/catalog');
-    return response.data;
+  }): Promise<IntegrationsListResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.app_id) queryParams.append('app_id', params.app_id.toString());
+      if (params?.enabled !== undefined) queryParams.append('enabled', params.enabled.toString());
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+      const url = queryParams.toString()
+        ? `${this.baseUrl}/integrations?${queryParams.toString()}`
+        : `${this.baseUrl}/integrations`;
+
+      const response = await api.get(url);
+      const data = response.data;
+      
+      // Normalize integrations
+      if (data?.data?.items && Array.isArray(data.data.items)) {
+        data.data.items = data.data.items.map((integration: any) => this.normalizeIntegration(integration));
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching integrations:', error);
+      throw error;
+    }
   }
 
-  async getAccountIntegrationById(id: number): Promise<ApiResponse<AccountIntegrationItem>> {
-    const response = await api.get(`/account-integrations/${id}`);
-    return response.data;
+  async getIntegrationById(id: number): Promise<IntegrationDetailsResponse> {
+    try {
+      const response = await api.get(`${this.baseUrl}/integrations/${id}`);
+      const data = response.data;
+      
+      // Normalize integration
+      if (data?.data?.integration) {
+        data.data.integration = this.normalizeIntegration(data.data.integration);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching integration:', error);
+      throw error;
+    }
   }
 
-  async updateIntegrationSettings(
+  async createIntegration(data: CreateIntegrationRequest): Promise<IntegrationDetailsResponse> {
+    try {
+      const response = await api.post(`${this.baseUrl}/integrations`, data);
+      const responseData = response.data;
+      
+      // Normalize integration in response
+      if (responseData?.data?.integration) {
+        responseData.data.integration = this.normalizeIntegration(responseData.data.integration);
+      }
+      
+      return responseData;
+    } catch (error) {
+      console.error('Error creating integration:', error);
+      throw error;
+    }
+  }
+
+  async updateIntegration(id: number, data: UpdateIntegrationRequest): Promise<IntegrationDetailsResponse> {
+    try {
+      const response = await api.patch(`${this.baseUrl}/integrations/${id}`, data);
+      const responseData = response.data;
+      
+      // Normalize integration in response
+      if (responseData?.data?.integration) {
+        responseData.data.integration = this.normalizeIntegration(responseData.data.integration);
+      }
+      
+      return responseData;
+    } catch (error) {
+      console.error('Error updating integration:', error);
+      throw error;
+    }
+  }
+
+  async updateIntegrationConfigurations(
     id: number,
-    settings: IntegrationSettingItem[]
-  ): Promise<ApiResponse<AccountIntegrationItem>> {
-    const response = await api.patch(`/account-integrations/${id}/settings`, { settings });
-    return response.data;
+    data: UpdateIntegrationConfigurationsRequest,
+  ): Promise<IntegrationDetailsResponse> {
+    try {
+      const response = await api.patch(`${this.baseUrl}/integrations/${id}/configurations`, data);
+      const responseData = response.data;
+      
+      // Normalize integration in response
+      if (responseData?.data?.integration) {
+        responseData.data.integration = this.normalizeIntegration(responseData.data.integration);
+      }
+      
+      return responseData;
+    } catch (error) {
+      console.error('Error updating integration configurations:', error);
+      throw error;
+    }
   }
 
-  async deleteAccountIntegration(id: number): Promise<ApiResponse<null>> {
-    const response = await api.delete(`/account-integrations/${id}`);
-    return response.data;
+  async testIntegration(id: number): Promise<TestConnectionResponse> {
+    try {
+      const response = await api.post(`${this.baseUrl}/integrations/${id}/test`);
+      return response.data;
+    } catch (error) {
+      console.error('Error testing integration:', error);
+      throw error;
+    }
   }
 
-  // OAuth Authentication APIs
-  async startOAuthFlow(
-    provider: string,
-    integrationAppId: number,
-    redirectUri?: string
-  ): Promise<ApiResponse<{ authUrl: string; state: string; provider: string }>> {
-    const params: any = { integrationAppId };
-    if (redirectUri) params.redirectUri = redirectUri;
-    
-    const response = await api.get(`/integrations/auth/${provider}/login`, { params });
-    return response.data;
+  async triggerSync(id: number): Promise<SyncResponse> {
+    try {
+      const response = await api.post(`${this.baseUrl}/integrations/${id}/sync`);
+      return response.data;
+    } catch (error) {
+      console.error('Error triggering sync:', error);
+      throw error;
+    }
   }
 
-  async handleOAuthCallback(
-    provider: string,
-    code: string,
-    state: string,
-    error?: string
-  ): Promise<ApiResponse<{ success: boolean; integrationId?: number; provider: string }>> {
-    const params: any = { code, state };
-    if (error) params.error = error;
-    
-    const response = await api.get(`/integrations/auth/${provider}/callback`, { params });
-    return response.data;
+  async getSyncStatus(id: number): Promise<SyncStatusResponse> {
+    try {
+      const response = await api.get(`${this.baseUrl}/integrations/${id}/sync/status`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching sync status:', error);
+      throw error;
+    }
   }
 
-  // Testing and Data APIs
-  async testIntegration(id: number): Promise<ApiResponse<TestIntegrationResponse>> {
-    const response = await api.post(`/account-integrations/${id}/test`);
-    return response.data;
+  async deleteIntegration(id: number): Promise<void> {
+    try {
+      await api.delete(`${this.baseUrl}/integrations/${id}`);
+    } catch (error) {
+      console.error('Error deleting integration:', error);
+      throw error;
+    }
   }
 
-  async getWeatherData(
-    id: number,
-    type: 'current' | 'forecast' | 'alerts'
-  ): Promise<ApiResponse<WeatherData>> {
-    const response = await api.get(`/account-integrations/${id}/weather`, {
-      params: { type }
-    });
-    return response.data;
+  // OAuth Integration APIs
+
+  async initiateOAuth(data: OAuthInitiateRequest): Promise<OAuthInitiateResponse> {
+    try {
+      const response = await api.post(`${this.baseUrl}/integrations/oauth/initiate`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error initiating OAuth:', error);
+      throw error;
+    }
   }
 }
 
-export default new IntegrationsService();
+export const integrationsService = new IntegrationsService();
+export default IntegrationsService;

@@ -28,8 +28,10 @@ const PLAYLIST_ROUTES = {
   ADD: '/playlist/add',
 };
 
-const APPS_ROUTES = {
-  LIST: '/apps',
+const INTEGRATIONS_ROUTES = {
+  LIST: '/integrations',
+  APPS: '/integrations/apps',
+  OAUTH_CALLBACK: '/integrations/oauth/callback',
 };
 
 const ROUTES = {
@@ -41,7 +43,7 @@ const ROUTES = {
   BRAND: BRAND_ROUTES,
   CONTENT: CONTENT_ROUTES,
   PLAYLIST: PLAYLIST_ROUTES,
-  APPS: APPS_ROUTES,
+  INTEGRATIONS: INTEGRATIONS_ROUTES,
   ACCOUNT: {
     BASE: '/account',
   },
