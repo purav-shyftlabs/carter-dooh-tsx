@@ -22,9 +22,19 @@ const IntegrationConfigForm: React.FC<IntegrationConfigFormProps> = ({
   // Build initial values from fields
   const formInitialValues = React.useMemo(() => {
     const values: Record<string, string | number | boolean> = {};
+    console.log('Building form initial values:', { fields, initialValues });
     fields.forEach((field) => {
-      if (initialValues[field.key] !== undefined) {
-        values[field.key] = initialValues[field.key];
+      // Check if initial value exists (including empty strings for password fields)
+      if (initialValues.hasOwnProperty(field.key)) {
+        // Use the initial value, even if it's an empty string (for password fields that might be masked)
+        const initialValue = initialValues[field.key];
+        if (field.type === 'checkbox') {
+          values[field.key] = initialValue === true || initialValue === 'true' || initialValue === '1' || initialValue === 1;
+        } else if (field.type === 'number') {
+          values[field.key] = typeof initialValue === 'number' ? initialValue : Number(initialValue) || undefined as any;
+        } else {
+          values[field.key] = String(initialValue || '');
+        }
       } else if (field.default !== undefined) {
         // Convert default value based on field type
         if (field.type === 'checkbox') {
@@ -232,11 +242,11 @@ const IntegrationConfigForm: React.FC<IntegrationConfigFormProps> = ({
             key={field.key}
             label={field.label}
             type="password"
-            value={String(fieldValue || '')}
+            value={fieldValue !== undefined && fieldValue !== null ? String(fieldValue) : ''}
             onChange={(e) => formik.setFieldValue(field.key, e.target.value)}
             onBlur={() => formik.setFieldTouched(field.key, true)}
             error={fieldError}
-            placeholder={field.placeholder}
+            placeholder={field.placeholder || (initialValues.hasOwnProperty(field.key) ? 'Enter new value to update' : 'Enter value')}
             required={field.required}
             disabled={isLoading}
           />

@@ -1,7 +1,7 @@
 import { CSSProperties, useMemo, useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Video, Image, Globe, Edit, X } from 'lucide-react';
+import { Video, Image, Globe, Edit, X, Plug2 } from 'lucide-react';
 import { usePlaylistStore } from '@/contexts/playlist/playlist.store';
 import type { PlaylistItem } from '@/types/playlist';
 import signedUrlService from '@/services/content/signed-url.service';
@@ -34,6 +34,7 @@ const TimelineItem = ({ item, index, draggingId, isDetectingDuration = false, on
   const TypeIcon = useMemo(() => {
     if (item.type === 'video') return Video;
     if (item.type === 'website') return Globe;
+    if (item.type === 'integration') return Plug2;
     return Image;
   }, [item.type]);
 
@@ -46,6 +47,8 @@ const TimelineItem = ({ item, index, draggingId, isDetectingDuration = false, on
       setLoadingSignedUrl(true);
       try {
         // Create a mock file object for the signed URL service
+        if (!item.assetId || !item.url) return;
+        
         const mockFile = {
           id: item.assetId,
           fileUrl: item.url,
@@ -94,7 +97,49 @@ const TimelineItem = ({ item, index, draggingId, isDetectingDuration = false, on
         {...listeners}
       >
       <div className={styles.thumb}>
-        {item.type === 'website' ? (
+        {item.type === 'integration' ? (
+          <div style={{ 
+            width: '100%', 
+            height: '100%', 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '4px',
+            position: 'relative',
+            flexDirection: 'column',
+            gap: '8px',
+            padding: '8px'
+          }}>
+            {item.integration?.app_logo ? (
+              <img 
+                src={item.integration.app_logo} 
+                alt={item.integration.app_name}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  objectFit: 'contain',
+                  borderRadius: '4px'
+                }}
+              />
+            ) : (
+              <Plug2 size={32} color="#667eea" />
+            )}
+            <div style={{
+              fontSize: '10px',
+              color: '#666',
+              textAlign: 'center',
+              fontWeight: 500,
+              lineHeight: '1.2',
+              maxWidth: '100%',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {item.integration?.app_name || 'Integration'}
+            </div>
+          </div>
+        ) : item.type === 'website' ? (
           <div style={{ 
             width: '100%', 
             height: '100%', 
@@ -143,7 +188,7 @@ const TimelineItem = ({ item, index, draggingId, isDetectingDuration = false, on
               fontSize: '10px',
               pointerEvents: 'none'
             }}>
-              {item.url.replace(/^https?:\/\//, '').split('/')[0]}
+              {item.url?.replace(/^https?:\/\//, '').split('/')[0]}
             </div>
           </div>
         ) : (
@@ -180,13 +225,13 @@ const TimelineItem = ({ item, index, draggingId, isDetectingDuration = false, on
           <button
             className={styles.stepBtn}
             onClick={() => updateDuration(item.id, Math.max(1, (item.duration || 1) - 1))}
-            disabled={item.type === 'video'}
+            disabled={item.type === 'video' || item.type === 'integration'}
             aria-label="decrease duration"
           >−</button>
           <div className={styles.durationValue} aria-label="duration value">
             {isDetectingDuration ? (
               <span style={{ color: '#666', fontSize: '10px' }}>Detecting...</span>
-            ) : item.type === 'video' && item.duration === 10 && onRetryDuration ? (
+            ) : item.type === 'video' && item.duration === 10 && onRetryDuration && item.url ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                 <span style={{ fontSize: '10px' }}>{item.duration}s</span>
                 <button 
@@ -211,7 +256,7 @@ const TimelineItem = ({ item, index, draggingId, isDetectingDuration = false, on
           <button
             className={styles.stepBtn}
             onClick={() => updateDuration(item.id, Math.max(1, (item.duration || 1) + 1))}
-            disabled={item.type === 'video'}
+            disabled={item.type === 'video' || item.type === 'integration'}
             aria-label="increase duration"
           >+</button>
         </div>

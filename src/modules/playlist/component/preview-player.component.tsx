@@ -3,6 +3,9 @@ import { X } from 'lucide-react';
 import { usePlaylistStore } from '@/contexts/playlist/playlist.store';
 import { contentService } from '@/services/content/content.service';
 import signedUrlService from '@/services/content/signed-url.service';
+import { integrationsService } from '@/services/integrations/integrations.service';
+import WeatherPreviewCard from '@/modules/integrations/components/weather-preview-card.component';
+import NewsPreviewCard from '@/modules/integrations/components/news-preview-card.component';
 import styles from '../styles/preview-player.module.scss';
 
 type Props = { onClose: () => void };
@@ -15,6 +18,8 @@ const PreviewPlayer = ({ onClose }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [videoPoster, setVideoPoster] = useState<string | null>(null);
   const [displayUrls, setDisplayUrls] = useState<Record<string, string>>({});
+  const [integrationData, setIntegrationData] = useState<Record<string, Record<string, unknown>>>({});
+  const [loadingIntegration, setLoadingIntegration] = useState<Record<string, boolean>>({});
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const items = playlist.items;
@@ -80,9 +85,120 @@ const PreviewPlayer = ({ onClose }: Props) => {
     }, 300); // 300ms transition
   };
 
+  // Load integration data for integration items
+  useEffect(() => {
+    const loadIntegrationData = async () => {
+      if (!current || current.type !== 'integration' || !current.integrationId) {
+        console.log('Preview Player - Skipping integration load:', {
+          hasCurrent: !!current,
+          type: current?.type,
+          integrationId: current?.integrationId
+        });
+        return;
+      }
+      
+      const integrationId = current.integrationId;
+      const itemId = current.id;
+      
+      console.log('Preview Player - Starting integration load:', {
+        itemId,
+        integrationId,
+        currentIntegration: current.integration,
+        alreadyLoaded: !!integrationData[itemId],
+        loading: loadingIntegration[itemId]
+      });
+      
+      // Skip if already loaded
+      if (integrationData[itemId] || loadingIntegration[itemId]) {
+        console.log('Preview Player - Integration already loaded or loading');
+        return;
+      }
+      
+      setLoadingIntegration(prev => ({ ...prev, [itemId]: true }));
+      
+      try {
+        // First, ensure we have integration metadata (app_name, app category, etc.)
+        if (!current.integration?.app_name) {
+          console.log('Preview Player - Loading integration details first');
+          try {
+            const integrationResponse = await integrationsService.getIntegrationById(integrationId);
+            const integration = integrationResponse.data?.integration;
+            
+            console.log('Preview Player - Integration details loaded:', {
+              integration,
+              appName: integration?.app?.name
+            });
+            
+            // Update the playlist item with integration metadata if missing
+            if (integration) {
+              const store = usePlaylistStore.getState();
+              const currentItem = store.playlist.items.find(i => i.id === current.id);
+              if (currentItem && !currentItem.integration?.app_name) {
+                const updatedIntegration = {
+                  id: integration.id,
+                  app_id: integration.app_id,
+                  app_name: integration.app?.name || 'Unknown App',
+                  app_logo: integration.app?.logo_url,
+                  status: integration.status,
+                };
+                
+                console.log('Preview Player - Updating playlist item with integration:', updatedIntegration);
+                store.updateItem(current.id, {
+                  integration: updatedIntegration
+                });
+                
+                // Update current reference
+                Object.assign(current, { integration: updatedIntegration });
+              }
+            }
+          } catch (err) {
+            console.error('Error loading integration details:', err);
+          }
+        }
+        
+        // Trigger sync to get fresh data
+        console.log('Preview Player - Triggering sync for integration:', integrationId);
+        const syncResponse = await integrationsService.triggerSync(integrationId);
+        
+        console.log('Preview Player - Sync response:', syncResponse);
+        
+        // Get the sync result - the API returns sync_result.sync_result for the actual data
+        const syncResult = syncResponse.data?.sync_result;
+        if (syncResult) {
+          // The actual data is in sync_result.sync_result
+          const actualData = (syncResult as any)?.sync_result || syncResult;
+          console.log('Preview Player - Setting integration data:', actualData);
+          setIntegrationData(prev => ({
+            ...prev,
+            [itemId]: actualData as Record<string, unknown>
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading integration data:', error);
+        // Try to get integration details as fallback
+        try {
+          const integrationResponse = await integrationsService.getIntegrationById(integrationId);
+          if (integrationResponse.data?.integration?.metadata) {
+            console.log('Preview Player - Using metadata as fallback:', integrationResponse.data.integration.metadata);
+            setIntegrationData(prev => ({
+              ...prev,
+              [itemId]: integrationResponse.data.integration.metadata as Record<string, unknown>
+            }));
+          }
+        } catch (err) {
+          console.error('Error loading integration metadata:', err);
+        }
+      } finally {
+        setLoadingIntegration(prev => ({ ...prev, [itemId]: false }));
+      }
+    };
+    
+    loadIntegrationData();
+  }, [current?.id, current?.type, current?.integrationId]);
+
   useEffect(() => {
     if (!current) return;
-    if (current.type === 'image' || current.type === 'website') {
+    if (current.type === 'image' || current.type === 'website' || current.type === 'integration') {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => next(), Math.max(1, current.duration) * 1000);
     }
@@ -96,7 +212,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
       
       for (const item of items) {
         // Only get signed URLs for images and videos, not websites
-        if (!displayUrls[item.id] && (item.type === 'image' || item.type === 'video')) {
+        if (!displayUrls[item.id] && (item.type === 'image' || item.type === 'video') && item.assetId && item.url) {
           try {
             // Create a mock file object for the signed URL service
             const mockFile = {
@@ -121,9 +237,11 @@ const PreviewPlayer = ({ onClose }: Props) => {
             newDisplayUrls[item.id] = signedUrl;
           } catch (error) {
             console.warn(`Failed to get signed URL for item ${item.id}, using original URL:`, error);
+            if (item.url) {
             newDisplayUrls[item.id] = item.url;
+            }
           }
-        } else if (item.type === 'website') {
+        } else if (item.type === 'website' && item.url) {
           // For websites, use the original URL directly
           newDisplayUrls[item.id] = item.url;
         }
@@ -141,12 +259,13 @@ const PreviewPlayer = ({ onClose }: Props) => {
 
   // Capture first frame for videos
   useEffect(() => {
-    if (current && current.type === 'video') {
+    if (current && current.type === 'video' && current.url) {
       setVideoPoster(null); // Reset poster
       
       // Use signed URL for first frame capture if available, otherwise use original URL
       const videoUrl = displayUrls[current.id] || current.url;
       
+      if (videoUrl) {
       captureVideoFirstFrame(videoUrl)
         .then((posterUrl) => {
           setVideoPoster(posterUrl);
@@ -155,6 +274,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
           console.warn('Failed to capture video first frame:', error);
           setVideoPoster(null);
         });
+      }
     } else {
       setVideoPoster(null);
     }
@@ -167,6 +287,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
       const nextItem = items[nextIndex];
       const nextItemUrl = displayUrls[nextItem.id] || nextItem.url;
       
+      if (nextItemUrl) {
       if (nextItem.type === 'image') {
         const img = new Image();
         img.src = nextItemUrl;
@@ -174,6 +295,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
         const video = document.createElement('video');
         video.preload = 'metadata';
         video.src = nextItemUrl;
+        }
       }
     }
   }, [currentIndex, items, displayUrls]);
@@ -219,7 +341,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
                 
               </div>
             )} */}
-            {current.type === 'image' ? (
+            {current.type === 'image' && current.url ? (
               <img 
                 src={displayUrls[current.id] || current.url} 
                 alt={current.name || ''} 
@@ -232,7 +354,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
                   transition: 'opacity 0.3s ease-in-out'
                 }} 
               />
-            ) : current.type === 'website' ? (
+            ) : current.type === 'website' && current.url ? (
               iframeError ? (
                 <div style={{
                   width: '100%',
@@ -287,11 +409,144 @@ const PreviewPlayer = ({ onClose }: Props) => {
                   />
                 </div>
               )
-            ) : (
+            ) : current.type === 'integration' ? (
+              loadingIntegration[current.id] ? (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
+                    <div style={{ fontSize: '16px', color: '#666' }}>Loading integration data...</div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '16px',
+                  overflow: 'auto',
+                  boxSizing: 'border-box'
+                }}>
+                  {(() => {
+                    // Debug logging
+                    console.log('Preview Player - Integration Item:', {
+                      current: current,
+                      integration: current.integration,
+                      integrationId: current.integrationId,
+                      integrationData: integrationData[current.id],
+                      loading: loadingIntegration[current.id]
+                    });
+                    
+                    if (!current.integrationId) {
+                      return (
+                        <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
+                          <div>Integration ID not found</div>
+                        </div>
+                      );
+                    }
+                    
+                    if (!current.integration?.app_name) {
+                      return (
+                        <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
+                          <div>Loading integration details...</div>
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                    <div style={{ 
+                      width: '100%', 
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'auto'
+                    }}>
+                      <div style={{
+                        width: '100%',
+                        maxWidth: '100%',
+                        height: 'fit-content',
+                        maxHeight: '100%',
+                        overflow: 'auto',
+                        transform: 'scale(0.85)',
+                        transformOrigin: 'center center'
+                      }}>
+                        {(() => {
+                          // Get app category from integration if available, otherwise check app name
+                          const appName = current.integration?.app_name?.toLowerCase() || '';
+                          const isWeather = appName.includes('weather') || appName.includes('openweather');
+                          const isNews = appName.includes('news') || appName.includes('google news');
+                          
+                          console.log('Preview Player - Widget Selection:', {
+                            appName,
+                            isWeather,
+                            isNews,
+                            integrationData: integrationData[current.id]
+                          });
+                          
+                          if (isWeather) {
+                            return (
+                              <WeatherPreviewCard 
+                                weatherData={integrationData[current.id] || {}} 
+                                city={current.name}
+                              />
+                            );
+                          } else if (isNews) {
+                            return <NewsPreviewCard newsData={integrationData[current.id] || {}} />;
+                          } else {
+                            return (
+                              <div style={{
+                                padding: '24px',
+                                textAlign: 'center',
+                                backgroundColor: '#f9fafb',
+                                borderRadius: '12px',
+                                border: '1px solid #e5e7eb'
+                              }}>
+                                <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔌</div>
+                                <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '6px' }}>
+                                  {current.integration.app_name}
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                  {current.name}
+                                </div>
+                                {integrationData[current.id] && (
+                                  <div style={{ 
+                                    marginTop: '16px', 
+                                    padding: '12px', 
+                                    backgroundColor: '#fff', 
+                                    borderRadius: '8px',
+                                    textAlign: 'left',
+                                    fontSize: '11px',
+                                    fontFamily: 'monospace',
+                                    maxHeight: '250px',
+                                    overflow: 'auto'
+                                  }}>
+                                    <pre>{JSON.stringify(integrationData[current.id], null, 2)}</pre>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        })()}
+                      </div>
+                    </div>
+                  );
+                  })()}
+                </div>
+              )
+            ) : current.type === 'video' && current.url ? (
               <video
                 key={`${current.id}-vid`}
                 src={displayUrls[current.id] || current.url}
-                poster={videoPoster || current.thumbnailUrl}
+                poster={videoPoster || current.thumbnailUrl || undefined}
                 autoPlay
                 muted
                 playsInline
@@ -310,12 +565,12 @@ const PreviewPlayer = ({ onClose }: Props) => {
                   objectFit: 'contain', 
                 }}
               />
-            )}
+            ) : null}
           </div>
         </div>
         <div className={styles.footer}>
           <div>{currentIndex + 1} / {items.length}</div>
-          {current.type === 'website' && (
+          {(current.type === 'website' || current.type === 'integration') && (
             <button 
               onClick={next}
               style={{

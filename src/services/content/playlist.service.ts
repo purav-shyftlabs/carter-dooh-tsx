@@ -5,15 +5,25 @@ export type PlaylistContent = {
   id: number;
   playlist_id: number;
   order_index: number;
-  type: 'image' | 'video' | 'website';
+  type: 'image' | 'video' | 'website' | 'integration';
   name: string;
   image_url?: string;
   video_url?: string;
   website_url?: string;
+  integration_id?: number;
   duration_seconds: number;
   metadata?: {
     alt_text?: string;
     [key: string]: any;
+  };
+  integration?: {
+    id: number;
+    app_id: number;
+    app_name: string;
+    app_logo?: string;
+    status: string;
+    connected_at?: string;
+    last_synced_at?: string;
   };
   created_at: string;
   updated_at: string;
@@ -123,11 +133,12 @@ class PlaylistRenderService {
     thumbnail_url?: string;
     status?: string;
     contents: Array<{
-      type: 'image' | 'video' | 'website';
+      type: 'image' | 'video' | 'website' | 'integration';
       name: string;
       image_url?: string;
       video_url?: string;
       website_url?: string;
+      integration_id?: number;
       duration_seconds: number;
       order_index: number;
       metadata?: { alt_text?: string; [key: string]: any };
@@ -162,11 +173,12 @@ class PlaylistRenderService {
     thumbnail_url?: string;
     status?: string;
     contents?: Array<{
-      type: 'image' | 'video' | 'website';
+      type: 'image' | 'video' | 'website' | 'integration';
       name: string;
       image_url?: string;
       video_url?: string;
       website_url?: string;
+      integration_id?: number;
       duration_seconds: number;
       order_index: number;
       metadata?: { alt_text?: string; [key: string]: any };
@@ -174,6 +186,78 @@ class PlaylistRenderService {
   }): Promise<{ id: string | number }> {
     const response = await api.put(`${this.listUrl}/${id}`, payload);
     return response.data;
+  }
+
+  // Playlist Integration Content Methods
+
+  async addContentsToPlaylist(
+    playlistId: number,
+    contents: Array<{
+      type: 'integration';
+      name: string;
+      integration_id: number;
+      duration_seconds?: number;
+      order_index?: number;
+      metadata?: Record<string, unknown>;
+    }>,
+  ): Promise<PlaylistContent[]> {
+    const response = await api.post(`/playlists/${playlistId}/contents`, {
+      playlistId,
+      contents,
+    });
+    return response.data.data || response.data;
+  }
+
+  async updatePlaylistContent(
+    contentId: number,
+    payload: {
+      name?: string;
+      integration_id?: number;
+      duration_seconds?: number;
+      order_index?: number;
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<PlaylistContent> {
+    const response = await api.put(`/playlist-contents/${contentId}`, payload);
+    return response.data.data || response.data;
+  }
+
+  async syncPlaylistContent(contentId: number): Promise<{
+    content_id: number;
+    integration_id: number;
+    sync_result: {
+      synced_at: string;
+      records_synced: number;
+      sync_result: Record<string, unknown>;
+    };
+  }> {
+    const response = await api.post(`/playlist-contents/${contentId}/sync`);
+    return response.data.data || response.data;
+  }
+
+  async getPlaylistContentIntegrationData(contentId: number): Promise<{
+    content_id: number;
+    integration_id: number;
+    integration: {
+      id: number;
+      app_id: number;
+      app_name: string;
+      app_logo?: string;
+      status: string;
+      connected_at?: string;
+      last_synced_at?: string;
+    };
+    sync_status: {
+      last_synced_at?: string;
+      next_sync_at?: string;
+      sync_frequency: string;
+      status: string;
+      enabled: boolean;
+    };
+    sync_data: null;
+  }> {
+    const response = await api.get(`/playlist-contents/${contentId}/integration-data`);
+    return response.data.data || response.data;
   }
 }
 

@@ -104,7 +104,7 @@ const TimelineItemEditModal = ({ item, isOpen, onClose }: Props) => {
                 fontSize: '12px',
                 pointerEvents: 'none'
               }}>
-                {(url || item.url).replace(/^https?:\/\//, '').split('/')[0]}
+                {(url || item?.url)?.replace(/^https?:\/\//, '').split('/')[0]}
               </div>
             </div>
           ) : (

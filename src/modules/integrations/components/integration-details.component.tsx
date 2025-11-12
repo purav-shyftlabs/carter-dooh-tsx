@@ -221,13 +221,29 @@ const IntegrationDetails: React.FC<IntegrationDetailsProps> = ({ integrationId }
     }
   };
 
-  // Build initial values from existing configurations (excluding auth fields)
+  // Build initial values from existing configurations (including auth fields)
   const initialConfigValues: Record<string, string | number | boolean> = {};
   if (integration.configurations) {
     integration.configurations.forEach((config) => {
-      initialConfigValues[config.key] = config.value;
+      // Convert value to proper type based on config schema
+      const field = integration.app?.config_schema?.fields?.find(f => f.key === config.key);
+      if (field) {
+        if (field.type === 'checkbox') {
+          initialConfigValues[config.key] = config.value === true || config.value === 'true' || config.value === '1' || config.value === 1;
+        } else if (field.type === 'number') {
+          initialConfigValues[config.key] = typeof config.value === 'number' ? config.value : Number(config.value) || 0;
+        } else {
+          initialConfigValues[config.key] = String(config.value);
+        }
+      } else {
+        // Fallback: use value as-is
+        initialConfigValues[config.key] = config.value;
+      }
     });
   }
+  
+  console.log('Initial config values:', initialConfigValues);
+  console.log('Integration configurations:', integration.configurations);
 
   // Get config schema from app
   const configFields = integration.app?.config_schema?.fields || [];
@@ -366,7 +382,7 @@ const IntegrationDetails: React.FC<IntegrationDetailsProps> = ({ integrationId }
         {showConfigForm ? (
           configFields.length > 0 ? (
             <IntegrationConfigForm
-              fields={configFields.filter((f) => f.category !== 'auth')} // Don't show auth fields for editing
+              fields={configFields} // Show all fields including auth fields for editing
               initialValues={initialConfigValues}
               onSubmit={handleUpdateConfigurations}
               onCancel={() => setShowConfigForm(false)}

@@ -5,7 +5,7 @@ type PlaylistState = {
   playlist: Playlist;
   addItem: (item: Omit<PlaylistItem, 'id' | 'order' | 'duration'> & Partial<Pick<PlaylistItem, 'duration'>>) => string;
   updateDuration: (id: string, duration: number) => void;
-  updateItem: (id: string, updates: Partial<Pick<PlaylistItem, 'name' | 'duration'>>) => void;
+  updateItem: (id: string, updates: Partial<PlaylistItem>) => void;
   removeItem: (id: string) => void;
   reorder: (sourceIndex: number, destinationIndex: number) => void;
   setName: (name: string) => void;
@@ -26,17 +26,19 @@ export const usePlaylistStore = create<PlaylistState>()((set, get) => ({
         const nextIndex = state.playlist.items.length;
         const duration = typeof incoming.duration === 'number' && incoming.duration > 0
           ? incoming.duration
-          : (incoming.type === 'image' ? DEFAULT_IMAGE_DURATION : DEFAULT_IMAGE_DURATION);
+          : (incoming.type === 'image' ? DEFAULT_IMAGE_DURATION : incoming.type === 'integration' ? 30 : DEFAULT_IMAGE_DURATION);
         const id = (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2)}`);
         const item: PlaylistItem = {
           id,
           assetId: incoming.assetId,
           type: incoming.type,
           url: incoming.url,
+          integrationId: incoming.integrationId,
           thumbnailUrl: incoming.thumbnailUrl,
           name: incoming.name,
           duration,
           order: nextIndex,
+          integration: incoming.integration,
         };
         set({
           playlist: {
@@ -64,6 +66,15 @@ export const usePlaylistStore = create<PlaylistState>()((set, get) => ({
           playlist: {
             ...state.playlist,
             items: state.playlist.items.map(i => i.id === id ? { ...i, ...updates } : i),
+          },
+        });
+      },
+      updateIntegration: (id, integration) => {
+        const state = get();
+        set({
+          playlist: {
+            ...state.playlist,
+            items: state.playlist.items.map(i => i.id === id ? { ...i, integration } : i),
           },
         });
       },

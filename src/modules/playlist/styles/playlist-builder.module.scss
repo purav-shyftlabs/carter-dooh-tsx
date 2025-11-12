@@ -170,6 +170,136 @@
 .placeholderTitle { font-weight: 600; color: #111827; margin-bottom: 6px; }
 .placeholderDesc { color: #6b7280; }
 
+// Integration Selector Styles
+.integrationSelector {
+  padding: 24px;
+  width: 100%;
+}
+
+.integrationSelectorHeader {
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-color-primary;
+  }
+}
+
+.integrationList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.integrationOption {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $brand-600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.integrationOptionSelected {
+  border-color: $brand-600;
+  background: #f0f7ff;
+}
+
+.integrationOptionIcon {
+  flex-shrink: 0;
+}
+
+.integrationOptionInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.integrationOptionName {
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-color-primary;
+}
+
+.integrationOptionCategory {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.integrationOptionConfig {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.configBadge {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  color: #4b5563;
+}
+
+.integrationOptionStatus {
+  flex-shrink: 0;
+}
+
+.statusConnected {
+  padding: 4px 12px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.statusError {
+  padding: 4px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.integrationSelectorForm {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.integrationFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: $text-color-primary;
+  }
+}
+
 .websiteForm {
   grid-column: 1 / -1;
   padding: 24px;

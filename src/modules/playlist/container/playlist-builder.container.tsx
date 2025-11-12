@@ -30,6 +30,8 @@ import { AlertVariant } from '@/contexts/alert/alert.provider';
 import ROUTES from '@/common/routes';
 import { playlistRenderService } from '@/services/content/playlist.service';
 import { Stepper, StepConfig } from '@/components/common/stepper';
+import IntegrationSelector from '../component/integration-selector.component';
+import { Plug2 } from 'lucide-react';
 
 const isVideo = (contentType: string | undefined) => typeof contentType === 'string' && contentType.startsWith('video/');
 const isImage = (contentType: string | undefined) => typeof contentType === 'string' && contentType.startsWith('image/');
@@ -54,7 +56,7 @@ const PlaylistBuilder: NextPageWithLayout = () => {
   const [thumbnailMap, setThumbnailMap] = useState<Record<string | number, string>>({});
   const [previewOpen, setPreviewOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'image' | 'video' | 'website'>('image');
+  const [typeFilter, setTypeFilter] = useState<'image' | 'video' | 'website' | 'integration'>('image');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [websiteName, setWebsiteName] = useState('');
   const timelineRef = useRef<HTMLDivElement | null>(null);
@@ -214,15 +216,33 @@ const PlaylistBuilder: NextPageWithLayout = () => {
                 url = content.website_url || '';
               }
 
+              // Debug logging for integration content
+              if (content.type === 'integration') {
+                console.log('Loading Integration Content:', {
+                  contentId: content.id,
+                  integrationId: content.integration_id,
+                  integration: content.integration,
+                  name: content.name
+                });
+              }
+
               return {
                 id: `content-${content.id}`,
-                assetId: `content-${content.id}`,
+                assetId: content.type !== 'integration' ? `content-${content.id}` : undefined,
                 type: content.type,
                 url: url,
+                integrationId: content.integration_id,
                 thumbnailUrl: url, // Use the same URL for thumbnail
                 name: content.name,
                 duration: content.duration_seconds,
                 order: index, // Use index for proper ordering
+                integration: content.integration ? {
+                  id: content.integration.id,
+                  app_id: content.integration.app_id,
+                  app_name: content.integration.app_name,
+                  app_logo: content.integration.app_logo,
+                  status: content.integration.status,
+                } : undefined,
               };
             });
 
@@ -365,11 +385,13 @@ const PlaylistBuilder: NextPageWithLayout = () => {
               console.warn('Failed to get signed URL for first frame capture, using original URL');
             }
             
-            const firstFrame = await captureVideoFirstFrame(processingUrl);
-            setVideoFirstFrames(prev => ({
-              ...prev,
-              [item.id]: firstFrame
-            }));
+            if (processingUrl) {
+              const firstFrame = await captureVideoFirstFrame(processingUrl);
+              setVideoFirstFrames(prev => ({
+                ...prev,
+                [item.id]: firstFrame
+              }));
+            }
           } catch (error) {
             console.warn(`Failed to capture first frame for video ${item.id}:`, error);
           }
@@ -480,6 +502,7 @@ const PlaylistBuilder: NextPageWithLayout = () => {
   const imageCount = useMemo(() => library.filter(f => isImage(f.content_type)).length, [library]);
   const videoCount = useMemo(() => library.filter(f => isVideo(f.content_type)).length, [library]);
   const websiteCount = useMemo(() => playlist.items.filter(item => item.type === 'website').length, [playlist.items]);
+  const integrationCount = useMemo(() => playlist.items.filter(item => item.type === 'integration').length, [playlist.items]);
 
   const handleSubmit = async () => {
     // Validate thumbnail URL before submitting
@@ -512,6 +535,8 @@ const PlaylistBuilder: NextPageWithLayout = () => {
             return { ...baseContent, video_url: item.url };
           } else if (item.type === 'website') {
             return { ...baseContent, website_url: item.url };
+          } else if (item.type === 'integration') {
+            return { ...baseContent, integration_id: item.integrationId };
           }
           return baseContent;
         });
@@ -553,6 +578,8 @@ const PlaylistBuilder: NextPageWithLayout = () => {
             return { ...baseContent, video_url: item.url };
           } else if (item.type === 'website') {
             return { ...baseContent, website_url: item.url };
+          } else if (item.type === 'integration') {
+            return { ...baseContent, integration_id: item.integrationId };
           }
           return baseContent;
         });
@@ -973,7 +1000,7 @@ const PlaylistBuilder: NextPageWithLayout = () => {
                           index={idx} 
                           draggingId={draggingId} 
                           isDetectingDuration={detectingDuration.has(item.id)}
-                          onRetryDuration={item.type === 'video' ? () => retryVideoDuration(item.id, item.url) : undefined}
+                          onRetryDuration={item.type === 'video' && item.url ? () => retryVideoDuration(item.id, item.url!) : undefined}
                         />
                       ))}
                     </div>
@@ -1004,12 +1031,20 @@ const PlaylistBuilder: NextPageWithLayout = () => {
                     <button className={`${styles.chip} ${typeFilter === 'image' ? styles.active : ''}`} onClick={() => setTypeFilter('image')}>Images ({imageCount})</button>
                     <button className={`${styles.chip} ${typeFilter === 'video' ? styles.active : ''}`} onClick={() => setTypeFilter('video')}>Videos ({videoCount})</button>
                     <button className={`${styles.chip} ${typeFilter === 'website' ? styles.active : ''}`} onClick={() => setTypeFilter('website')}>Websites ({websiteCount})</button>
+                    <button className={`${styles.chip} ${typeFilter === 'integration' ? styles.active : ''}`} onClick={() => setTypeFilter('integration')}>
+                      <Plug2 size={14} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }} />
+                      Integrations ({integrationCount})
+                    </button>
                   </div>
-                  <input className={styles.searchInput} placeholder="Search media..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                  {typeFilter !== 'integration' && (
+                    <input className={styles.searchInput} placeholder="Search media..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                  )}
                 </div>
               </div>
               <div className={`${styles.libraryGrid} ${contentItemStyles.grid}`}>
-                {typeFilter === 'website' ? (
+                {typeFilter === 'integration' ? (
+                  <IntegrationSelector />
+                ) : typeFilter === 'website' ? (
                   <div className={styles.websiteForm}>
                     <div className={styles.websiteInputGroup}>
                       <label className={styles.websiteLabel}>Website Name</label>

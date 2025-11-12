@@ -5,6 +5,7 @@ import styles from '../styles/integrations.module.scss';
 interface WeatherData {
   city?: string;
   temperature?: string | number;
+  temperature_unit?: string;
   condition?: string;
   description?: string;
   humidity?: number | string;
@@ -37,13 +38,14 @@ const WeatherPreviewCard: React.FC<WeatherPreviewCardProps> = ({ weatherData, ci
     return <Sun size={48} color="#FFA500" />;
   };
 
-  const temperature = weatherData.temperature || weatherData.temp || weatherData.Temperature;
-  const condition = weatherData.condition || weatherData.weather || weatherData.Condition;
-  const description = weatherData.description || weatherData.Description;
-  const humidity = weatherData.humidity || weatherData.Humidity;
-  const windSpeed = weatherData.windSpeed || weatherData.wind || weatherData.WindSpeed;
-  const forecast = weatherData.forecast || weatherData.Forecast || [];
-  const displayCity = city || weatherData.city || weatherData.City || 'Unknown Location';
+  const temperature = weatherData.temperature ;
+  const condition = weatherData.condition;
+  const description = weatherData.description;
+  const humidity = weatherData.humidity;
+  const windSpeed = weatherData.windSpeed;
+  const forecast = weatherData.forecast;
+  const displayCity = city || weatherData.city;
+  const temperature_unit = weatherData.temperature_unit;
 
   // Extract temperature value if it's a string like "22°C"
   const tempValue = typeof temperature === 'string' 
@@ -55,7 +57,7 @@ const WeatherPreviewCard: React.FC<WeatherPreviewCardProps> = ({ weatherData, ci
       <div className={styles.weatherWidgetHeader}>
         <div>
           <h3 className={styles.weatherWidgetTitle}>Current Weather</h3>
-          <span className={styles.weatherWidgetLocation}>{displayCity}</span>
+          <span className={styles.weatherWidgetLocation}>{displayCity as string}</span>
         </div>
       </div>
 
@@ -67,13 +69,13 @@ const WeatherPreviewCard: React.FC<WeatherPreviewCardProps> = ({ weatherData, ci
           <div className={styles.weatherWidgetTempContainer}>
             {tempValue ? (
               <span className={styles.weatherWidgetTemp}>
-                {typeof temperature === 'string' ? temperature : `${temperature}°C`}
+                {typeof temperature === 'string' ? temperature : `${temperature}`+ `${temperature_unit === 'celsius' ? '°C' : '°F'}`}
               </span>
             ) : (
               <span className={styles.weatherWidgetTemp}>--</span>
             )}
             <div className={styles.weatherWidgetCondition}>
-              {condition || description || 'No data available'}
+              {condition as string || description as string || 'No data available'}
             </div>
           </div>
         </div>
@@ -85,7 +87,7 @@ const WeatherPreviewCard: React.FC<WeatherPreviewCardProps> = ({ weatherData, ci
                 <Droplets size={20} color="#4A90E2" />
                 <div className={styles.weatherMetricContent}>
                   <span className={styles.weatherMetricLabel}>Humidity</span>
-                  <span className={styles.weatherMetricValue}>{humidity}%</span>
+                  <span className={styles.weatherMetricValue}>{humidity as number}%</span>
                 </div>
               </div>
             )}
@@ -95,7 +97,7 @@ const WeatherPreviewCard: React.FC<WeatherPreviewCardProps> = ({ weatherData, ci
                 <div className={styles.weatherMetricContent}>
                   <span className={styles.weatherMetricLabel}>Wind Speed</span>
                   <span className={styles.weatherMetricValue}>
-                    {windSpeed} {typeof windSpeed === 'number' ? 'km/h' : ''}
+                    {windSpeed as number} {typeof windSpeed === 'number' ? 'km/h' : ''}
                   </span>
                 </div>
               </div>
