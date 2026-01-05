@@ -67,11 +67,14 @@ class IntegrationsService {
 
   // Helper function to normalize Integration from API response
   private normalizeIntegration(rawIntegration: any): Integration {
+    // Determine app_id with fallback to nested app.id
+    const rawAppId = rawIntegration.appId || rawIntegration.app_id || (rawIntegration.app && rawIntegration.app.id);
+    const appIdNum = typeof rawAppId === 'string' ? parseInt(rawAppId, 10) : rawAppId || 0;
     return {
       id: typeof rawIntegration.id === 'string' ? parseInt(rawIntegration.id, 10) : rawIntegration.id,
       user_id: rawIntegration.userId || rawIntegration.user_id || 0,
       account_id: rawIntegration.accountId || rawIntegration.account_id || 0,
-      app_id: rawIntegration.appId || rawIntegration.app_id || 0,
+      app_id: appIdNum,
       app: rawIntegration.app ? this.normalizeApp(rawIntegration.app) : undefined,
       status: (rawIntegration.status || 'pending') as any,
       enabled: rawIntegration.enabled !== undefined ? rawIntegration.enabled : true,

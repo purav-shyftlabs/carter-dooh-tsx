@@ -1,0 +1,46 @@
+.layoutFormContainer {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+.sidebarSection {
+  position: relative;
+  z-index: 1000;
+  // Sidebar is now fixed in its own component
+}
+
+.contentSection {
+  flex: 1;
+  margin-left: 120px; // Space for icon deck
+  padding: 24px;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+
+  &.sidebarOpen {
+    margin-left: 620px; // Icon deck (120px) + Sidebar (500px)
+  }
+}
+
+.canvasContainer {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 48px);
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .sidebarSection {
+    padding: 8px;
+  }
+
+  .contentSection {
+    margin-left: 80px;
+    padding: 16px;
+  }
+}
+

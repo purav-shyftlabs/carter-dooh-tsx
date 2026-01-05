@@ -1,0 +1,386 @@
+.layoutCanvas {
+  width: 100%;
+  height: calc(100vh - 200px); // Fixed viewport height
+  position: relative;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: auto; // Scrollable canvas
+  min-height: 600px;
+
+  :global(.react-grid-layout) {
+    position: relative;
+    min-height: 2000px; // Allow items to be placed beyond viewport
+    width: 100%;
+  }
+
+  // Global styles for ReactPlayer to ensure proper rendering
+  :global(.react-player) {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    
+    > div {
+      position: relative !important;
+      width: 100% !important;
+      height: 100% !important;
+      padding-top: 0 !important; // Remove aspect ratio padding
+      
+      > div {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        
+        video {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: contain !important;
+        }
+      }
+    }
+  }
+
+  :global(.react-grid-item) {
+    background: transparent;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    &.react-grid-item--dragging {
+      opacity: 0.8;
+      z-index: 1000;
+      border-color: #3b82f6;
+    }
+
+    &.react-grid-item--resizing {
+      opacity: 0.9;
+      border-color: #3b82f6;
+    }
+  }
+
+  :global(.react-resizable-handle) {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 1000;
+    background: rgba(59, 130, 246, 0.3);
+    border: 2px solid #3b82f6;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: rgba(59, 130, 246, 0.5);
+      border-color: #2563eb;
+    }
+  }
+
+  :global(.react-resizable-handle-se) {
+    bottom: 0;
+    right: 0;
+    cursor: se-resize;
+    width: 20px;
+    height: 20px;
+  }
+
+  :global(.react-resizable-handle-e) {
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    cursor: e-resize;
+    width: 20px;
+    height: 60px;
+  }
+
+  :global(.react-resizable-handle-s) {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: s-resize;
+    width: 60px;
+    height: 20px;
+  }
+
+  :global(.react-resizable-handle-w) {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    cursor: w-resize;
+    width: 20px;
+    height: 60px;
+  }
+
+  :global(.react-resizable-handle-sw) {
+    bottom: 0;
+    left: 0;
+    cursor: sw-resize;
+    width: 20px;
+    height: 20px;
+  }
+
+  :global(.react-resizable-handle-n) {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: n-resize;
+    width: 60px;
+    height: 20px;
+  }
+
+  :global(.react-resizable-handle-ne) {
+    top: 0;
+    right: 0;
+    cursor: ne-resize;
+    width: 20px;
+    height: 20px;
+  }
+
+  :global(.react-resizable-handle-nw) {
+    top: 0;
+    left: 0;
+    cursor: nw-resize;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.gridItem {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 100px; // Ensure minimum height for content
+  position: relative;
+}
+
+:global(.grid-item-drag-handle) {
+  flex: 1;
+  overflow: hidden;
+  cursor: move;
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  z-index: 10;
+  pointer-events: auto; // Ensure header is clickable
+  cursor: default; // Header is not draggable
+  position: relative;
+}
+
+.itemName {
+  font-size: 12px;
+  font-weight: 500;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.removeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 8px;
+  z-index: 1000; // Ensure button is above draggable area
+  position: relative;
+
+  &:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+
+  &:active {
+    transform: scale(0.95);
+    background: #dc2626;
+    color: #fff;
+  }
+}
+
+.itemContent {
+  flex: 1;
+  overflow: hidden; // Prevent scrolling, content must fit
+  position: relative;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0; // Allow flex shrinking
+  min-height: 0; // Allow flex shrinking
+  width: 100%;
+  height: 100%;
+  
+  // Ensure ALL content fits inside - no cropping ever
+  // But allow weather widget to fully expand
+  > *:not(.weatherWidget) {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    box-sizing: border-box;
+  }
+  
+  // Weather and News widgets should fully adopt container
+  .weatherWidget,
+  .newsWidget {
+    max-width: none !important;
+    max-height: none !important;
+  }
+  
+  // Images - always fit, maintain aspect ratio
+  img {
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center;
+  }
+  
+  // Videos - always fit, maintain aspect ratio
+  video {
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center;
+  }
+  
+  // Iframes - scale to fit
+  iframe {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+  
+  // For ReactPlayer wrapper - ensure it fits and is visible
+  > div {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    position: relative !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    
+    // Inner wrapper div
+    > div {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      position: relative !important;
+      min-height: 0 !important;
+      min-width: 0 !important;
+      
+      // ReactPlayer wrapper (react-player creates this)
+      > div {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        position: relative !important;
+        padding-top: 0 !important; // Remove any aspect ratio padding
+        
+        // ReactPlayer inner div
+        > div {
+          width: 100% !important;
+          height: 100% !important;
+          position: relative !important;
+          
+          // Video element inside ReactPlayer
+          video {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            object-fit: contain !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+          }
+        }
+      }
+    }
+  }
+  
+  // Integration viewers and other content
+  > div[style*="width"] {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: auto !important;
+  }
+}
+
+.emptyCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.emptyMessage {
+  text-align: center;
+  color: #6b7280;
+  padding: 48px;
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 14px;
+    margin: 8px 0;
+    color: #6b7280;
+  }
+}
+
+.emptyHint {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+

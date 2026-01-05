@@ -47,19 +47,31 @@ const PreviewPlayer = ({ onClose }: Props) => {
           if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+            video.pause();
+            video.currentTime = 0;
+            video.src = '';
             video.remove();
             resolve(dataURL);
           } else {
+            video.pause();
+            video.currentTime = 0;
+            video.src = '';
             video.remove();
             reject(new Error('Could not get canvas context'));
           }
         } catch (error) {
+          video.pause();
+          video.currentTime = 0;
+          video.src = '';
           video.remove();
           reject(error);
         }
       };
       
       video.onerror = () => {
+        video.pause();
+        video.currentTime = 0;
+        video.src = '';
         video.remove();
         reject(new Error('Failed to load video'));
       };
@@ -255,7 +267,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
     if (items.length > 0) {
       getDisplayUrls();
     }
-  }, [items, displayUrls]);
+  }, [items]);
 
   // Capture first frame for videos
   useEffect(() => {
@@ -278,7 +290,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
     } else {
       setVideoPoster(null);
     }
-  }, [current, displayUrls]);
+  }, [current?.id, displayUrls]);
 
   // Preload next item for smooth transitions
   useEffect(() => {
@@ -295,6 +307,12 @@ const PreviewPlayer = ({ onClose }: Props) => {
         const video = document.createElement('video');
         video.preload = 'metadata';
         video.src = nextItemUrl;
+        // Cleanup: Ensure proper teardown of video element
+        return () => {
+          video.pause();
+          video.currentTime = 0;
+          video.src = '';
+        };
         }
       }
     }
@@ -343,7 +361,7 @@ const PreviewPlayer = ({ onClose }: Props) => {
             )} */}
             {current.type === 'image' && current.url ? (
               <img 
-                src={displayUrls[current.id] || current.url} 
+                src={displayUrls[current.assetId] || current.image_url} 
                 alt={current.name || ''} 
                 onLoad={() => setIsLoading(false)}
                 onError={() => setIsLoading(false)}

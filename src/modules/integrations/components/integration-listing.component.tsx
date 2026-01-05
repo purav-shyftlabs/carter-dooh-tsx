@@ -126,9 +126,9 @@ const IntegrationListing: React.FC = () => {
             <span className={`${styles.statusBadge} ${getStatusBadgeClass(row.original.status)}`}>
               {row.original.status}
             </span>
-            {row.original.enabled && (
+            {row.original.enabled ? (
               <span className={styles.enabledBadge}>Enabled</span>
-            )}
+            ) : <span className={styles.disabledBadge}>Disabled</span>}
           </div>
         ),
       },
@@ -161,12 +161,14 @@ const IntegrationListing: React.FC = () => {
               variant="tertiary"
               icon={<RefreshCw size={16} />}
               onClick={() => handleSync(row.original.id)}
+              className={styles.syncIcon}
               title="Sync Now"
             />
             <Button
               label=""
               size="small"
               variant="tertiary"
+              className={row.original.enabled ? styles.disabledIcon : styles.enabledIcon}
               icon={<Power size={16} />}
               onClick={() => handleToggleEnabled(row.original)}
               title={row.original.enabled ? 'Disable' : 'Enable'}
@@ -177,6 +179,7 @@ const IntegrationListing: React.FC = () => {
               variant="tertiary"
               icon={<Settings size={16} />}
               onClick={() => router.push(`/integrations/${row.original.id}`)}
+              className={styles.settingsIcon}
               title="Configure"
             />
             <Button
@@ -185,6 +188,7 @@ const IntegrationListing: React.FC = () => {
               variant="danger"
               icon={<Trash2 size={16} />}
               onClick={() => handleDelete(row.original.id)}
+              className={styles.deleteIcon}
               title="Delete"
             />
           </div>

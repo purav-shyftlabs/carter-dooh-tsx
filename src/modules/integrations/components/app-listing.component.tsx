@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styles from '../styles/integrations.module.scss';
 import { integrationsService } from '@/services/integrations/integrations.service';
-import { App } from '@/types/integrations';
+import { App, Integration } from '@/types/integrations';
 import { Button } from 'shyftlabs-dsl';
 import { ExternalLinkIcon } from 'lucide-react';
 
@@ -21,6 +21,7 @@ const AppListing: React.FC<AppListingProps> = ({ category }) => {
   const [apps, setApps] = useState<App[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState<string>(category || '');
+  const [connectedAppIds, setConnectedAppIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     let mounted = true;
@@ -51,6 +52,33 @@ const AppListing: React.FC<AppListingProps> = ({ category }) => {
     };
   }, [pageNo, pageSize, search, selectedCategory]);
 
+  // Load connected integrations once to mark apps as connected
+  useEffect(() => {
+    let mounted = true;
+    const loadIntegrations = async () => {
+      try {
+        const response = await integrationsService.getIntegrations({
+          status: 'connected',
+          page: 1,
+          limit: 1000,
+        });
+        if (!mounted) return;
+        const ids = new Set<number>();
+        (response.data.items || []).forEach((integration: Integration) => {
+          if (integration.app_id) ids.add(integration.app_id);
+        });
+        setConnectedAppIds(ids);
+      } catch (error) {
+        console.error('Error loading integrations:', error);
+        setConnectedAppIds(new Set());
+      }
+    };
+    loadIntegrations();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const columns = useMemo(
     () => [
       {
@@ -72,8 +100,12 @@ const AppListing: React.FC<AppListingProps> = ({ category }) => {
         header: 'Name',
         cell: ({ row }: { row: { original: App } }) => (
           <div>
-            <div className={styles.appName}>{row.original.name}</div>
+            <div className={styles.appName}>
+              {row.original.name}
+             
+            </div>
             <div className={styles.appCategory}>{row.original.category}</div>
+            
           </div>
         ),
       },
@@ -99,10 +131,15 @@ const AppListing: React.FC<AppListingProps> = ({ category }) => {
         cell: ({ row }: { row: { original: App } }) => (
           <div className={styles.actions}>
             <Button
-              label="Connect"
+              label={connectedAppIds.has(row.original.id) ? 'Connected' : 'Connect'}
               size="small"
-              variant="primary"
-              onClick={() => router.push(`/integrations/apps/${row.original.id}`)}
+              variant={connectedAppIds.has(row.original.id) ? 'secondary' : 'primary'}
+              disabled={connectedAppIds.has(row.original.id)}
+              onClick={() => {
+                if (!connectedAppIds.has(row.original.id)) {
+                  router.push(`/integrations/apps/${row.original.id}`);
+                }
+              }}
             />
             {row.original.documentation_url && (
               <a
@@ -118,7 +155,7 @@ const AppListing: React.FC<AppListingProps> = ({ category }) => {
         ),
       },
     ],
-    [router],
+    [router, connectedAppIds],
   );
 
   const categories = useMemo(() => {

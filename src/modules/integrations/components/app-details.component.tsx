@@ -121,14 +121,16 @@ const AppDetails: React.FC<AppDetailsProps> = ({ appId }) => {
 
   return (
     <div className={styles.appDetailsContainer}>
-      <div className={styles.appHeader}>
-        <Button
-          label=""
+      <Button
+          label="Go Back"
           icon={<ArrowLeft />}
           onClick={() => router.push('/integrations/apps')}
           variant="tertiary"
           size="small"
+          iconPosition='left'
         />
+      <div className={styles.appHeader}>
+        
         <div className={styles.appInfo}>
           <h1>{app.name}</h1>
           <span className={styles.category}>{app.category}</span>

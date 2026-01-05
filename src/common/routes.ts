@@ -23,6 +23,11 @@ const CONTENT_ROUTES = {
   ADD: '/content/add',
 };
 
+const LAYOUTS_ROUTES = {
+  LIST: '/layout',
+  ADD: '/layout/add',
+};
+
 const PLAYLIST_ROUTES = {
   LIST: '/playlist',
   ADD: '/playlist/add',
@@ -42,6 +47,7 @@ const ROUTES = {
   USERS:USERS_ROUTES,
   BRAND: BRAND_ROUTES,
   CONTENT: CONTENT_ROUTES,
+  LAYOUTS: LAYOUTS_ROUTES,
   PLAYLIST: PLAYLIST_ROUTES,
   INTEGRATIONS: INTEGRATIONS_ROUTES,
   ACCOUNT: {

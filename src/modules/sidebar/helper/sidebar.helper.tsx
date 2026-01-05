@@ -1,4 +1,4 @@
-import { FileCheck, FolderOpen, Video, Plug2 } from 'lucide-react';
+import { FileCheck, FolderOpen, Video, Plug2, LayoutIcon } from 'lucide-react';
 import { HomeIcon, SettingsIcon, UsersIcon } from '@/lib/icons';
 import ROUTES from '@/common/routes';
 import { NextRouter } from 'next/router';
@@ -107,6 +107,13 @@ export const useSidebarMenuList = () => {
     },
     {
       id: 7,
+      label: 'Layouts',
+      icon: <LayoutIcon width={16} height={16} />,
+      link: ROUTES.LAYOUTS.LIST,
+      // show: hasLayoutView,
+    },
+    {
+      id: 8,
       label: 'Integrations',
       icon: <Plug2 width={16} height={16} />,
       link: ROUTES.INTEGRATIONS.LIST,
@@ -115,7 +122,7 @@ export const useSidebarMenuList = () => {
       assist: 'integrations',
     },
     {
-      id: 8,
+      id: 9,
       label: 'Account Settings',
       icon: <SettingsIcon width={16} height={16} />,
       link: ROUTES.ACCOUNT.BASE,

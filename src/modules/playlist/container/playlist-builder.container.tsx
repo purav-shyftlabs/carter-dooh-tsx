@@ -15,13 +15,11 @@ import styles from '../styles/playlist-builder.module.scss';
 import TimelineItem from '../component/timeline-item.component';
 import PreviewPlayer from '../component/preview-player.component';
 import { contentService } from '@/services/content/content.service';
-import type { File as LibraryFile, Folder, BreadcrumbItem } from '@/types/folder';
+import type { File as LibraryFile } from '@/types/folder';
 import React from 'react';
 import InternalLayout from '@/layouts/internal-layout/internal-layout';
 import { NextPageWithLayout } from '@/types/common';
-import contentItemStyles from '@/modules/content/styles/folder-item.module.scss';
-import { Folder as FolderIcon, EyeIcon, TrashIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getFileIcon } from '@/utils/file-icons';
+import { EyeIcon, TrashIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import PageHeader from '@/components/page-header/page-header.component';
 import { Button } from 'shyftlabs-dsl';
 import { useRouter } from 'next/router';
@@ -30,8 +28,10 @@ import { AlertVariant } from '@/contexts/alert/alert.provider';
 import ROUTES from '@/common/routes';
 import { playlistRenderService } from '@/services/content/playlist.service';
 import { Stepper, StepConfig } from '@/components/common/stepper';
-import IntegrationSelector from '../component/integration-selector.component';
+import { IntegrationSelector } from '@/components/common/integration-selector';
 import { Plug2 } from 'lucide-react';
+import { MediaLibrary } from '@/components/common/media-library';
+import type { Integration } from '@/types/integrations';
 
 const isVideo = (contentType: string | undefined) => typeof contentType === 'string' && contentType.startsWith('video/');
 const isImage = (contentType: string | undefined) => typeof contentType === 'string' && contentType.startsWith('image/');
@@ -44,21 +44,9 @@ const PlaylistBuilder: NextPageWithLayout = () => {
   const { showAlert } = useAlert();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [library, setLibrary] = useState<LibraryFile[]>([]);
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
-  const [breadcrumbHistory, setBreadcrumbHistory] = useState<Folder[]>([]);
-  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
-    { id: null, name: 'Root', path: '' }
-  ]);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [previewMap, setPreviewMap] = useState<Record<string | number, string>>({});
-  const [thumbnailMap, setThumbnailMap] = useState<Record<string | number, string>>({});
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'image' | 'video' | 'website' | 'integration'>('image');
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [websiteName, setWebsiteName] = useState('');
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -293,76 +281,6 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     }
   }, []); // Run only once on mount
 
-  useEffect(() => {
-    let active = true;
-    const parentId = currentFolder ? Number(currentFolder.id) : null;
-    Promise.all([
-      contentService.getFolders(parentId),
-      contentService.getFiles(parentId)
-    ])
-      .then(([foldersRes, filesRes]) => {
-        if (!active) return;
-        setFolders(foldersRes.data || []);
-        setLibrary(filesRes.data || []);
-      })
-      .catch(() => {
-        if (!active) return;
-        setFolders([]);
-        setLibrary([]);
-      });
-    return () => { active = false; };
-  }, [currentFolder]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      const entries = await Promise.all(library.map(async (f) => {
-        try {
-          // Use signed URL for secure access
-          const fileUrl = await contentService.getFileUrl(f);
-          // For videos, generate thumbnail from first frame
-          if (isVideo(f.content_type)) {
-            try {
-              const thumbnailUrl = await generateVideoThumbnail(fileUrl);
-              return [f.id, fileUrl, thumbnailUrl] as const;
-            } catch {
-              return [f.id, fileUrl, fileUrl] as const;
-            }
-          }
-          return [f.id, fileUrl] as const;
-        } catch (error) {
-          console.error('Failed to load file URL for', f.id, error);
-          // Fallback to direct URL
-          const fallbackUrl = contentService.getFileUrlSync(f);
-          return [f.id, fallbackUrl] as const;
-        }
-      }));
-      if (!cancelled) {
-        const map: Record<string | number, string> = {};
-        const thumbMap: Record<string | number, string> = {};
-        entries.forEach((entry) => { 
-          if (entry.length === 3) {
-            const [id, url, thumb] = entry;
-            map[id] = url;
-            thumbMap[id] = thumb;
-          } else {
-            const [id, url] = entry;
-            map[id] = url;
-            thumbMap[id] = url;
-          }
-        });
-        setPreviewMap(map);
-        setThumbnailMap(thumbMap);
-      }
-    };
-    if (library.length > 0) {
-      run();
-    } else {
-      setPreviewMap({});
-      setThumbnailMap({});
-    }
-    return () => { cancelled = true; };
-  }, [library]);
 
   // Capture first frames for videos in playlist
   useEffect(() => {
@@ -370,28 +288,13 @@ const PlaylistBuilder: NextPageWithLayout = () => {
       const videoItems = playlist.items.filter(item => item.type === 'video');
       
       for (const item of videoItems) {
-        if (!videoFirstFrames[item.id]) {
+        if (!videoFirstFrames[item.id] && item.url) {
           try {
-            // Try to get signed URL for first frame capture, but fallback to original URL
-            let processingUrl = item.url;
-            try {
-              // Find the asset to get signed URL
-              const asset = library.find(f => String(f.id) === item.assetId);
-              if (asset) {
-                const signedUrl = await contentService.getFileUrl(asset);
-                processingUrl = signedUrl;
-              }
-            } catch (error) {
-              console.warn('Failed to get signed URL for first frame capture, using original URL');
-            }
-            
-            if (processingUrl) {
-              const firstFrame = await captureVideoFirstFrame(processingUrl);
-              setVideoFirstFrames(prev => ({
-                ...prev,
-                [item.id]: firstFrame
-              }));
-            }
+            const firstFrame = await captureVideoFirstFrame(item.url);
+            setVideoFirstFrames(prev => ({
+              ...prev,
+              [item.id]: firstFrame
+            }));
           } catch (error) {
             console.warn(`Failed to capture first frame for video ${item.id}:`, error);
           }
@@ -402,95 +305,8 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     if (playlist.items.length > 0) {
       captureFrames();
     }
-  }, [playlist.items, videoFirstFrames, library]);
+  }, [playlist.items, videoFirstFrames]);
 
-  const generateVideoThumbnail = async (videoUrl: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        reject(new Error('Canvas context not available'));
-        return;
-      }
-      
-      video.crossOrigin = 'anonymous';
-      video.preload = 'metadata';
-      
-      video.onloadedmetadata = () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        video.currentTime = 0.1; // Seek to first frame
-      };
-      
-      video.onseeked = () => {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const thumbnailUrl = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(thumbnailUrl);
-      };
-      
-      video.onerror = () => reject(new Error('Video load failed'));
-      video.src = videoUrl;
-    });
-  };
-
-  // Breadcrumb helpers
-  const updateBreadcrumbs = (folder: Folder | null, history: Folder[] = []) => {
-    if (!folder) {
-      setBreadcrumbs([{ id: null, name: 'Root', path: '' }]);
-      setBreadcrumbHistory([]);
-      return;
-    }
-    const items: BreadcrumbItem[] = [{ id: null, name: 'Root', path: '' }];
-    history.forEach((parent) => {
-      items.push({ id: Number(parent.id), name: parent.name, path: `/folder/${parent.id}` });
-    });
-    items.push({ id: Number(folder.id), name: folder.name, path: `/folder/${folder.id}` });
-    setBreadcrumbs(items);
-    setBreadcrumbHistory(history);
-  };
-
-  const navigateToFolder = (folder: Folder) => {
-    const newHistory = [...breadcrumbHistory, ...(currentFolder ? [currentFolder] : [])];
-    setCurrentFolder(folder);
-    updateBreadcrumbs(folder, newHistory);
-  };
-
-  const navigateToCrumb = (crumb: BreadcrumbItem, index: number) => {
-    if (crumb.id === null) {
-      setCurrentFolder(null);
-      updateBreadcrumbs(null, []);
-      return;
-    }
-    const newHistory = breadcrumbHistory.slice(0, index);
-    const targetFolder = index < breadcrumbHistory.length ? breadcrumbHistory[index] : currentFolder;
-    if (targetFolder && Number(targetFolder.id) === Number(crumb.id)) {
-      setCurrentFolder(targetFolder);
-      updateBreadcrumbs(targetFolder, newHistory);
-    } else {
-      const f: Folder = { id: Number(crumb.id), name: crumb.name, parent_id: null, account_id: 0, owner_id: 0, allow_all_brands: true } as unknown as Folder;
-      setCurrentFolder(f);
-      updateBreadcrumbs(f, newHistory);
-    }
-  };
-
-  const libraryMapped = useMemo(() => library.map(f => ({ 
-    file: f, 
-    previewUrl: previewMap[f.id],
-    thumbnailUrl: thumbnailMap[f.id] || previewMap[f.id]
-  })), [library, previewMap, thumbnailMap]);
-
-  const filteredLibrary = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return libraryMapped.filter(({ file }) => {
-      const matchesType = typeFilter === 'image' ? isImage(file.content_type) : 
-                         typeFilter === 'video' ? isVideo(file.content_type) : false;
-      const name = (file.original_filename || file.name || '').toLowerCase();
-      const matchesQuery = q.length === 0 || name.includes(q);
-      return matchesType && matchesQuery;
-    });
-  }, [libraryMapped, search, typeFilter]);
 
   const totalDuration = useMemo(() => playlist.items.reduce((acc, it) => acc + Math.max(1, Number(it.duration || 0)), 0), [playlist.items]);
   const formatSeconds = (s: number) => {
@@ -499,8 +315,7 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     return m > 0 ? `${m}m ${r}s` : `${r}s`;
   };
 
-  const imageCount = useMemo(() => library.filter(f => isImage(f.content_type)).length, [library]);
-  const videoCount = useMemo(() => library.filter(f => isVideo(f.content_type)).length, [library]);
+  // Counts will be calculated by MediaLibrary component internally
   const websiteCount = useMemo(() => playlist.items.filter(item => item.type === 'website').length, [playlist.items]);
   const integrationCount = useMemo(() => playlist.items.filter(item => item.type === 'integration').length, [playlist.items]);
 
@@ -828,22 +643,41 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     });
   };
 
-  const handleAddWebsite = () => {
-    if (!websiteUrl.trim() || !isValidUrl(websiteUrl)) {
+  const handleAddWebsite = (name: string, url: string) => {
+    if (!url.trim() || !isValidUrl(url)) {
       return;
     }
 
-    const newId = addItem({
+    addItem({
       assetId: `website-${Date.now()}`,
       type: 'website',
-      url: websiteUrl.trim(),
-      thumbnailUrl: websiteUrl.trim(), // Use URL as thumbnail for iframe preview
-      name: websiteName.trim() || 'Website',
+      url: url.trim(),
+      thumbnailUrl: url.trim(), // Use URL as thumbnail for iframe preview
+      name: name.trim() || 'Website',
+    });
+  };
+
+  const handleAddIntegration = (integration: Integration) => {
+    const integrationName = integration.app?.name || 'Integration';
+    const cityConfig = integration.configurations?.find((c) => c.key === 'city');
+    const cityName = cityConfig ? ` - ${cityConfig.value}` : '';
+    const name = `${integrationName}${cityName}`;
+
+    addItem({
+      type: 'integration',
+      integrationId: integration.id,
+      name,
+      duration: 30, // Default duration, can be edited later
+      integration: {
+        id: integration.id,
+        app_id: integration.app_id,
+        app_name: integration.app?.name || 'Unknown App',
+        app_logo: integration.app?.logo_url,
+        status: integration.status,
+      },
     });
 
-    // Clear the form
-    setWebsiteUrl('');
-    setWebsiteName('');
+    showAlert('Integration added to playlist', AlertVariant.SUCCESS);
   };
 
   const onDragStart = (e: DragStartEvent) => {
@@ -1010,97 +844,18 @@ const PlaylistBuilder: NextPageWithLayout = () => {
             </div>
 
             {/* Media Library Section */}
-            <div className={styles.mediaLibrarySection}>
-              <div className={styles.header}>
-                <h3 className={styles.headerTitle}>Media Library</h3>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-                  {breadcrumbs.map((crumb, idx) => (
-                    <React.Fragment key={`${crumb.id ?? 'root'}-${idx}`}>
-                      <a
-                        className={styles.breadcrumbLink}
-                        onClick={() => navigateToCrumb(crumb, idx)}
-                      >
-                        {crumb.name}
-                      </a>
-                      {idx < breadcrumbs.length - 1 && <span style={{ color: '#9ca3af', fontSize: 12 }}>/</span>}
-                    </React.Fragment>
-                  ))}
-                </div>
-                <div className={styles.filtersRow}>
-                  <div className={styles.typeChips}>
-                    <button className={`${styles.chip} ${typeFilter === 'image' ? styles.active : ''}`} onClick={() => setTypeFilter('image')}>Images ({imageCount})</button>
-                    <button className={`${styles.chip} ${typeFilter === 'video' ? styles.active : ''}`} onClick={() => setTypeFilter('video')}>Videos ({videoCount})</button>
-                    <button className={`${styles.chip} ${typeFilter === 'website' ? styles.active : ''}`} onClick={() => setTypeFilter('website')}>Websites ({websiteCount})</button>
-                    <button className={`${styles.chip} ${typeFilter === 'integration' ? styles.active : ''}`} onClick={() => setTypeFilter('integration')}>
-                      <Plug2 size={14} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }} />
-                      Integrations ({integrationCount})
-                    </button>
-                  </div>
-                  {typeFilter !== 'integration' && (
-                    <input className={styles.searchInput} placeholder="Search media..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                  )}
-                </div>
-              </div>
-              <div className={`${styles.libraryGrid} ${contentItemStyles.grid}`}>
-                {typeFilter === 'integration' ? (
-                  <IntegrationSelector />
-                ) : typeFilter === 'website' ? (
-                  <div className={styles.websiteForm}>
-                    <div className={styles.websiteInputGroup}>
-                      <label className={styles.websiteLabel}>Website Name</label>
-                      <RMNInput
-                        placeholder="Enter website name"
-                        size="small"
-                        value={websiteName}
-                        onChange={(e) => setWebsiteName((e.target as HTMLInputElement).value)}
-                      />
-                    </div>
-                    <div className={styles.websiteInputGroup}>
-                      <label className={styles.websiteLabel}>Website URL *</label>
-                      <RMNInput
-                        placeholder="https://example.com"
-                        size="small"
-                        value={websiteUrl}
-                        onChange={(e) => setWebsiteUrl((e.target as HTMLInputElement).value)}
-                      />
-                    </div>
-                    <Button
-                      label="Add Website"
-                      onClick={handleAddWebsite}
-                      disabled={!websiteUrl.trim() || !isValidUrl(websiteUrl)}
-                      size="small"
-                      style={{ marginTop: '12px' }}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    {folders.map((folder) => (
-                      <div key={`folder-${folder.id}`} className={contentItemStyles.item} onClick={() => navigateToFolder(folder)} role="button" tabIndex={0}>
-                        <div className={contentItemStyles.itemContent + ' ' + contentItemStyles.folderCard}>
-                          <FolderIcon size={72} color="#12287c" />
-                          <div className={contentItemStyles.name}>{folder.name}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {filteredLibrary.map(({ file, thumbnailUrl }) => (
-                      <div key={file.id} className={contentItemStyles.item} onClick={() => handleAddFromLibrary(file)} role="button" tabIndex={0}>
-                        <div className={contentItemStyles.itemContent + ' ' + contentItemStyles.folderCard}>
-                          {isImage(file.content_type) ? (
-                            <img className={contentItemStyles.fileThumb} src={thumbnailUrl} alt={file.original_filename || file.name} />
-                          ) : (
-                            <span className={contentItemStyles.fileIcon}>{getFileIcon(file.content_type, file.original_filename)}</span>
-                          )}
-                          <div className={contentItemStyles.name}>{file.original_filename || file.name}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {filteredLibrary.length === 0 && folders.length === 0 && (
-                      <div className={styles.emptyLibrary}>No media found. Try adjusting filters or uploading in Content.</div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+            <MediaLibrary
+              title="Media Library"
+              onItemSelect={handleAddFromLibrary}
+              onWebsiteAdd={handleAddWebsite}
+              integrationSelector={<IntegrationSelector onIntegrationSelect={handleAddIntegration} />}
+              showWebsiteForm={true}
+              showIntegrationSelector={true}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              websiteCount={websiteCount}
+              integrationCount={integrationCount}
+            />
           </div>
         )}
         </div>
@@ -1112,5 +867,9 @@ const PlaylistBuilder: NextPageWithLayout = () => {
     </div>
   );
 };
+
+PlaylistBuilder.getLayout = (page: React.ReactNode) => (
+  <InternalLayout head={{ title: 'Playlist Builder', description: 'Playlist Builder' }}>{page}</InternalLayout>
+);
 
 export default PlaylistBuilder;

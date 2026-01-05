@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Newspaper, ExternalLink, Calendar, User } from 'lucide-react';
 import styles from '../styles/integrations.module.scss';
 
@@ -26,6 +26,56 @@ interface NewsPreviewCardProps {
 }
 
 const NewsPreviewCard: React.FC<NewsPreviewCardProps> = ({ newsData }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState<number>(0);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [showHeader, setShowHeader] = useState(true);
+  const [showImages, setShowImages] = useState(true);
+  const [showDescription, setShowDescription] = useState(true);
+  const [showFooter, setShowFooter] = useState(true);
+  const [maxArticles, setMaxArticles] = useState(6);
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const height = containerRef.current.clientHeight;
+        const width = containerRef.current.clientWidth;
+        setContainerHeight(height);
+        setContainerWidth(width);
+        
+        // Show header only if height > 100px
+        setShowHeader(height > 100);
+        
+        // Show images only if width > 250px
+        setShowImages(width > 250);
+        
+        // Show description only if height > 200px AND width > 300px
+        setShowDescription(height > 200 && width > 300);
+        
+        // Show footer only if height > 400px
+        setShowFooter(height > 400);
+        
+        // Adjust number of articles based on available space
+        if (height < 300 || width < 400) {
+          setMaxArticles(2);
+        } else if (height < 500 || width < 600) {
+          setMaxArticles(4);
+        } else {
+          setMaxArticles(6);
+        }
+      }
+    };
+
+    updateDimensions();
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
   // Handle different data formats
   const articles: NewsArticle[] = Array.isArray(newsData.articles)
     ? newsData.articles
@@ -53,31 +103,35 @@ const NewsPreviewCard: React.FC<NewsPreviewCardProps> = ({ newsData }) => {
 
   if (articles.length === 0) {
     return (
-      <div className={styles.newsWidget}>
+      <div ref={containerRef} className={styles.newsWidget}>
         <div className={styles.newsCardEmpty}>
-          <Newspaper size={48} color="#999" />
+          <Newspaper size={containerWidth > 200 ? 48 : 32} color="#999" />
           <p>No news articles available</p>
         </div>
       </div>
     );
   }
 
+  const displayArticles = articles.slice(0, maxArticles);
+
   return (
-    <div className={styles.newsWidget}>
-      <div className={styles.newsWidgetHeader}>
-        <div className={styles.newsWidgetTitle}>
-          <Newspaper size={24} color="#1976d2" />
-          <h3>Latest News</h3>
+    <div ref={containerRef} className={styles.newsWidget}>
+      {showHeader && (
+        <div className={styles.newsWidgetHeader}>
+          <div className={styles.newsWidgetTitle}>
+            <Newspaper size={containerWidth > 300 ? 24 : 20} color="#1976d2" />
+            <h3>Latest News</h3>
+          </div>
+          {totalResults && showHeader && (
+            <span className={styles.newsWidgetCount}>{totalResults} articles</span>
+          )}
         </div>
-        {totalResults && (
-          <span className={styles.newsWidgetCount}>{totalResults} articles</span>
-        )}
-      </div>
+      )}
 
       <div className={styles.newsWidgetGrid}>
-        {articles.slice(0, 6).map((article, index) => (
+        {displayArticles.map((article, index) => (
           <div key={index} className={styles.newsWidgetCard}>
-            {article.urlToImage && (
+            {showImages && article.urlToImage && (
               <div className={styles.newsWidgetImage}>
                 <img src={article.urlToImage} alt={article.title || 'News article'} />
               </div>
@@ -86,7 +140,7 @@ const NewsPreviewCard: React.FC<NewsPreviewCardProps> = ({ newsData }) => {
               <h4 className={styles.newsWidgetCardTitle}>
                 {article.title || 'No title'}
               </h4>
-              {article.description && (
+              {showDescription && article.description && (
                 <p className={styles.newsWidgetCardDescription}>{article.description}</p>
               )}
               <div className={styles.newsWidgetCardMeta}>
@@ -109,7 +163,7 @@ const NewsPreviewCard: React.FC<NewsPreviewCardProps> = ({ newsData }) => {
                   rel="noopener noreferrer"
                   className={styles.newsWidgetCardLink}
                 >
-                  Read more <ExternalLink size={14} />
+                  Read more <ExternalLink size={containerWidth > 300 ? 14 : 12} />
                 </a>
               )}
             </div>
@@ -117,9 +171,9 @@ const NewsPreviewCard: React.FC<NewsPreviewCardProps> = ({ newsData }) => {
         ))}
       </div>
 
-      {articles.length > 6 && (
+      {showFooter && articles.length > maxArticles && (
         <div className={styles.newsWidgetFooter}>
-          <span>Showing 6 of {articles.length} articles</span>
+          <span>Showing {maxArticles} of {articles.length} articles</span>
         </div>
       )}
     </div>
