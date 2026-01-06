@@ -48,7 +48,7 @@ class SignedUrlService {
         }
       });
 
-      if (response.data.success && response.data.data.signedUrl) {
+      if (response.data.success && response.data.data?.signedUrl) {
         const signedUrl = response.data.data.signedUrl;
         const expiresAt = now + (response.data.data.expiresIn * 1000);
         
@@ -60,6 +60,17 @@ class SignedUrlService {
         throw new Error(response.data.message || 'Failed to get signed URL');
       }
     } catch (error) {
+      // Check if it's a 500 error or other server error
+      const isServerError = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { status?: number } }).response?.status === 500
+        : false;
+      
+      if (isServerError) {
+        console.warn('Signed URL service returned 500 error, falling back to direct URL:', error);
+        // Return the original fileUrl as fallback
+        return fileUrl;
+      }
+      
       console.error('Error getting signed URL:', error);
       throw error;
     }
@@ -75,7 +86,8 @@ class SignedUrlService {
     try {
       // Use the file URL for the signed URL request
       if (!file.fileUrl) {
-        throw new Error('File URL is required for signed URL generation');
+        console.warn('File URL is not available, returning empty string');
+        return '';
       }
       return await this.getSignedUrl(file.fileUrl, expirationMinutes);
     } catch (error) {

@@ -36,10 +36,27 @@ export const useSidebarMenuList = () => {
       id: 2,
       label: 'Billboard',
       icon: <FileCheck width={16} height={16} />,
-      link: ROUTES.BILLBOARD,
+      link: ROUTES.BILLBOARD.LIST,
       // show: hasBillboardView,
-      testId: 'billboard',
       assist: 'billboard',
+      subCategories: [
+        {
+          id: 0,
+          label: 'Screens',
+          link: ROUTES.BILLBOARD.LIST,
+          testId: 'screens-submenu-item',
+          assist: 'screens',
+          show: true,
+        },
+        {
+          id: 1,
+          label: 'Push Content',
+          link: ROUTES.BILLBOARD.PUSH_CONTENT,
+          testId: 'push-content-submenu-item',
+          assist: 'push-content',
+          show: true,
+        },
+      ],
     },
     {
       id: 3,
@@ -138,7 +155,12 @@ export const useSidebarMenuList = () => {
   };
 };
 
-export const isActiveRoute = (router: NextRouter, link: string) => {
+export const isActiveRoute = (router: NextRouter, link: string | undefined) => {
+  // Handle undefined or non-string links
+  if (!link || typeof link !== 'string') {
+    return false;
+  }
+
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const fullLink = basePath + link;
   const currentPath = router.asPath;

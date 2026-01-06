@@ -202,7 +202,7 @@ const FileForm: React.FC & { getLayout?: (page: React.ReactNode) => React.ReactN
               <p className={styles.title}> File details </p>
               <div className={styles.flexTwoCol}>
                 <div className={`${styles.card} ${styles.col}`}>
-                  <div>
+                  <div className={styles.previewContainer}>
                   {file && previewUrl ? (
                     String(file.content_type || '').startsWith('image/') ? (
                       <img className={styles.previewImage} src={previewUrl} alt={file.original_filename} />

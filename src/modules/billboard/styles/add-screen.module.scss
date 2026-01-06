@@ -1,0 +1,264 @@
+.addScreenContainer {
+  padding: 24px;
+}
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  margin-top: 32px;
+}
+
+.initialState {
+  text-align: center;
+  padding: 64px 32px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.iconContainer {
+  margin-bottom: 24px;
+}
+
+.icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.initialState h2 {
+  margin: 0 0 16px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.initialState p {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.subtext {
+  font-size: 14px !important;
+  color: #999 !important;
+  margin-bottom: 32px !important;
+}
+
+.pairingState {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 32px;
+}
+
+.pairingHeader {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+
+  h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+.pairingMethod {
+  margin-bottom: 32px;
+}
+
+.methodHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.methodIcon {
+  font-size: 24px;
+}
+
+.methodLabel {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.pairingInstructions {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.codeSection,
+.linkSection {
+  padding: 24px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+.codeDisplay,
+.linkDisplay {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.code {
+  flex: 1;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  text-align: center;
+  padding: 20px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  color: #1976d2;
+  font-family: 'Courier New', monospace;
+}
+
+.link {
+  flex: 1;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 14px;
+  word-break: break-all;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.timeRemaining {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
+
+  .expired {
+    color: #c62828;
+    font-weight: 500;
+  }
+}
+
+.statusSection {
+  padding: 24px;
+  text-align: center;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.statusIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  p {
+    margin: 0;
+    font-size: 16px;
+    color: #666;
+  }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.successIcon,
+.errorIcon,
+.infoIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.successIcon {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.errorIcon {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.infoIcon {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.successText {
+  color: #2e7d32 !important;
+  font-weight: 500;
+}
+
+.errorText {
+  color: #c62828 !important;
+  font-weight: 500;
+}
+
+.infoText {
+  color: #1565c0 !important;
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+

@@ -39,9 +39,15 @@ const INTEGRATIONS_ROUTES = {
   OAUTH_CALLBACK: '/integrations/oauth/callback',
 };
 
+const BILLBOARD_ROUTES = {
+  LIST: '/billboard',
+  ADD: '/billboard/add',
+  PUSH_CONTENT: '/billboard/push-content',
+};
+
 const ROUTES = {
   DASHBOARD: '/dashboard',
-  BILLBOARD: '/billboard',
+  BILLBOARD: BILLBOARD_ROUTES,
   AUTH: AUTH_ROUTES,
   INSIGHTS: '/insights',
   USERS:USERS_ROUTES,

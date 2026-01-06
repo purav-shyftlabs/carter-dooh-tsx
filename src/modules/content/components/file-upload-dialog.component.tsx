@@ -115,10 +115,11 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
           // Check if it's an axios error with response data
           if (err?.response?.data?.message) {
             const apiMessage = err.response.data.message;
-            if (apiMessage.includes('More than one matching record found')) {
+            const messageString = typeof apiMessage === 'string' ? apiMessage : String(apiMessage);
+            if (messageString.includes('More than one matching record found')) {
               errorMessage = 'File with this name already exists in this folder';
-            } else if (apiMessage.includes('Upload failed:')) {
-              const parts = apiMessage.split('Upload failed:');
+            } else if (messageString.includes('Upload failed:')) {
+              const parts = messageString.split('Upload failed:');
               if (parts.length > 1) {
                 const mainError = parts[1].trim();
                 if (mainError.includes('More than one matching record')) {
@@ -128,7 +129,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
                 }
               }
             } else {
-              errorMessage = apiMessage;
+              errorMessage = messageString;
             }
           }
           // Check for HTTP status errors
